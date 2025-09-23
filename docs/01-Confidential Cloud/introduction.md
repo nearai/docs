@@ -2,7 +2,7 @@
 id: introduction
 title: Introduction to NEAR AI Cloud
 sidebar_label: Introduction
-position: 1
+sidebar_position: 1
 description: ""
 ---
 
@@ -16,15 +16,15 @@ description: ""
 
 Ready to build the future of AI? Get started with NEAR AI Cloud in minutes:
 
-[🚀 Quick Start Guide](./get-started.md)
+[🚀 Quick Start Guide](./quickstart)
 
 For developers looking to understand the technical architecture and security model:
 
-[⚙️ Private Inference Deep Dive](./private-inference.md)
+[⚙️ Private Inference Deep Dive](./private-inference)
 
 To learn how to verify the authenticity of AI responses:
 
-[✅ Verification Guide](./verification.md)
+[✅ Verification Guide](./verification)
 
 ---
 

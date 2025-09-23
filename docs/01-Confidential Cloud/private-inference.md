@@ -121,5 +121,5 @@ NEAR AI Cloud's private inference protects against:
 
 Ready to implement private inference in your applications?
 
-- [:material-rocket-launch: Get Started](./get-started.md) - Set up your first private inference request
-- [:material-check-decagram: Verification Guide](./verification.md) - Learn about attestation and signature verification
+- [🚀 Get Started](./get-started.md) - Set up your first private inference request
+- [✅ Verification Guide](./verification.md) - Learn about attestation and signature verification

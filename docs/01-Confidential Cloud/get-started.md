@@ -1,9 +1,12 @@
 ---
-id: get-started
-title: Get Started
-sidebar_label: Getting Started 
+id: quickstart
+title: Quickstart
+sidebar_label: Quickstart
 description: ""
 ---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # NEAR AI Cloud Quickstart
 
@@ -27,8 +30,9 @@ NEAR AI Cloud provides:
 2. Navigate to the **Credits** section in your dashboard, and purchase the amount of credits you need
 3. Go to the **API Keys** section in your dashboard, and create a new API key.
 
-!!! note "API Key Security"
+:::note API Key Security
     Keep your API key secure and never share it publicly. You can regenerate keys at any time from your dashboard.
+:::
 
 ---
 
@@ -36,60 +40,72 @@ NEAR AI Cloud provides:
 
 Let's chat with one open source model, with privacy protected. Please replace the API key with the one you have created.
 
-=== "python"
+<Tabs
+  defaultValue="curl"
+  values={[
+    {label: 'curl', value: 'curl'},
+    {label: 'Python', value: 'python'},
+    {label: 'JavaScript', value: 'javascript'},
+  ]}>
+<TabItem value="curl">
 
-    ```python
-    import openai
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer your-api-key-here" \
+-d '{
+    "model": "deepseek-chat-v3-0324",
+    "messages": [{
+        "role": "user",
+        "content": "Hello, how are you?"
+    }]
+}'
+```
 
-    client = openai.OpenAI(
-        base_url="https://cloud-api.near.ai/v1",
-        api_key="your-api-key-here"
-    )
+</TabItem>
+<TabItem value="python">
 
-    response = client.chat.completions.create(
-        model="deepseek-chat-v3-0324",
-        messages=[{
-            "role": "user", "content": "Hello, how are you?"
-        }]
-    )
+```python
+import openai
 
-    print(response.choices[0].message.content)
-    ```
+client = openai.OpenAI(
+    base_url="https://cloud-api.near.ai/v1",
+    api_key="your-api-key-here"
+)
 
-=== "javascript"
+response = client.chat.completions.create(
+    model="deepseek-chat-v3-0324",
+    messages=[{
+        "role": "user", "content": "Hello, how are you?"
+    }]
+)
 
-    ```javascript
-    import OpenAI from 'openai';
+print(response.choices[0].message.content)
+```
 
-    const openai = new OpenAI({
-        baseURL: 'https://cloud-api.near.ai/v1',
-        apiKey: 'your-api-key-here',
-    });
+</TabItem>
+<TabItem value="javascript">
 
-    const completion = await openai.chat.completions.create({
-        model: 'deepseek-chat-v3-0324',
-        messages: [{
-            role: 'user', content: 'Hello, how are you?'
-        }]
-    });
+```javascript
+import OpenAI from 'openai';
 
-    console.log(completion.choices[0].message.content);
-    ```
+const openai = new OpenAI({
+    baseURL: 'https://cloud-api.near.ai/v1',
+    apiKey: 'your-api-key-here',
+});
 
-=== "curl"
+const completion = await openai.chat.completions.create({
+    model: 'deepseek-chat-v3-0324',
+    messages: [{
+        role: 'user', content: 'Hello, how are you?'
+    }]
+});
 
-    ```bash
-    curl https://cloud-api.near.ai/v1/chat/completions \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer your-api-key-here" \
-    -d '{
-        "model": "deepseek-chat-v3-0324",
-        "messages": [{
-            "role": "user",
-            "content": "Hello, how are you?"
-        }]
-    }'
-    ```
+console.log(completion.choices[0].message.content);
+```
+
+</TabItem>
+</Tabs>
 
 ---
 
@@ -105,5 +121,5 @@ You can find the model list from [https://cloud.near.ai/models](https://cloud.ne
 
 Now that you're set up with NEAR AI Cloud, explore these resources:
 
-- [:material-cog: Private Inference Deep Dive](./private-inference.md) - Learn about private inference
-- [:material-check-decagram: Verification Guide](./verification.md) - Understand how to verify private AI responses
+- [⚙️ Private Inference Deep Dive](./private-inference.md) - Learn about private inference
+- [✅ Verification Guide](./verification.md) - Understand how to verify private AI responses

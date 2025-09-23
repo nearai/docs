@@ -21,3 +21,44 @@
   align-items: center;
   justify-content: center;
 }
+
+.featureCard {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  border-radius: var(--ifm-card-border-radius);
+}
+
+:global(.card) {
+  height: 100%;
+  transition: all 0.3s ease;
+  text-decoration: none !important;
+  color: var(--ifm-font-color-base);
+}
+
+:global(.card:hover) {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 235, 154, 0.15);
+  text-decoration: none;
+}
+
+.featureCard h3 {
+  margin-bottom: 0.75rem;
+  transition: color 0.3s ease;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+:global(.card:hover) .featureCard h3 {
+  color: rgba(0, 235, 154, 0.9);
+}
+
+.featureCard p {
+  flex-grow: 1;
+  margin-bottom: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  opacity: 0.9;
+  text-align: left;
+}
