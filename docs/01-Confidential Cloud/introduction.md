@@ -1,7 +1,8 @@
 ---
 id: introduction
 title: Introduction to NEAR AI Cloud
-sidebar_label: Confidential Cloud
+sidebar_label: Introduction
+position: 1
 description: ""
 ---
 
