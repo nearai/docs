@@ -78,8 +78,8 @@ const config = {
             label: 'Home',
           },
           {
-            href: 'https://github.com/nearai/docs',
-            label: 'GitHub',
+            href: 'https://cloud.near.ai',
+            label: 'Developer Dashboard',
             position: 'right',
           },
         ],
@@ -120,6 +120,10 @@ const config = {
           {
             title: 'More',
             items: [
+              {
+                label: 'Developer Dashboard',
+                href: 'https://cloud.near.ai',
+              },
               {
                 label: 'GitHub',
                 href: 'https://github.com/nearai/docs',
