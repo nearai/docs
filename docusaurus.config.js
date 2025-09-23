@@ -91,8 +91,16 @@ const config = {
             title: 'Docs',
             items: [
               {
-                label: 'Tutorial',
-                to: '/docs/intro',
+                label: 'Quickstart',
+                to: '/docs/Confidential%20Cloud/quickstart',
+              },
+              {
+                label: 'Private Inference',
+                to: '/docs/Confidential%20Cloud/private-inference',
+              },
+              {
+                label: 'Verification',
+                to: '/docs/Confidential%20Cloud/verification',
               },
             ],
           },
@@ -100,16 +108,12 @@ const config = {
             title: 'Community',
             items: [
               {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-              },
-              {
-                label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
+                label: 'Telegram',
+                href: 'https://t.me/nearaialpha',
               },
               {
                 label: 'X',
-                href: 'https://x.com/docusaurus',
+                href: 'https://x.com/near_ai',
               },
             ],
           },
@@ -117,17 +121,13 @@ const config = {
             title: 'More',
             items: [
               {
-                label: 'Blog',
-                to: '/blog',
-              },
-              {
                 label: 'GitHub',
-                href: 'https://github.com/facebook/docusaurus',
+                href: 'https://github.com/nearai/docs',
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} NEAR AI`,
       },
       prism: {
         theme: prismThemes.github,
