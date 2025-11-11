@@ -455,7 +455,11 @@ table {
 
 @media screen and (max-width: 768px) {
   .doc-feature-card {
-    padding: 1.1rem;
+    padding: 1rem;
+    text-align: center;
+  }
+  .doc-feature-card p {
+    text-align: center;
   }
   .doc-beta-banner {
     flex-direction: column;

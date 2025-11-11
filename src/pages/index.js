@@ -62,7 +62,7 @@ export default function Home() {
                     your information remains yours alone.
                   </p>
                 </div>
-                <div className="row margin-vert--lg">
+                <div className={clsx("row", styles.featureRow)}>
                   <div className="col col--4">
                     <Link
                       to="docs/NEAR%20AI%20Cloud/quickstart"

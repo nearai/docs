@@ -87,6 +87,42 @@
   }
 }
 
+@media screen and (max-width: 768px) {
+  .heroBanner {
+    padding: 2.5rem 1.5rem 0.75rem;
+  }
+  .heroBanner h1 {
+    font-size: 2.2rem;
+    margin-bottom: 0.75rem;
+  }
+  .heroBanner .hero__subtitle {
+    font-size: 1rem;
+  }
+  .buttons {
+    flex-direction: column;
+  }
+  .featureRow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .featureCard {
+    padding: 1.15rem;
+    text-align: center;
+  }
+  .featureCard p {
+    text-align: center;
+  }
+}
+
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  .featureRow {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+}
+
 .buttons {
   display: flex;
   align-items: center;
