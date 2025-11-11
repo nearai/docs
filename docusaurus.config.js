@@ -11,7 +11,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'NEAR AI',
-  tagline: 'Building user-owned AI',
+  tagline: 'Private. Intelligent. Yours.',
   favicon: 'img/favicon.ico',
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
@@ -67,15 +67,13 @@ const config = {
       navbar: {
         logo: {
           alt: 'NEAR AI Logo',
-          src: 'img/nearAI-logo.svg',
-          width: 100,
+          src: 'img/nearAI-logo.jpg',
         },
         items: [
           {
-            type: 'docSidebar',
-            sidebarId: 'tutorialSidebar',
+            to: '/docs/NEAR%20AI%20Cloud/introduction',
             position: 'left',
-            label: 'Home',
+            label: 'Docs',
           },
           {
             href: 'https://cloud.near.ai',
@@ -92,15 +90,15 @@ const config = {
             items: [
               {
                 label: 'Quickstart',
-                to: '/docs/Confidential%20Cloud/quickstart',
+                to: '/docs/NEAR%20AI%20Cloud/quickstart',
               },
               {
                 label: 'Private Inference',
-                to: '/docs/Confidential%20Cloud/private-inference',
+                to: '/docs/NEAR%20AI%20Cloud/private-inference',
               },
               {
                 label: 'Verification',
-                to: '/docs/Confidential%20Cloud/verification',
+                to: '/docs/NEAR%20AI%20Cloud/verification',
               },
             ],
           },
@@ -131,7 +129,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} NEAR AI`,
+        copyright: `© ${new Date().getFullYear()} NEAR AI. All rights reserved.`,
       },
       prism: {
         theme: prismThemes.github,

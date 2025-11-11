@@ -23,7 +23,7 @@ This section will show you step-by-step processes for checking these proofs, val
 
 1. **Secure Key Generation:** When NEAR AI Cloud initializes, it generates a unique cryptographic signing key pair inside the Trusted Execution Environment (TEE). The private key never leaves the secure hardware.
 
-2. **Hardware Attestation:** The system generates attestation reports that cryptographically prove it's running on genuine NVIDIA H100/H200/B100 hardware in TEE mode within a Confidential VM.
+2. **Hardware Attestation:** The system generates attestation reports that cryptographically prove it's running on genuine NVIDIA H100/H200/B100 hardware in TEE mode within a NEAR%20AI VM.
 
 3. **Key Binding:** These attestation reports include the public key from step 1, creating a verifiable link between the secure hardware and the signing capability.
 
@@ -271,7 +271,7 @@ You can verify the Intel TDX quote with the value of `intel_quote` at [TEE Attes
 
 ## Chat Message Verification
 
-You can verify each chat message with NEAR AI Confidential Cloud. For this you will need:
+You can verify each chat message with NEAR AI NEAR%20AI Cloud. For this you will need:
 
 1. [Chat Message **REQUEST** Hash](#chat-request-hash)
 2. [Chat Message **RESPONSE** Hash](#chat-response-hash)
@@ -444,7 +444,7 @@ Here is an example of how to get the sha256 hash of your message response body:
 
 ### Chat Message Signature
 
-From the Chat Message Response you will get a unique chat `id` that is used to fetch the Chat Message Signature from NEAR AI Confidential Cloud.
+From the Chat Message Response you will get a unique chat `id` that is used to fetch the Chat Message Signature from NEAR AI NEAR%20AI Cloud.
 
 By default, you can query another API with the value of `id` in the response in 5 minutes after chat completion. The signature will be persistent in the LLM gateway once it's queried.
 

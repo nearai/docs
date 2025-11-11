@@ -1,28 +1,38 @@
-import clsx from 'clsx';
-import Link from '@docusaurus/Link';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import Layout from '@theme/Layout';
-import HomepageFeatures from '@site/src/components/HomepageFeatures';
+import clsx from "clsx";
+import Link from "@docusaurus/Link";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import Layout from "@theme/Layout";
+import HomepageFeatures from "@site/src/components/HomepageFeatures";
 
-import Heading from '@theme/Heading';
-import styles from './index.module.css';
+import Heading from "@theme/Heading";
+import styles from "./index.module.css";
+import VerifiedGif from "@site/static/img/verified.gif";
+import PrivateInferenceIcon from "@site/static/img/icons/private-inference.svg";
+import VerificationIcon from "@site/static/img/icons/verification.svg";
+import QuickstartIcon from "@site/static/img/icons/quickstart.svg";
 
 function HomepageHeader() {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext();
   return (
-    <header className={clsx('hero hero--primary', styles.heroBanner)}>
+    <header className={clsx("hero hero--primary", styles.heroBanner)}>
       <div className="container">
         <Heading as="h1" className="hero__title">
-          NEAR AI Cloud
+          Private. Intelligent. Yours.
         </Heading>
-        <p className="hero__subtitle">
-          AI that runs on your terms — fully private, verifiable, and user-owned
+        <p
+          className="hero__subtitle"
+          style={{
+            color: "var(--ifm-font-color-base)",
+          }}
+        >
+          Build private, user-owned AI with NEAR AI Cloud
         </p>
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="docs/Confidential%20Cloud/quickstart">
-            Get Started 🚀
+            to="docs/NEAR%20AI%20Cloud/quickstart"
+          >
+            Start Building
           </Link>
         </div>
       </div>
@@ -31,59 +41,93 @@ function HomepageHeader() {
 }
 
 export default function Home() {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
       title="NEAR AI Cloud - Private, Verifiable AI Platform"
-      description="Deploy and scale powerful language models on TEE-enabled GPUs with on-chain guarantees. Fully private, verifiable, and user-owned AI platform.">
+      description="Deploy and scale powerful language models on TEE-enabled GPUs with on-chain guarantees. Fully private, verifiable, and user-owned AI platform."
+    >
       <HomepageHeader />
       <main>
         <div className="container margin-vert--lg">
           <div className="row">
             <div className="col col--8 col--offset-2">
               <div className="markdown">
-                <p>
-                  Deploy and scale powerful language models on TEE-enabled GPUs with on-chain guarantees. 
-                  Built for the age of agentic AI, NEAR AI Cloud gives your models the power to act, reason, 
-                  and transact — while you retain complete control over the stack.
-                </p>
-
-                <h2>Getting Started</h2>
-                <p>Ready to build the future of AI? Get started with NEAR AI Cloud in minutes:</p>
-
+                <div className={styles.lead}>
+                  <p className={styles.leadCopy}>
+                    NEAR AI runs the models you trust in secure Trusted
+                    Execution Environments (TEEs), ensuring your data stays
+                    completely private. Model providers, cloud providers, and
+                    NEAR cannot access, view, or use your data for training —
+                    your information remains yours alone.
+                  </p>
+                </div>
                 <div className="row margin-vert--lg">
                   <div className="col col--4">
-                      <Link to="docs/Confidential%20Cloud/quickstart" className="card">
-                        <div className={`card__body ${styles.featureCard}`}>
-                          <h3>🚀 Quick Start</h3>
-                          <p>Get up and running in minutes with our comprehensive quickstart guide</p>
+                    <Link
+                      to="docs/NEAR%20AI%20Cloud/quickstart"
+                      className="card"
+                    >
+                      <div className={`card__body ${styles.featureCard}`}>
+                        <div className={styles.featureIcon}>
+                          <QuickstartIcon />
                         </div>
-                      </Link>
-                    </div>
-                    <div className="col col--4">
-                      <Link to="docs/Confidential%20Cloud/private-inference" className="card">
-                        <div className={`card__body ${styles.featureCard}`}>
-                          <h3>⚙️ Private Inference</h3>
-                          <p>Learn about our secure architecture and how we protect your data</p>
+                        <h3>Quick Start</h3>
+                        <p>
+                          Start building private, verifiable AI in minutes
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+                  <div className="col col--4">
+                    <Link
+                      to="docs/NEAR%20AI%20Cloud/private-inference"
+                      className="card"
+                    >
+                      <div className={`card__body ${styles.featureCard}`}>
+                        <div className={styles.featureIcon}>
+                          <PrivateInferenceIcon />
                         </div>
-                      </Link>
-                    </div>
-                    <div className="col col--4">
-                      <Link to="docs/Confidential%20Cloud/verification" className="card">
-                        <div className={`card__body ${styles.featureCard}`}>
-                          <h3>✅ Verification</h3>
-                          <p>Understand how to verify and validate AI responses for authenticity</p>
+                        <h3>Private Inference</h3>
+                        <p>
+                          Learn about the secure architecture and how your data is
+                          protected
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+                  <div className="col col--4">
+                    <Link
+                      to="docs/NEAR%20AI%20Cloud/verification"
+                      className="card"
+                    >
+                      <div className={`card__body ${styles.featureCard}`}>
+                        <div className={styles.featureIcon}>
+                          <VerificationIcon />
                         </div>
-                      </Link>
+                        <h3>Verification</h3>
+                        <p>
+                          Understand how to verify and validate secure interactions
+                          with AI models
+                        </p>
+                      </div>
+                    </Link>
                   </div>
                 </div>
-
-                <div className="alert alert--warning margin-vert--lg" role="alert">
-                  <strong>Beta Release</strong>
-                  <p>
-                    NEAR AI Cloud is currently in beta - we're rapidly building and shipping new features! 
-                    Join our community to help shape the future of private, verifiable AI.
-                  </p>
+                <div
+                  className={styles.betaBanner}
+                  role="note"
+                  aria-label="Beta release"
+                >
+                  <div className={styles.betaBadge}>Beta</div>
+                  <div className={styles.betaContent}>
+                    <h4 className={styles.betaTitle}>Beta Release</h4>
+                    <p className={styles.betaText}>
+                      NEAR AI Cloud is currently in beta. We're rapidly building
+                      and shipping new features. Join our community to help
+                      shape the future of private, verifiable AI.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

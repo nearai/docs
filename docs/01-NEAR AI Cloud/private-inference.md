@@ -31,7 +31,7 @@ NEAR AI Cloud uses a combination of Intel TDX and NVIDIA TEE technologies to cre
 
 ![TEE Architecture](../assets/tee.png)
 
-1. **Intel TDX (Trust Domain Extensions)**: Creates confidential virtual machines (CVMs) that isolate your AI workloads from the host system
+1. **Intel TDX (Trust Domain Extensions)**: Creates NEAR%20AI virtual machines (CVMs) that isolate your AI workloads from the host system
 2. **NVIDIA TEE**: Provides GPU-level isolation for model inference, ensuring model weights and computations remain private
 3. **Cryptographic Attestation**: Each TEE environment generates cryptographic proofs of its integrity and configuration
 

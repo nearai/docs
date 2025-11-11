@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 32 32">
+  <desc>
+    Startup Launch Streamline Icon adapted for NEAR AI
+  </desc>
+  <path d="M21.5625 6.5625h1.875a1.875 1.875 0 0 1 1.875 1.875v9.375a1.875 1.875 0 0 1-1.875 1.875H20.625" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+  <path d="M9.375 19.6875H6.5625a1.875 1.875 0 0 1-1.875-1.875v-9.375a1.875 1.875 0 0 1 1.875-1.875h1.875" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+  <path d="M23.21375 19.6875a3.75 3.75 0 0 1 3.35375 2.0725l2.295 4.58875a1.875 1.875 0 0 1-1.6775 2.71375H2.815A1.875 1.875 0 0 1 1.1375 26.34875l2.295-4.58875a3.75 3.75 0 0 1 3.35375-2.0725" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+  <path d="M17.8125 4.945C17.8125 2.73125 15 0.9375 15 0.9375S12.1875 2.73125 12.1875 4.945v9.35125h5.625Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+  <path d="M12.1875 14.29625H8.765a0.75 0.75 0 0 1-0.55625-0.2325 0.54 0.54 0 0 1-0.125-0.52 6.3975 6.3975 0 0 1 4.10375-4.434" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+  <path d="M17.8125 14.29625h3.4225a0.75 0.75 0 0 0 0.555-0.2325 0.5375 0.5375 0 0 0 0.125-0.52 6.41125 6.41125 0 0 0-4.1025-3.935" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+  <path d="M13.125 17.8125v2.8125" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+  <path d="M16.875 17.8125v5.625" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+</svg>
