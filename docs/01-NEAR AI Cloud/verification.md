@@ -64,7 +64,7 @@ https://cloud-api.near.ai/v1/attestation/report?model={model_name}
 <TabItem value="curl">
 
 ```bash
-curl https://cloud-api.near.ai/v1/attestation/report?model=deepseek-chat-v3-0324 \
+curl https://cloud-api.near.ai/v1/attestation/report?model=deepseek-ai/DeepSeek-V3.1 \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
@@ -74,7 +74,7 @@ curl https://cloud-api.near.ai/v1/attestation/report?model=deepseek-chat-v3-0324
 <TabItem value="javascript">
 
 ```js
-const MODEL_NAME = 'deepseek-chat-v3-0324'
+const MODEL_NAME = 'deepseek-ai/DeepSeek-V3.1'
 
 const response = await fetch(
   `https://cloud-api.near.ai/v1/attestation/report?model=${MODEL_NAME}`,
@@ -93,7 +93,7 @@ const response = await fetch(
 ```python
 import requests
 
-MODEL_NAME = 'deepseek-chat-v3-0324'
+MODEL_NAME = 'deepseek-ai/DeepSeek-V3.1'
 
 response = requests.get(
     f'https://cloud-api.near.ai/v1/attestation/report?model={MODEL_NAME}',
