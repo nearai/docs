@@ -1,0 +1,161 @@
+---
+id: quickstart
+title: Quickstart
+sidebar_label: Quickstart
+sidebar_position: 2
+description: ""
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import ModelsIcon from '@site/static/img/icons/models-icon.svg';
+import PrivateInferenceIcon from '@site/static/img/icons/private-inference.svg';
+import VerificationIcon from '@site/static/img/icons/verification.svg';
+
+# NEAR AI Cloud Quickstart
+
+[NEAR AI Cloud](https://cloud.near.ai) offers developers access to private, verifiable AI models through a unified API. This guide will walk you through setting up your account, creating API keys, and making your first requests.
+
+## Setup
+
+  1) **Create your account** - Sign up at [cloud.near.ai](https://cloud.near.ai/) 
+  2) **Add Credits** - Goto the "Credits" section and purchase credits based on your needs
+  3) **Generate API Key** - Goto the "API Keys" section and generate a new key
+
+:::tip Keep Your API Key Safe
+Never share your API key publicly or commit it to version control. If compromised, you can regenerate it anytime from your dashboard.
+:::
+
+---
+
+## Make Your First API Call
+
+NEAR AI Cloud uses an OpenAI-compatible API, making it easy to integrate with existing tools and libraries. The example below demonstrates a simple chat completion request to the DeepSeek model running in a secure TEE environment.
+
+:::note
+Replace `YOUR_API_KEY` with the API key you generated in the setup steps above.
+:::
+
+<Tabs
+  defaultValue="curl"
+  values={[
+    {label: 'curl', value: 'curl'},
+    {label: 'Python', value: 'python'},
+    {label: 'JavaScript', value: 'javascript'},
+  ]}>
+<TabItem value="curl">
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer YOUR_API_KEY" \
+-d '{
+    "model": "deepseek-chat-v3-0324",
+    "messages": [{
+        "role": "user",
+        "content": "Hello, NEAR AI!"
+    }]
+}'
+```
+
+</TabItem>
+<TabItem value="python">
+
+```python
+import openai
+
+client = openai.OpenAI(
+    base_url="https://cloud-api.near.ai/v1",
+    api_key="YOUR_API_KEY"
+)
+
+response = client.chat.completions.create(
+    model="deepseek-chat-v3-0324",
+    messages=[{
+        "role": "user", "content": "Hello, NEAR AI!"
+    }]
+)
+
+print(response.choices[0].message.content)
+```
+
+</TabItem>
+<TabItem value="javascript">
+
+```javascript
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+    baseURL: 'https://cloud-api.near.ai/v1',
+    apiKey: 'YOUR_API_KEY',
+});
+
+const completion = await openai.chat.completions.create({
+    model: 'deepseek-chat-v3-0324',
+    messages: [{
+        role: 'user', content: 'Hello, NEAR AI!'
+    }]
+});
+
+console.log(completion.choices[0].message.content);
+```
+
+</TabItem>
+</Tabs>
+
+### Expected Response
+
+The API will return a JSON response containing the model's completion:
+
+```json
+{
+  "id": "chatcmpl-d17ba5d9f393440591562f4ff006f246",
+  "object": "chat.completion",
+  "created": 1762892406,
+  "model": "deepseek-ai/DeepSeek-V3.1",
+  "choices": [{
+    "index": 0,
+    "message": {
+      "role": "assistant",
+      "content": "Hello there! 👋 Welcome to the NEAR ecosystem! \n\nHow can I assist you today? Whether you're looking to build on NEAR, explore dApps, set up a wallet, or learn about the protocol, I'm here to help! Just let me know what you need. 😊"
+    },
+    "finish_reason": "stop"
+  }],
+  "usage": {
+    "prompt_tokens": 13,
+    "total_tokens": 75,
+    "completion_tokens": 62
+  }
+}
+```
+
+All inference is performed within Trusted Execution Environments (TEEs), ensuring your data remains private and verifiable.
+
+---
+
+## Next Steps
+
+<div className="doc-feature-grid">
+  <a className="doc-feature-card" href="./models">
+    <div className="doc-feature-icon">
+      <ModelsIcon />
+    </div>
+    <h3>Explore Models</h3>
+    <p>Browse available AI models including DeepSeek, Llama, OpenAI, and Qwen</p>
+  </a>
+  <a className="doc-feature-card" href="./private-inference">
+    <div className="doc-feature-icon">
+      <PrivateInferenceIcon />
+    </div>
+    <h3>Private Inference</h3>
+    <p>Learn about the secure architecture and how your data is protected</p>
+  </a>
+  <a className="doc-feature-card" href="./verification">
+    <div className="doc-feature-icon">
+      <VerificationIcon />
+    </div>
+    <h3>Verification</h3>
+    <p>Understand how to verify and validate secure interactions with AI models</p>
+  </a>
+</div>
+
