@@ -453,6 +453,130 @@ table {
   opacity: 0.95;
 }
 
+.doc-model-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.75rem;
+  margin: 2.5rem 0 0;
+}
+
+.doc-model-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid var(--accent-border);
+  background: linear-gradient(
+    180deg,
+    var(--accent-gradient-top) 0%,
+    var(--accent-gradient-bottom) 100%
+  );
+  text-decoration: none;
+  color: var(--ifm-color-content);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.doc-model-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--accent-border-hover);
+  box-shadow: 0 18px 36px var(--accent-shadow);
+}
+
+.doc-model-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.doc-model-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+html[data-theme='light'] .doc-model-icon {
+  background: rgba(12, 138, 90, 0.16);
+}
+
+[data-theme='dark'] .doc-model-icon {
+  background: rgba(0, 235, 154, 0.18);
+}
+
+.doc-model-icon svg {
+  width: 30px;
+  height: 30px;
+  color: var(--ifm-color-primary);
+}
+
+.doc-model-card h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.doc-model-provider {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+html[data-theme='light'] .doc-model-provider {
+  color: #064b31;
+}
+
+[data-theme='dark'] .doc-model-provider {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.doc-model-card p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  opacity: 0.96;
+}
+
+.doc-model-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.doc-model-meta span {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--ifm-color-content);
+}
+
+html[data-theme='light'] .doc-model-meta span {
+  background: rgba(12, 138, 90, 0.14);
+  color: #064b31;
+}
+
+[data-theme='dark'] .doc-model-meta span {
+  background: rgba(0, 235, 154, 0.18);
+  color: var(--near-green);
+}
+
+.doc-model-meta span::before {
+  content: "•";
+  margin-right: 0.4rem;
+  opacity: 0.5;
+}
+
+.doc-model-meta span:first-child::before {
+  content: none;
+  margin: 0;
+}
+
 @media screen and (max-width: 768px) {
   .doc-feature-card {
     padding: 1rem;
@@ -467,5 +591,8 @@ table {
   }
   .doc-beta-badge {
     width: fit-content;
+  }
+  .doc-model-grid {
+    grid-template-columns: 1fr;
   }
 }
