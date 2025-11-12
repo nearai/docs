@@ -47,10 +47,8 @@ const config = {
       ({
         docs: {
           sidebarPath: './sidebars.js',
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/nearai/docs/tree/main/',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -71,7 +69,7 @@ const config = {
         },
         items: [
           {
-            to: '/docs/NEAR%20AI%20Cloud/introduction',
+            to: 'docs/introduction',
             position: 'left',
             label: 'Docs',
           },
@@ -90,15 +88,15 @@ const config = {
             items: [
               {
                 label: 'Quickstart',
-                to: '/docs/NEAR%20AI%20Cloud/quickstart',
+                to: 'docs/quickstart',
               },
               {
                 label: 'Private Inference',
-                to: '/docs/NEAR%20AI%20Cloud/private-inference',
+                to: 'docs/private-inference',
               },
               {
                 label: 'Verification',
-                to: '/docs/NEAR%20AI%20Cloud/verification',
+                to: 'docs/verification',
               },
             ],
           },

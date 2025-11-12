@@ -2,6 +2,7 @@
 id: verification
 title: Verification
 sidebar_label: Verification
+slug: /verification
 description: ""
 ---
 
@@ -23,7 +24,7 @@ This section will show you step-by-step processes for checking these proofs, val
 
 1. **Secure Key Generation:** When NEAR AI Cloud initializes, it generates a unique cryptographic signing key pair inside the Trusted Execution Environment (TEE). The private key never leaves the secure hardware.
 
-2. **Hardware Attestation:** The system generates attestation reports that cryptographically prove it's running on genuine NVIDIA H100/H200/B100 hardware in TEE mode within a NEAR%20AI VM.
+2. **Hardware Attestation:** The system generates attestation reports that cryptographically prove it's running on genuine NVIDIA H100/H200/B100 hardware in TEE mode within a confidential VM.
 
 3. **Key Binding:** These attestation reports include the public key from step 1, creating a verifiable link between the secure hardware and the signing capability.
 
@@ -126,7 +127,7 @@ response = requests.get(
 
 - `signing_address`: Account address generated inside TEE that will be used to sign the chat response.
 
-- `nvidia_payload` and `intel_quote`: Attestation report formatted for NVIDIA TEE and Intel TEE respectively. You can use them to verify the integrity of the TEE. See [Verify the Attestation](#verify-the-attestation) for more details.
+- `nvidia_payload` and `intel_quote`: Attestation report formatted for NVIDIA TEE and Intel TEE respectively. You can use them to verify the integrity of the TEE. See [Verify the Attestation](#verifying-model-attestation) for more details.
 
 - `all_attestations`: List attestations from all GPU nodes as multiple TEE nodes may be used to serve inference requests. You can utilize the `signing_address` from `all_attestations` to select the appropriate TEE node for verifying its integrity.
 
@@ -135,7 +136,7 @@ response = requests.get(
 
 
 :::note
-    This endpoint requires [NEAR AI Cloud Account & API Key](./get-started.md#quick-setup)
+    This endpoint requires [NEAR AI Cloud Account & API Key](./quickstart)
 
     **Implementation**: This endpoint is defined in the [NEAR AI Private ML SDK](https://github.com/nearai/private-ml-sdk/blob/a23fa797dfd7e676fba08cba68471b51ac9a13d9/vllm-proxy/src/app/api/v1/openai.py#L170).
 :::
@@ -271,10 +272,10 @@ You can verify the Intel TDX quote with the value of `intel_quote` at [TEE Attes
 
 ## Chat Message Verification
 
-You can verify each chat message with NEAR AI NEAR%20AI Cloud. For this you will need:
+You can verify each chat message with NEAR AI Cloud. For this you will need:
 
-1. [Chat Message **REQUEST** Hash](#chat-request-hash)
-2. [Chat Message **RESPONSE** Hash](#chat-response-hash)
+1. [Chat Message **REQUEST** Hash](#chat-message-request-hash)
+2. [Chat Message **RESPONSE** Hash](#chat-message-response-hash)
 3. [Chat Message Signature](#chat-message-signature)
 
 ---

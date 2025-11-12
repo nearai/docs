@@ -30,7 +30,7 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="docs/NEAR%20AI%20Cloud/quickstart"
+            to="docs/quickstart"
           >
             Start Building
           </Link>
@@ -65,7 +65,7 @@ export default function Home() {
                 <div className={clsx("row", styles.featureRow)}>
                   <div className="col col--4">
                     <Link
-                      to="docs/NEAR%20AI%20Cloud/quickstart"
+                      to="docs/quickstart"
                       className="card"
                     >
                       <div className={`card__body ${styles.featureCard}`}>
@@ -81,7 +81,7 @@ export default function Home() {
                   </div>
                   <div className="col col--4">
                     <Link
-                      to="docs/NEAR%20AI%20Cloud/private-inference"
+                      to="docs/private-inference"
                       className="card"
                     >
                       <div className={`card__body ${styles.featureCard}`}>
@@ -98,7 +98,7 @@ export default function Home() {
                   </div>
                   <div className="col col--4">
                     <Link
-                      to="docs/NEAR%20AI%20Cloud/verification"
+                      to="docs/verification"
                       className="card"
                     >
                       <div className={`card__body ${styles.featureCard}`}>

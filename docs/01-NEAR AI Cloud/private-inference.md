@@ -2,6 +2,7 @@
 id: private-inference
 title: Private Inference
 sidebar_label: Private Inference
+slug: /private-inference
 description: ""
 ---
 
@@ -31,7 +32,7 @@ NEAR AI Cloud uses a combination of Intel TDX and NVIDIA TEE technologies to cre
 
 ![TEE Architecture](../assets/tee.png)
 
-1. **Intel TDX (Trust Domain Extensions)**: Creates NEAR%20AI virtual machines (CVMs) that isolate your AI workloads from the host system
+1. **Intel TDX (Trust Domain Extensions)**: Creates confidential virtual machines (CVMs) that isolate your AI workloads from the host system
 2. **NVIDIA TEE**: Provides GPU-level isolation for model inference, ensuring model weights and computations remain private
 3. **Cryptographic Attestation**: Each TEE environment generates cryptographic proofs of its integrity and configuration
 
@@ -121,5 +122,5 @@ NEAR AI Cloud's private inference protects against:
 
 Ready to implement private inference in your applications?
 
-- [🚀 Get Started](./get-started.md) - Set up your first private inference request
-- [✅ Verification Guide](./verification.md) - Learn about attestation and signature verification
+- [🚀 Get Started](./quickstart) - Set up your first private inference request
+- [✅ Verification Guide](./verification) - Learn about attestation and signature verification
