@@ -46,10 +46,12 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
+          routeBasePath: '/',
           sidebarPath: './sidebars.js',
           editUrl:
             'https://github.com/nearai/docs/tree/main/',
         },
+        blog: false,
         theme: {
           customCss: './src/css/custom.css',
         },
@@ -74,7 +76,7 @@ const config = {
         },
         items: [
           {
-            to: 'docs/introduction',
+            to: 'introduction',
             position: 'left',
             label: 'Docs',
           },
@@ -93,15 +95,15 @@ const config = {
             items: [
               {
                 label: 'Quickstart',
-                to: 'docs/quickstart',
+                to: 'quickstart',
               },
               {
                 label: 'Private Inference',
-                to: 'docs/private-inference',
+                to: 'private-inference',
               },
               {
                 label: 'Verification',
-                to: 'docs/verification',
+                to: 'verification',
               },
             ],
           },

@@ -349,8 +349,8 @@ table {
 
 .doc-feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
   margin-bottom: 2.5rem;
 }
 
@@ -358,9 +358,9 @@ table {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.75rem;
-  padding: 1.25rem;
-  border-radius: 16px;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 12px;
   border: 1px solid var(--accent-border);
   background: linear-gradient(
     180deg,
@@ -373,21 +373,21 @@ table {
 }
 
 .doc-feature-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   border-color: var(--accent-border-hover);
-  box-shadow: 0 12px 28px var(--accent-shadow);
+  box-shadow: 0 8px 20px var(--accent-shadow);
 }
 
 .doc-feature-card h3 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1rem;
   text-align: center;
 }
 
 .doc-feature-card p {
   margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.6;
+  font-size: 0.875rem;
+  line-height: 1.5;
   text-align: center;
   opacity: 0.95;
 }
@@ -399,8 +399,8 @@ table {
 }
 
 .doc-feature-icon svg {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   color: var(--ifm-color-primary);
 }
 
@@ -579,11 +579,16 @@ html[data-theme='light'] .doc-model-meta span {
 
 @media screen and (max-width: 768px) {
   .doc-feature-card {
-    padding: 1rem;
+    padding: 0.875rem;
     text-align: center;
   }
   .doc-feature-card p {
     text-align: center;
+    font-size: 0.8125rem;
+  }
+  .doc-feature-icon svg {
+    width: 32px;
+    height: 32px;
   }
   .doc-beta-banner {
     flex-direction: column;
