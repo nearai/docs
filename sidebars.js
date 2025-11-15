@@ -15,22 +15,22 @@
  @type {import('@docusaurus/plugin-content-docs').SidebarsConfig}
  */
 const sidebars = {
-  tutorialSidebar: [
-    'NEAR AI Cloud/introduction',
-    'NEAR AI Cloud/quickstart',
-    'NEAR AI Cloud/private-inference',
-    'NEAR AI Cloud/models',
+  docsSidebar: [
+    'cloud/introduction',
+    'cloud/quickstart',
+    'cloud/private-inference',
+    'cloud/models',
     {
       type: 'category',
       label: 'Verification',
       link: {
         type: 'doc',
-        id: 'NEAR AI Cloud/verification/verification',
+        id: 'cloud/verification/verification',
       },
       collapsed: false,
       items: [
-        'NEAR AI Cloud/verification/model-verification',
-        'NEAR AI Cloud/verification/chat-verification',
+        'cloud/verification/model-verification',
+        'cloud/verification/chat-verification',
       ],
     },
   ],

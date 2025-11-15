@@ -2,7 +2,8 @@
 id: chat-verification
 title: Chat Message Verification
 sidebar_label: Chat Verification
-slug: /verification/chat
+slug: /cloud/verification/chat
+sidebar_position: 5
 description: ""
 ---
 

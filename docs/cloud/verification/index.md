@@ -2,7 +2,7 @@
 id: verification
 title: Verification
 sidebar_label: Verification
-slug: /verification
+slug: /cloud/verification
 description: ""
 ---
 

@@ -76,7 +76,7 @@ const config = {
         },
         items: [
           {
-            to: 'introduction',
+            to: 'cloud/introduction',
             position: 'left',
             label: 'Docs',
           },

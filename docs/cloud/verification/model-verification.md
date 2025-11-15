@@ -2,7 +2,7 @@
 id: model-verification
 title: Model Verification
 sidebar_label: Model Verification
-slug: /verification/model
+slug: /cloud/verification/model
 description: ""
 ---
 
