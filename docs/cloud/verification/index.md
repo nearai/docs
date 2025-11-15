@@ -6,17 +6,11 @@ slug: /cloud/verification
 description: ""
 ---
 
-# Verification
-
 [NEAR AI Cloud](https://cloud.near.ai) operates in Trusted Execution Environments (TEEs) which use cryptographic proofs to verify that your private AI conversations actually happened in secure, isolated environments - not on compromised systems or with unauthorized access.
 
 This section will show you step-by-step processes for checking these proofs, validating digital signatures, and confirming that your AI interactions haven't been tampered with.
 
----
-
-## Overview
-
-### How NEAR AI Cloud Verification Works:
+## How NEAR AI Cloud Verification Works
 
 1. **Secure Key Generation:** When NEAR AI Cloud initializes, it generates a unique cryptographic signing key pair inside the Trusted Execution Environment (TEE). The private key never leaves the secure hardware.
 

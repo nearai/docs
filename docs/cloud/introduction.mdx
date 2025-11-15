@@ -9,42 +9,82 @@ description: ""
 import QuickstartIcon from '@site/static/img/icons/quickstart.svg';
 import PrivateInferenceIcon from '@site/static/img/icons/private-inference.svg';
 import VerificationIcon from '@site/static/img/icons/verification.svg';
+import VerifiedPrivateIcon from '@site/static/img/icons/verified-private.svg';
+import UnifiedApiIcon from '@site/static/img/icons/unified-api.svg';
+import PaymentsIcon from '@site/static/img/icons/payments.svg';
+import { FeatureCard, FeatureCardGrid } from '@site/src/components/FeatureCard';
 
-NEAR AI Cloud is the platform where AI runs on your terms — fully private, verifiable, and user-owned. 
-Deploy and scale powerful language models on TEE-enabled GPUs with on-chain guarantees. Built for the 
-age of agentic AI, NEAR AI Cloud gives your models the power to act, reason, and transact — while you 
-retain complete control over the stack.
+**Run AI models with complete privacy.** NEAR AI Cloud delivers verifiable private inference through hardware-enforced security, giving you access to leading AI models without compromising your data. Built on Trusted Execution Environments (TEEs) and blockchain verification, your computations remain private, tamper-proof, and under your control.
 
-NEAR AI Cloud provides:
+## Why NEAR AI Cloud?
 
-- **Unified API for AI Models**: Access leading AI models like DeepSeek, Llama, OpenAI, Qwen and more through a single API
-- **Private Inference**: All AI computations run in Trusted Execution Environments (TEEs) ensuring end-to-end privacy and verifiability
-- **Flexible Payments**: Top up or pay as you go
-
-
-<div className="doc-feature-grid">
-  <a className="doc-feature-card" href="./quickstart">
-    <div className="doc-feature-icon">
-      <QuickstartIcon />
-    </div>
-    <h3>Quick Start</h3>
-    <p>Start building private, verifiable AI in minutes</p>
-  </a>
-  <a className="doc-feature-card" href="./private-inference">
-    <div className="doc-feature-icon">
-      <PrivateInferenceIcon />
-    </div>
-    <h3>Private Inference</h3>
-    <p> Learn about the secure architecture and how your data is protected</p>
-  </a>
-  <a className="doc-feature-card" href="./verification">
-    <div className="doc-feature-icon">
-      <VerificationIcon />
-    </div>
-    <h3>Verification</h3>
-    <p> Understand how to verify and validate secure interactions with AI models</p>
-  </a>
+<div className="feature-highlight">
+  <div className="feature-highlight-icon">
+    <VerifiedPrivateIcon />
+  </div>
+  <div className="feature-highlight-content">
+    <h3>Verifiable Private Inference</h3>
+    <p>All AI computations run privately and securely in Trusted Execution Environments (TEEs) ensuring no one can access your data. </p>
+  </div>
 </div>
+
+<div className="feature-highlights">
+  <div className="feature-highlight">
+    <div className="feature-highlight-icon">
+      <UnifiedApiIcon />
+    </div>
+    <div className="feature-highlight-content">
+      <h3>Unified API for AI Models</h3>
+      <p>Access leading AI models like DeepSeek, Llama, OpenAI, Qwen and more through a single, streamlined API</p>
+    </div>
+  </div>
+
+  <div className="feature-highlight">
+    <div className="feature-highlight-icon">
+      <PaymentsIcon />
+    </div>
+    <div className="feature-highlight-content">
+      <h3>Flexible Payments</h3>
+      <p>Top up or pay as you go with seamless payment options that scale with your needs</p>
+    </div>
+  </div>
+</div>
+
+## Why Trusted Execution Environments?
+
+Trusted Execution Environments (TEEs) are encrypted secure areas inside CPUs and GPUs that run code and process data in complete isolation. Think of them as secure vaults within the hardware itself.
+
+**What makes TEEs secure:**
+- **Isolated Processing**: Data inside the TEE cannot be seen by the host OS, other applications, or even cloud infrastructure providers
+- **Tamper-Proof**: Code and data inside the TEE cannot be modified or intercepted
+- **Verifiable**: You can cryptographically verify that the TEE is genuine and model requests are processed in that secure environment.
+
+## Your Data Stays Yours
+
+With NEAR AI Cloud, your data remains truly private. Model providers, cloud infrastructure providers, and NEAR itself cannot see, access, mine, or use your data to train models. You get the power of leading AI models — like DeepSeek, Llama, OpenAI, and Qwen — with absolute confidence in your data privacy.
+
+## Get Started
+
+<FeatureCardGrid>
+  <FeatureCard
+    icon={QuickstartIcon}
+    title="Quick Start"
+    description="Start building private, verifiable AI in minutes"
+    href="./quickstart"
+  />
+  <FeatureCard
+    icon={PrivateInferenceIcon}
+    title="Private Inference"
+    description="Learn about the secure architecture and how your data is protected"
+    href="./private-inference"
+  />
+  <FeatureCard
+    icon={VerificationIcon}
+    title="Verification"
+    description="Understand how to verify and validate secure interactions with AI models"
+    href="./verification"
+  />
+</FeatureCardGrid>
 
 <div className="doc-beta-banner" role="note" aria-label="Beta release">
   <div className="doc-beta-badge">Beta</div>

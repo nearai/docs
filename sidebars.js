@@ -18,8 +18,8 @@ const sidebars = {
   docsSidebar: [
     'cloud/introduction',
     'cloud/quickstart',
-    'cloud/private-inference',
     'cloud/models',
+    'cloud/private-inference',
     {
       type: 'category',
       label: 'Verification',
