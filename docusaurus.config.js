@@ -95,15 +95,15 @@ const config = {
             items: [
               {
                 label: 'Quickstart',
-                to: 'quickstart',
+                to: 'cloud/quickstart',
               },
               {
                 label: 'Private Inference',
-                to: 'private-inference',
+                to: 'cloud/private-inference',
               },
               {
                 label: 'Verification',
-                to: 'verification',
+                to: 'cloud/verification',
               },
             ],
           },

@@ -65,7 +65,7 @@ export default function Home() {
                 <div className={clsx("row", styles.featureRow)}>
                   <div className="col col--4">
                     <Link
-                      to="quickstart"
+                      to="cloud/quickstart"
                       className="card"
                     >
                       <div className={`card__body ${styles.featureCard}`}>
@@ -81,7 +81,7 @@ export default function Home() {
                   </div>
                   <div className="col col--4">
                     <Link
-                      to="private-inference"
+                      to="cloud/private-inference"
                       className="card"
                     >
                       <div className={`card__body ${styles.featureCard}`}>
@@ -98,7 +98,7 @@ export default function Home() {
                   </div>
                   <div className="col col--4">
                     <Link
-                      to="verification"
+                      to="cloud/verification"
                       className="card"
                     >
                       <div className={`card__body ${styles.featureCard}`}>
