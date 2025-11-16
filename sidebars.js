@@ -20,28 +20,28 @@ const sidebars = {
       type: 'doc',
       id: 'cloud/introduction',
       customProps: {
-        icon: '/img/icons/introduction.svg',
+        icon: '/docs/img/icons/introduction.svg',
       },
     },
     {
       type: 'doc',
       id: 'cloud/quickstart',
       customProps: {
-        icon: '/img/icons/quickstart.svg',
+        icon: '/docs/img/icons/quickstart.svg',
       },
     },
     {
       type: 'doc',
       id: 'cloud/models',
       customProps: {
-        icon: '/img/icons/ai.svg',
+        icon: '/docs/img/icons/ai.svg',
       },
     },
     {
       type: 'doc',
       id: 'cloud/private-inference',
       customProps: {
-        icon: '/img/icons/private-inference.svg',
+        icon: '/docs/img/icons/private-inference.svg',
       },
     },
     {
@@ -53,7 +53,7 @@ const sidebars = {
       },
       collapsed: true,
       customProps: {
-        icon: '/img/icons/verification.svg',
+        icon: '/docs/img/icons/verification.svg',
       },
       items: [
         'cloud/verification/model-verification',
