@@ -722,3 +722,8 @@ html[data-theme='light'] .doc-model-meta span {
     grid-template-columns: 1fr;
   }
 }
+
+/* Indent nested sidebar items (subitems under categories) */
+.menu__list .menu__list {
+  padding-left: 2rem;
+}

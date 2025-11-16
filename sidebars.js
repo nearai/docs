@@ -16,10 +16,34 @@
  */
 const sidebars = {
   docsSidebar: [
-    'cloud/introduction',
-    'cloud/quickstart',
-    'cloud/models',
-    'cloud/private-inference',
+    {
+      type: 'doc',
+      id: 'cloud/introduction',
+      customProps: {
+        icon: '/docs/img/icons/introduction.svg',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'cloud/quickstart',
+      customProps: {
+        icon: '/docs/img/icons/quickstart.svg',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'cloud/models',
+      customProps: {
+        icon: '/docs/img/icons/ai.svg',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'cloud/private-inference',
+      customProps: {
+        icon: '/docs/img/icons/private-inference.svg',
+      },
+    },
     {
       type: 'category',
       label: 'Verification',
@@ -27,7 +51,10 @@ const sidebars = {
         type: 'doc',
         id: 'cloud/verification/verification',
       },
-      collapsed: false,
+      collapsed: true,
+      customProps: {
+        icon: '/docs/img/icons/verification.svg',
+      },
       items: [
         'cloud/verification/model-verification',
         'cloud/verification/chat-verification',
