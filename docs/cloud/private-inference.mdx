@@ -69,36 +69,36 @@ NEAR AI Cloud's private inference provides three core guarantees:
 
 NEAR AI Cloud combines Intel TDX and NVIDIA TEE technologies to create isolated, secure environments for AI computation:
 
-**Intel TDX (Trust Domain Extensions)**
-Creates confidential virtual machines (CVMs) that isolate your AI workloads from the host system, preventing unauthorized access to data in memory.
+-  **Intel TDX (Trust Domain Extensions)**
+    Creates confidential virtual machines (CVMs) that isolate your AI workloads from the host system, preventing unauthorized access to data in memory.
 
-**NVIDIA TEE**
-Provides GPU-level isolation for model inference, ensuring model weights and computations remain completely private during processing.
+- **NVIDIA TEE**
+    Provides GPU-level isolation for model inference, ensuring model weights and computations remain completely private during processing.
 
-**Cryptographic Attestation**
-Each TEE environment generates cryptographic proofs of its integrity and configuration, enabling independent verification of the secure execution environment.
+- **Cryptographic Attestation**
+    Each TEE environment generates cryptographic proofs of its integrity and configuration, enabling independent verification of the secure execution environment.
 
 ### The Inference Process
 
 When you make a request to NEAR AI Cloud, your data flows through a secure pipeline designed to maintain privacy at every step:
 
-**1. Request Initiation**
-You send chat completion requests to the LLM Gateway, which operates within a secure TEE environment and manages authentication.
+    1. **Request Initiation:**
+    You send chat completion requests to the LLM Gateway, which operates within a secure TEE environment and manages authentication.
 
-**2. Secure Request Routing**
-The LLM Gateway routes your request to the appropriate Private LLM Node based on the requested model, availability, and load balancing requirements.
+    2. **Secure Request Routing:**
+    The LLM Gateway routes your request to the appropriate Private LLM Node based on the requested model, availability, and load balancing requirements.
 
-**3. Secure Inference**
-AI inference computations execute inside the Private LLM Node's TEE, where all data and model weights are protected by hardware-enforced isolation.
+    3. **Secure Inference:**
+    AI inference computations execute inside the Private LLM Node's TEE, where all data and model weights are protected by hardware-enforced isolation.
 
-**4. Attestation Generation**
-The TEE generates CPU and GPU attestation reports that provide cryptographic proof of the environment's integrity and configuration.
+    4. **Attestation Generation**
+    The TEE generates CPU and GPU attestation reports that provide cryptographic proof of the environment's integrity and configuration.
 
-**5. Cryptographic Signing**
-The TEE cryptographically signs both your original request and the inference results to ensure authenticity and prevent tampering.
+    5. **Cryptographic Signing:**
+    The TEE cryptographically signs both your original request and the inference results to ensure authenticity and prevent tampering.
 
-**6. Verifiable Response**
-You receive the AI response along with cryptographic signatures and attestation data for independent verification.
+    6. **Verifiable Response:**
+    You receive the AI response along with cryptographic signatures and attestation data for independent verification.
 
 ---
 
@@ -125,9 +125,7 @@ NEAR AI Cloud operates through a distributed architecture consisting of an LLM G
                             └─────────────────┘
 ```
 
-### Key Components
-
-**Private LLM Nodes**
+### Private LLM Nodes
 
 Each Private LLM Node provides secure, isolated AI inference capabilities:
 
@@ -136,7 +134,7 @@ Each Private LLM Node provides secure, isolated AI inference capabilities:
 - **Private-ML-SDK**: Manages secure model execution, attestation generation, and cryptographic signing
 - **Health Monitoring**: Automated liveness checks and monitoring ensure continuous availability
 
-**LLM Gateway**
+### LLM Gateway
 
 The LLM Gateway serves as the central orchestration layer:
 
@@ -153,29 +151,29 @@ The LLM Gateway serves as the central orchestration layer:
 
 NEAR AI Cloud's private inference implements multiple layers of security to protect your data:
 
-**Hardware-Level Isolation**
-TEEs create isolated execution environments enforced at the hardware level, preventing unauthorized access to memory and computation even from privileged system administrators or cloud providers.
+-  **Hardware-Level Isolation**
+  TEEs create isolated execution environments enforced at the hardware level, preventing unauthorized access to memory and computation even from privileged system administrators or cloud providers.
 
-**Secure Communication**
+- **Secure Communication**
 All communication between your applications and the LLM infrastructure uses end-to-end encryption, protecting data in transit from network-level attacks.
 
-**Cryptographic Attestation**
+- **Cryptographic Attestation**
 Every TEE environment generates cryptographic proofs that verify the integrity of the execution environment, allowing you to independently confirm your computations occurred in a genuine, unmodified TEE.
 
-**Result Authentication**
+- **Result Authentication**
 All AI outputs are cryptographically signed inside the TEE before leaving the secure environment, ensuring the authenticity and integrity of responses.
 
 ### Threat Protection
 
 NEAR AI Cloud's architecture protects against common attack vectors:
 
-**Malicious Infrastructure Providers**
+- **Malicious Infrastructure Providers**
 Hardware-enforced TEE isolation prevents cloud infrastructure providers from accessing your prompts, model weights, or inference results, even with physical access to servers.
 
-**Network-Based Attacks**
+- **Network-Based Attacks**
 End-to-end encryption protects your data during transmission, preventing man-in-the-middle attacks and network eavesdropping.
 
-**Model Extraction Attempts**
+- **Model Extraction Attempts**
 Model weights remain encrypted and isolated within the TEE, making extraction computationally infeasible even for attackers with privileged system access.
 
 **Result Tampering**
