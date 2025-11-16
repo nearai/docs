@@ -6,24 +6,60 @@ slug: /cloud/private-inference
 description: "Learn how NEAR AI Cloud's private inference leverages TEEs to provide cryptographically verifiable AI computations with complete data privacy and security."
 ---
 
+import PrivateInferenceIcon from '@site/static/img/icons/private-inference.svg';
 import VerificationIcon from '@site/static/img/icons/verification.svg';
+import PerformanceIcon from '@site/static/img/icons/performance.svg';
 import { FeatureCard, FeatureCardGrid } from '@site/src/components/FeatureCard';
 
 # Private Inference
 
-NEAR AI Cloud's private inference capabilities leverage Trusted Execution Environments (TEEs) to provide cryptographically verifiable AI computations while ensuring complete data privacy. This guide explains how private inference works, its architecture, and security guarantees.
+When you use traditional AI services, your data passes through systems controlled by cloud providers and AI companies. Your prompts, the AI's responses, and even the processing of your requests are all visible to these third parties. This creates serious privacy concerns for sensitive applications.
 
-Private inference ensures that your AI model interactions are completely private and verifiable, with cryptographic proofs that guarantee the integrity of every computation.
+**Private inference solves this problem.** It ensures that AI computations happen in a completely isolated environment where no one—not the cloud provider, not the model provider, not even NEAR—can access your data. At the same time, you can independently verify that your requests were actually processed in this secure environment through cryptographic attestation.
+
+This guide explains how NEAR AI Cloud implements private inference using Trusted Execution Environments (TEEs), the architecture that protects your data, and the security guarantees you can rely on.
 
 ---
 
 ## What is Private Inference?
 
-Private inference in NEAR AI Cloud ensures that your AI model interactions are:
+Private inference is a method of running AI models where both your input data and the model's outputs remain completely hidden from everyone except you—even while the computation happens on remote servers you don't control.
 
-- **🔒 Private**: Your prompts, model weights, and outputs are never visible to the infrastructure provider
-- **🛡️ Verifiable**: Every computation is cryptographically signed and can be verified to have occurred in a secure environment
-- **⚡ Fast**: Optimized for high-throughput inference with minimal latency overhead
+Traditional cloud AI services require you to trust that providers won't access your data. Private inference eliminates this need for trust by using hardware-based security that makes it technically impossible for anyone to see your data, even with physical access to the servers.
+
+NEAR AI Cloud's private inference provides three core guarantees:
+
+<div className="feature-highlights">
+  <div className="feature-highlight">
+    <div className="feature-highlight-icon">
+      <PrivateInferenceIcon />
+    </div>
+    <div className="feature-highlight-content">
+      <h3>Complete Privacy</h3>
+      <p>Your prompts, model weights, and outputs are encrypted and isolated in hardware-secured environments. Infrastructure providers, model providers, and NEAR cannot access your data at any point in the process.</p>
+    </div>
+  </div>
+
+  <div className="feature-highlight">
+    <div className="feature-highlight-icon">
+      <VerificationIcon />
+    </div>
+    <div className="feature-highlight-content">
+      <h3>Cryptographic Verification</h3>
+      <p>Every computation generates cryptographic proof that it occurred inside a genuine, secure TEE. You can independently verify that your AI requests were processed in a protected environment without trusting any third party.</p>
+    </div>
+  </div>
+
+  <div className="feature-highlight">
+    <div className="feature-highlight-icon">
+      <PerformanceIcon />
+    </div>
+    <div className="feature-highlight-content">
+      <h3>Production Performance</h3>
+      <p>Hardware-accelerated TEEs with NVIDIA H200 GPUs deliver high-throughput inference with minimal latency overhead, making private inference practical for real-world applications.</p>
+    </div>
+  </div>
+</div>
 
 ---
 
@@ -31,38 +67,44 @@ Private inference in NEAR AI Cloud ensures that your AI model interactions are:
 
 ### Trusted Execution Environment (TEE)
 
-NEAR AI Cloud uses a combination of Intel TDX and NVIDIA TEE technologies to create isolated, secure environments for AI computation:
+NEAR AI Cloud combines Intel TDX and NVIDIA TEE technologies to create isolated, secure environments for AI computation:
 
-![TEE Architecture](../assets/tee.png)
+-  **Intel TDX (Trust Domain Extensions)**
+    Creates confidential virtual machines (CVMs) that isolate your AI workloads from the host system, preventing unauthorized access to data in memory.
 
-1. **Intel TDX (Trust Domain Extensions)**: Creates confidential virtual machines (CVMs) that isolate your AI workloads from the host system
-2. **NVIDIA TEE**: Provides GPU-level isolation for model inference, ensuring model weights and computations remain private
-3. **Cryptographic Attestation**: Each TEE environment generates cryptographic proofs of its integrity and configuration
+- **NVIDIA TEE**
+    Provides GPU-level isolation for model inference, ensuring model weights and computations remain completely private during processing.
 
-### The Private Inference Process
+- **Cryptographic Attestation**
+    Each TEE environment generates cryptographic proofs of its integrity and configuration, enabling independent verification of the secure execution environment.
 
-```mermaid
-graph TD
-    A[User Request] --> B[Secure Request Routing]
-    B --> C[Secure Inference]
-    C --> D[Cryptographic Signature]
-    D --> E[Verifiable Response]
-    
-    C --> F[Attestation Report]
-```
+### The Inference Process
 
-1. **Request Initiation**: Users send chat completion requests to the LLM Gateway, which operates within a secure TEE environment
-2. **Secure Request Routing**: The LLM Gateway securely routes requests to appropriate Private LLM Nodes based on model availability and load balancing
-3. **Secure Inference**: AI inference computations are performed inside the Private LLM Nodes, with all data and model weights protected by TEE isolation
-4. **Attestation Generation**: CPU and GPU attestation reports are generated, providing cryptographic proof of the TEE environment's integrity
-5. **Cryptographic Signing**: The TEE cryptographically signs both the original request and the inference results to ensure authenticity and prevent tampering
-6. **Verifiable Response**: Users receive the AI response along with cryptographic signatures for complete verification
+When you make a request to NEAR AI Cloud, your data flows through a secure pipeline designed to maintain privacy at every step:
+
+    1. **Request Initiation:**
+    You send chat completion requests to the LLM Gateway, which operates within a secure TEE environment and manages authentication.
+
+    2. **Secure Request Routing:**
+    The LLM Gateway routes your request to the appropriate Private LLM Node based on the requested model, availability, and load balancing requirements.
+
+    3. **Secure Inference:**
+    AI inference computations execute inside the Private LLM Node's TEE, where all data and model weights are protected by hardware-enforced isolation.
+
+    4. **Attestation Generation**
+    The TEE generates CPU and GPU attestation reports that provide cryptographic proof of the environment's integrity and configuration.
+
+    5. **Cryptographic Signing:**
+    The TEE cryptographically signs both your original request and the inference results to ensure authenticity and prevent tampering.
+
+    6. **Verifiable Response:**
+    You receive the AI response along with cryptographic signatures and attestation data for independent verification.
 
 ---
 
 ## Architecture Overview
 
-NEAR AI Cloud operates LLM Gateway and a network of Private LLM Nodes:
+NEAR AI Cloud operates through a distributed architecture consisting of an LLM Gateway and a network of Private LLM Nodes:
 
 ```
     ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -71,7 +113,7 @@ NEAR AI Cloud operates LLM Gateway and a network of Private LLM Nodes:
     ├─────────────────┤    ├─────────────────┤    ├─────────────────┤
     │ Intel TDX CVM   │    │ Intel TDX CVM   │    │ Intel TDX CVM   │
     │ NVIDIA TEE      │    │ NVIDIA TEE      │    │ NVIDIA TEE      │
-    │ Private-ML-SDK  │    │ Private-ML-SDK  │    │ Private-ML-SDK  │ 
+    │ Private-ML-SDK  │    │ Private-ML-SDK  │    │ Private-ML-SDK  │
     └─────────────────┘    └─────────────────┘    └─────────────────┘
             │                       │                       │
             └───────────────────────┼───────────────────────┘
@@ -83,41 +125,59 @@ NEAR AI Cloud operates LLM Gateway and a network of Private LLM Nodes:
                             └─────────────────┘
 ```
 
-### Key Components
+### Private LLM Nodes
 
-#### 1. **Private LLM Nodes**
-- Standardized hardware: 8x NVIDIA H200 GPUs per machine
-- Intel TDX-enabled CPUs for secure virtualization
-- Private-ML-SDK for secure model execution and attestation
-- Automated liveness monitoring and health checks
+Each Private LLM Node provides secure, isolated AI inference capabilities:
 
-#### 2. **LLM Gateway**
-- Model registration and provider management
-- Request routing and load balancing across Private LLM Nodes
-- Attestation verification and storage
-- API key management and usage tracking
+- **Standardized Hardware**: 8x NVIDIA H200 GPUs per node, optimized for high-performance inference
+- **Intel TDX-enabled CPUs**: Enable secure virtualization with hardware-enforced isolation
+- **Private-ML-SDK**: Manages secure model execution, attestation generation, and cryptographic signing
+- **Health Monitoring**: Automated liveness checks and monitoring ensure continuous availability
+
+### LLM Gateway
+
+The LLM Gateway serves as the central orchestration layer:
+
+- **Model Management**: Registers and manages available models across the Private LLM Node network
+- **Request Routing**: Intelligently routes requests to appropriate nodes based on model availability and load
+- **Attestation Verification**: Validates and stores TEE attestation reports for audit and verification
+- **Access Control**: Manages API keys, authentication, and usage tracking for billing and monitoring
 
 ---
 
 ## Security Guarantees
 
-### Cryptographic Isolation
+### Defense in Depth
 
-Private inference provides multiple layers of security:
+NEAR AI Cloud's private inference implements multiple layers of security to protect your data:
 
-1. **Hardware-Level Isolation**: TEEs create isolated execution environments at the hardware level
-2. **Secure Communication**: End-to-end encryption between users and LLM
-3. **Attestation Verification**: Cryptographic proofs verify the integrity of the execution environment
-4. **Result Signing**: All AI outputs are cryptographically signed inside TEE
+-  **Hardware-Level Isolation**
+  TEEs create isolated execution environments enforced at the hardware level, preventing unauthorized access to memory and computation even from privileged system administrators or cloud providers.
 
-### Threat Model
+- **Secure Communication**
+All communication between your applications and the LLM infrastructure uses end-to-end encryption, protecting data in transit from network-level attacks.
 
-NEAR AI Cloud's private inference protects against:
+- **Cryptographic Attestation**
+Every TEE environment generates cryptographic proofs that verify the integrity of the execution environment, allowing you to independently confirm your computations occurred in a genuine, unmodified TEE.
 
-- **Malicious Infrastructure Providers**: TEEs prevent providers from accessing user data
-- **Network Attacks**: End-to-end encryption protects data in transit
-- **Model Extraction**: Model weights remain encrypted and inaccessible
-- **Result Tampering**: Cryptographic signatures ensure result integrity
+- **Result Authentication**
+All AI outputs are cryptographically signed inside the TEE before leaving the secure environment, ensuring the authenticity and integrity of responses.
+
+### Threat Protection
+
+NEAR AI Cloud's architecture protects against common attack vectors:
+
+- **Malicious Infrastructure Providers**
+Hardware-enforced TEE isolation prevents cloud infrastructure providers from accessing your prompts, model weights, or inference results, even with physical access to servers.
+
+- **Network-Based Attacks**
+End-to-end encryption protects your data during transmission, preventing man-in-the-middle attacks and network eavesdropping.
+
+- **Model Extraction Attempts**
+Model weights remain encrypted and isolated within the TEE, making extraction computationally infeasible even for attackers with privileged system access.
+
+**Result Tampering**
+Cryptographic signatures generated inside the TEE ensure that responses cannot be modified in transit without detection, maintaining the integrity of AI outputs.
 
 ---
 
