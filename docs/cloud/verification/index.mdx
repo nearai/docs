@@ -6,6 +6,10 @@ slug: /cloud/verification
 description: ""
 ---
 
+import ModelsIcon from '@site/static/img/icons/models-icon.svg';
+import ChatIcon from '@site/static/img/icons/chat.svg';
+import { FeatureCard, FeatureCardGrid } from '@site/src/components/FeatureCard';
+
 [NEAR AI Cloud](https://cloud.near.ai) operates in Trusted Execution Environments (TEEs) which use cryptographic proofs to verify that your private AI conversations actually happened in secure, isolated environments - not on compromised systems or with unauthorized access.
 
 This section will show you step-by-step processes for checking these proofs, validating digital signatures, and confirming that your AI interactions haven't been tampered with.
@@ -30,6 +34,17 @@ This section will show you step-by-step processes for checking these proofs, val
 
 ## What You Can Verify
 
-**Model Verification** - Verify that AI models are running in secure TEE environments using NVIDIA and Intel attestation.
-
-**Chat Verification** - Verify individual chat messages and responses through cryptographic signatures.
+<FeatureCardGrid>
+  <FeatureCard
+    icon={ModelsIcon}
+    title="Model Verification"
+    description="Verify that AI models are running in secure TEE environments using NVIDIA and Intel attestation"
+    href="./verification/model"
+  />
+  <FeatureCard
+    icon={ChatIcon}
+    title="Chat Verification"
+    description="Verify individual chat messages and responses through cryptographic signatures"
+    href="./verification/chat"
+  />
+</FeatureCardGrid>
