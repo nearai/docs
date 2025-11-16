@@ -1,9 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 32 32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 32 32" id="File-Code-Check--Streamline-Ultimate" height="32" width="32">
   <desc>
-    App Window Check Streamline Icon adapted for NEAR AI
+    File Code Check Streamline Icon: https://streamlinehq.com
   </desc>
-  <path d="M27.2 12.19125v-9.375A1.875 1.875 0 0 0 25.325 0.94125H2.825A1.875 1.875 0 0 0 0.95 2.81625v20.625a1.875 1.875 0 0 0 1.875 1.875h7.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-  <path d="M0.95 6.56625h26.25" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-  <path d="M29.075 21.56625a7.5 7.5 0 1 1 -7.5 -7.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-  <path d="m29.075 15.94125-6.8375 6.8375a0.9375 0.9375 0 0 1-1.32625 0l-2.14875-2.15375" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+  <defs></defs>
+  <title>file-code-check</title>
+  <path d="M14.048750000000002 21.567500000000003a7.5 7.5 0 1 0 15 0 7.5 7.5 0 1 0 -15 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+  <path d="m24.89125 19.38625 -3.6325000000000003 4.8425a0.93625 0.93625 0 0 1 -1.4124999999999999 0.1l-1.875 -1.875" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+  <path d="M10.298750000000002 25.317500000000003h-7.5a1.875 1.875 0 0 1 -1.875 -1.875v-20.625a1.875 1.875 0 0 1 1.875 -1.875h13.285a1.875 1.875 0 0 1 1.32625 0.54875L21 5.08a1.875 1.875 0 0 1 0.55 1.32625v3.91125" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+  <path d="M9.36125 6.567499999999999h1.875s0.9375 0 0.9375 0.9375v3.75s0 0.9375 -0.9375 0.9375h-1.875s-0.9375 0 -0.9375 -0.9375v-3.75s0 -0.9375 0.9375 -0.9375" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+  <path d="m4.67375 6.567499999999999 0 5.625" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+  <path d="m15.923750000000002 6.567499999999999 0 5.625" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+  <path d="M5.61125 15.942499999999999h1.875s0.9375 0 0.9375 0.9375v3.75s0 0.9375 -0.9375 0.9375h-1.875s-0.9375 0 -0.9375 -0.9375v-3.75s0 -0.9375 0.9375 -0.9375" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
 </svg>
