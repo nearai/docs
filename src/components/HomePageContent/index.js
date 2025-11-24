@@ -1,18 +1,12 @@
 import clsx from "clsx";
 import Link from "@docusaurus/Link";
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
-import Layout from "@theme/Layout";
-import HomepageFeatures from "@site/src/components/HomepageFeatures";
-
 import Heading from "@theme/Heading";
-import styles from "./index.module.css";
-import VerifiedGif from "@site/static/img/verified.gif";
+import styles from "./styles.module.css";
 import PrivateInferenceIcon from "@site/static/img/icons/private-inference.svg";
 import VerificationIcon from "@site/static/img/icons/verification.svg";
 import QuickstartIcon from "@site/static/img/icons/quickstart.svg";
 
 function HomepageHeader() {
-  const { siteConfig } = useDocusaurusContext();
   return (
     <header className={clsx("hero hero--primary", styles.heroBanner)}>
       <div className="container">
@@ -30,9 +24,9 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/cloud/quickstart"
+            to="/cloud/introduction"
           >
-            Start Building
+            Get Started
           </Link>
         </div>
       </div>
@@ -40,26 +34,23 @@ function HomepageHeader() {
   );
 }
 
-export default function Home() {
-  const { siteConfig } = useDocusaurusContext();
+export default function HomePageContent() {
   return (
-    <Layout
-      title="NEAR AI Cloud - Private, Verifiable AI Platform"
-      description="Deploy and scale powerful language models on TEE-enabled GPUs with on-chain guarantees. Fully private, verifiable, and user-owned AI platform."
-    >
+    <>
       <HomepageHeader />
       <main>
         <div className="container margin-vert--lg">
           <div className="row">
-            <div className="col col--8 col--offset-2">
+            <div className="col">
               <div className="markdown">
                 <div className={styles.lead}>
                   <p className={styles.leadCopy}>
                     NEAR AI runs the models you trust in secure Trusted
                     Execution Environments (TEEs), ensuring your data stays
                     completely private. Model providers, cloud providers, and
-                    NEAR cannot access, view, or use your data for training —
-                    your information remains yours alone.
+                    NEAR AI cannot access, view, or use your data for training.
+                    <br />
+                    <center><strong>Your information remains yours.</strong></center>
                   </p>
                 </div>
                 <div className={clsx("row", styles.featureRow)}>
@@ -134,6 +125,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-    </Layout>
+    </>
   );
 }
