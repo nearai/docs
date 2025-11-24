@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import clsx from "clsx";
 import Link from "@docusaurus/Link";
 import Heading from "@theme/Heading";
@@ -35,6 +36,21 @@ function HomepageHeader() {
 }
 
 export default function HomePageContent() {
+  useEffect(() => {
+    // Hide breadcrumbs on home page
+    const breadcrumbs = document.querySelector('nav.theme-doc-breadcrumbs');
+    if (breadcrumbs) {
+      breadcrumbs.style.display = 'none';
+    }
+    
+    // Cleanup: show breadcrumbs when component unmounts (navigation away)
+    return () => {
+      if (breadcrumbs) {
+        breadcrumbs.style.display = '';
+      }
+    };
+  }, []);
+
   return (
     <>
       <HomepageHeader />
