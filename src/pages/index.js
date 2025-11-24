@@ -58,8 +58,9 @@ export default function Home() {
                     NEAR AI runs the models you trust in secure Trusted
                     Execution Environments (TEEs), ensuring your data stays
                     completely private. Model providers, cloud providers, and
-                    NEAR cannot access, view, or use your data for training —
-                    your information remains yours alone.
+                    NEAR AI cannot access, view, or use your data for training.
+                    <br />
+                    <center><strong>Your information remains yours.</strong></center>
                   </p>
                 </div>
                 <div className={clsx("row", styles.featureRow)}>
