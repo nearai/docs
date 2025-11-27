@@ -67,7 +67,7 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      image: 'img/icons/social-card.jpg',
+      image: 'img/icons/social-card.png',
       colorMode: {
         defaultMode: 'dark',
         disableSwitch: true,

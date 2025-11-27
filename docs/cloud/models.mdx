@@ -19,6 +19,7 @@ NEAR AI Cloud provides access to leading AI models, each optimized for different
 <table>
   <thead>
     <tr>
+      <th>Model</th>
       <th>Model ID</th>
       <th>Context</th>
       <th>Input Price</th>
@@ -28,6 +29,7 @@ NEAR AI Cloud provides access to leading AI models, each optimized for different
   </thead>
   <tbody>
       <tr>
+      <td><a href="#glm-4.6-fp8">GLM</a></td>
       <td><CodeBlock language="text">zai-org/GLM-4.6-FP8</CodeBlock></td>
       <td>200K</td>
       <td>$1.20/M</td>
@@ -35,6 +37,7 @@ NEAR AI Cloud provides access to leading AI models, each optimized for different
       <td>Agentic applications, advanced coding, tool use, refined writing</td>
     </tr>
     <tr>
+      <td><a href="#deepseek-v3.1">DeepSeek</a></td>
       <td><CodeBlock language="text">deepseek-ai/DeepSeek-V3.1</CodeBlock></td>
       <td>128K</td>
       <td>$1.00/M</td>
@@ -42,6 +45,7 @@ NEAR AI Cloud provides access to leading AI models, each optimized for different
       <td>Hybrid thinking mode, tool calling, agent tasks</td>
     </tr>
     <tr>
+      <td><a href="#gpt-oss-120b">GPT</a></td>
       <td><CodeBlock language="text">openai/gpt-oss-120b</CodeBlock></td>
       <td>131K</td>
       <td>$0.20/M</td>
@@ -49,6 +53,7 @@ NEAR AI Cloud provides access to leading AI models, each optimized for different
       <td>Open-weight, high-reasoning, agentic workflows, configurable depth</td>
     </tr>
     <tr>
+      <td><a href="#qwen3-30b-a3b-instruct-2507">Qwen</a></td>
       <td><CodeBlock language="text">Qwen/Qwen3-30B-A3B-Instruct-2507</CodeBlock></td>
       <td>262K</td>
       <td>$0.15/M</td>
@@ -63,86 +68,7 @@ NEAR AI Cloud provides access to leading AI models, each optimized for different
 ## Model Details
 
 <div className="doc-model-grid">
-  <div className="doc-model-card">
-    <div className="doc-model-header">
-      <div className="doc-model-icon">
-        <DeepseekIcon />
-      </div>
-      <div>
-        <h3>DeepSeek V3.1</h3>
-      </div>
-    </div>
-    <p>
-      DeepSeek V3.1 is a hybrid model that supports both thinking mode and non-thinking mode. Compared
-      with the previous version, this upgrade delivers gains across multiple areas:
-    </p>
-    <ul>
-      <li><strong>Hybrid thinking mode:</strong> One model supports both thinking and non-thinking modes by changing the chat template.</li>
-      <li><strong>Smarter tool calling:</strong> Post-training optimization significantly boosts tool usage and agent task performance.</li>
-      <li><strong>Higher thinking efficiency:</strong> DeepSeek-V3.1-Think delivers DeepSeek-R1-0528 quality while responding more quickly.</li>
-    </ul>
-    <div className="doc-model-meta">
-      <span>128K context</span>
-      <span>$1.00 /M input tokens</span>
-      <span>$2.50 /M output tokens</span>
-    </div>
-    <p><strong>Model ID:</strong></p>
-    <CodeBlock language="text">deepseek-ai/DeepSeek-V3.1</CodeBlock>
-  </div>
-
-  <div className="doc-model-card">
-    <div className="doc-model-header">
-      <div className="doc-model-icon">
-        <GPTIcon />
-      </div>
-      <div>
-        <h3>GPT OSS 120B</h3>
-      </div>
-    </div>
-    <p>
-      GPT OSS 120B is an open-weight, 117B-parameter Mixture-of-Experts (MoE) language model from OpenAI
-      designed for high-reasoning, agentic, and general-purpose production use cases. It activates 5.1B
-      parameters per forward pass and is optimized to run on a single H100 GPU with native MXFP4 quantization.
-    </p>
-    <p>
-      The model supports configurable reasoning depth, full chain-of-thought access, and native tool use,
-      including function calling, browsing, and structured output generation.
-    </p>
-    <div className="doc-model-meta">
-      <span>131K context</span>
-      <span>$0.20 /M input tokens</span>
-      <span>$0.60 /M output tokens</span>
-    </div>
-    <p><strong>Model ID:</strong></p>
-    <CodeBlock language="text">openai/gpt-oss-120b</CodeBlock>
-  </div>
-
-  <div className="doc-model-card">
-    <div className="doc-model-header">
-      <div className="doc-model-icon">
-        <QwenIcon />
-      </div>
-      <div>
-        <h3>Qwen3 30B A3B Instruct 2507</h3>
-      </div>
-    </div>
-    <p>
-      Qwen3-30B-A3B-Instruct-2507 is a mixture-of-experts (MoE) causal language model featuring 30.5 billion
-      total parameters and 3.3 billion activated parameters per inference. It supports ultra-long context up
-      to 262K tokens and operates exclusively in non-thinking mode, delivering strong enhancements in
-      instruction following, reasoning, logical comprehension, mathematics, coding, multilingual understanding,
-      and alignment with user preferences.
-    </p>
-    <div className="doc-model-meta">
-      <span>262K context</span>
-      <span>$0.15 /M input tokens</span>
-      <span>$0.45 /M output tokens</span>
-    </div>
-    <p><strong>Model ID:</strong></p>
-    <CodeBlock language="text">Qwen/Qwen3-30B-A3B-Instruct-2507</CodeBlock>
-  </div>
-
-  <div className="doc-model-card">
+  <div id="glm-4.6-fp8" className="doc-model-card">
     <div className="doc-model-header">
       <div className="doc-model-icon">
         <ZaiIcon />
@@ -170,4 +96,84 @@ NEAR AI Cloud provides access to leading AI models, each optimized for different
     <p><strong>Model ID:</strong></p>
     <CodeBlock language="text">zai-org/GLM-4.6-FP8</CodeBlock>
   </div>
+
+  <div id="deepseek-v3.1" className="doc-model-card">
+    <div className="doc-model-header">
+      <div className="doc-model-icon">
+        <DeepseekIcon />
+      </div>
+      <div>
+        <h3>DeepSeek V3.1</h3>
+      </div>
+    </div>
+    <p>
+      DeepSeek V3.1 is a hybrid model that supports both thinking mode and non-thinking mode. Compared
+      with the previous version, this upgrade delivers gains across multiple areas:
+    </p>
+    <ul>
+      <li><strong>Hybrid thinking mode:</strong> One model supports both thinking and non-thinking modes by changing the chat template.</li>
+      <li><strong>Smarter tool calling:</strong> Post-training optimization significantly boosts tool usage and agent task performance.</li>
+      <li><strong>Higher thinking efficiency:</strong> DeepSeek-V3.1-Think delivers DeepSeek-R1-0528 quality while responding more quickly.</li>
+    </ul>
+    <div className="doc-model-meta">
+      <span>128K context</span>
+      <span>$1.00 /M input tokens</span>
+      <span>$2.50 /M output tokens</span>
+    </div>
+    <p><strong>Model ID:</strong></p>
+    <CodeBlock language="text">deepseek-ai/DeepSeek-V3.1</CodeBlock>
+  </div>
+
+  <div id="gpt-oss-120b" className="doc-model-card">
+    <div className="doc-model-header">
+      <div className="doc-model-icon">
+        <GPTIcon />
+      </div>
+      <div>
+        <h3>GPT OSS 120B</h3>
+      </div>
+    </div>
+    <p>
+      GPT OSS 120B is an open-weight, 117B-parameter Mixture-of-Experts (MoE) language model from OpenAI
+      designed for high-reasoning, agentic, and general-purpose production use cases. It activates 5.1B
+      parameters per forward pass and is optimized to run on a single H100 GPU with native MXFP4 quantization.
+    </p>
+    <p>
+      The model supports configurable reasoning depth, full chain-of-thought access, and native tool use,
+      including function calling, browsing, and structured output generation.
+    </p>
+    <div className="doc-model-meta">
+      <span>131K context</span>
+      <span>$0.20 /M input tokens</span>
+      <span>$0.60 /M output tokens</span>
+    </div>
+    <p><strong>Model ID:</strong></p>
+    <CodeBlock language="text">openai/gpt-oss-120b</CodeBlock>
+  </div>
+
+  <div id="qwen3-30b-a3b-instruct-2507" className="doc-model-card">
+    <div className="doc-model-header">
+      <div className="doc-model-icon">
+        <QwenIcon />
+      </div>
+      <div>
+        <h3>Qwen3 30B A3B Instruct 2507</h3>
+      </div>
+    </div>
+    <p>
+      Qwen3-30B-A3B-Instruct-2507 is a mixture-of-experts (MoE) causal language model featuring 30.5 billion
+      total parameters and 3.3 billion activated parameters per inference. It supports ultra-long context up
+      to 262K tokens and operates exclusively in non-thinking mode, delivering strong enhancements in
+      instruction following, reasoning, logical comprehension, mathematics, coding, multilingual understanding,
+      and alignment with user preferences.
+    </p>
+    <div className="doc-model-meta">
+      <span>262K context</span>
+      <span>$0.15 /M input tokens</span>
+      <span>$0.45 /M output tokens</span>
+    </div>
+    <p><strong>Model ID:</strong></p>
+    <CodeBlock language="text">Qwen/Qwen3-30B-A3B-Instruct-2507</CodeBlock>
+  </div>
+
 </div>
