@@ -57,7 +57,7 @@ export function CategoryIcon({icon}: {icon?: string}) {
     width: '22px',
     height: '22px',
     marginRight: '0.75rem',
-    filter: 'brightness(0) saturate(100%) invert(64%) sepia(66%) saturate(462%) hue-rotate(101deg) brightness(94%) contrast(89%)',
+    filter: 'brightness(0) saturate(100%) invert(42%) sepia(93%) saturate(1352%) hue-rotate(195deg) brightness(91%) contrast(91%)',
   };
 
   return (

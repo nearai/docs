@@ -12,7 +12,7 @@ import { themes as prismThemes } from 'prism-react-renderer';
 const config = {
   title: 'NEAR AI',
   tagline: 'Private. Intelligent. Yours.',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/favicon.svg',
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
@@ -76,7 +76,7 @@ const config = {
       navbar: {
         logo: {
           alt: 'NEAR AI Logo',
-          src: 'img/nearAI-logo.jpg',
+          src: 'img/nearAI-logo.svg',
         },
         items: [
           {
@@ -100,6 +100,10 @@ const config = {
               {
                 label: 'Quickstart',
                 to: 'cloud/quickstart',
+              },
+              {
+                label: 'Models',
+                to: 'cloud/models',
               },
               {
                 label: 'Private Inference',

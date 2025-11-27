@@ -9,3 +9,8 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+
+/* Blue icon styling for active state */
+:global(.menu__link--active) img {
+  filter: brightness(0) saturate(100%) invert(64%) sepia(56%) saturate(3658%) hue-rotate(191deg) brightness(99%) contrast(92%) !important;
+}
