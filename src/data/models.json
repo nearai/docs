@@ -1,0 +1,99 @@
+{
+  "models": [
+    {
+      "modelId": "deepseek-ai/DeepSeek-V3.1",
+      "inputCostPerToken": {
+        "amount": 1000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 2500,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": true,
+        "contextLength": 128000,
+        "modelDisplayName": "DeepSeek V3.1",
+        "modelDescription": "DeepSeek V3.1 is a hybrid model that supports both thinking mode and non-thinking mode. Compared to the previous version, this upgrade brings improvements in multiple aspects:\n- **Hybrid thinking mode**: One model supports both thinking mode and non-thinking mode by changing the chat template.\n- **Smarter tool calling**: Through post-training optimization, the model's performance in tool usage and agent tasks has significantly improved.\n- **Higher thinking efficiency**: DeepSeek-V3.1-Think achieves comparable answer quality to DeepSeek-R1-0528, while responding more quickly.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/148330874?s=200&v=4",
+        "aliases": [
+          "deepseek/deepseek-chat-v3.1",
+          "deepseek-v3.1"
+        ]
+      }
+    },
+    {
+      "modelId": "openai/gpt-oss-120b",
+      "inputCostPerToken": {
+        "amount": 200,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 600,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": true,
+        "contextLength": 131000,
+        "modelDisplayName": "GPT OSS 120B",
+        "modelDescription": "gpt-oss-120b is an open-weight, 117B-parameter Mixture-of-Experts (MoE) language model from OpenAI designed for high-reasoning, agentic, and general-purpose production use cases. It activates 5.1B parameters per forward pass and is optimized to run on a single H100 GPU with native MXFP4 quantization. The model supports configurable reasoning depth, full chain-of-thought access, and native tool use, including function calling, browsing, and structured output generation.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "aliases": [
+          "nearai/gpt-oss-120b",
+          "gpt-oss-120b"
+        ]
+      }
+    },
+    {
+      "modelId": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+      "inputCostPerToken": {
+        "amount": 150,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 450,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": true,
+        "contextLength": 262144,
+        "modelDisplayName": "Qwen3 30B A3B Instruct 2507",
+        "modelDescription": "Qwen3-30B-A3B-Instruct-2507 is a mixture-of-experts (MoE) causal language model featuring 30.5 billion total parameters and 3.3 billion activated parameters per inference. It supports ultra-long context up to 262 K tokens and operates exclusively in non-thinking mode, delivering strong enhancements in instruction following, reasoning, logical comprehension, mathematics, coding, multilingual understanding, and alignment with user preferences.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/141221163?s=200&v=4",
+        "aliases": [
+          "qwen/qwen3-30b-a3b-instruct-2507",
+          "qwen3-30b-a3b-instruct-2507"
+        ]
+      }
+    },
+    {
+      "modelId": "zai-org/GLM-4.6",
+      "inputCostPerToken": {
+        "amount": 750,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 2000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": true,
+        "contextLength": 200000,
+        "modelDisplayName": "GLM-4.6",
+        "modelDescription": "GLM‑4.6 is the latest flagship model in the GLM (General Language Model) series by Z.ai (formerly Zhipu AI). It is oriented toward agentic applications: reasoning, tool usage, coding/engineering workflows, and long‑context tasks.\n\nCompared with GLM-4.5, **GLM-4.6** brings several key improvements:\n\n- **Longer context window**: The context window has been expanded from 128K to 200K tokens, enabling the model to handle more complex agentic tasks.\n- **Superior coding performance**: The model achieves higher scores on code benchmarks and demonstrates better real-world performance in applications such as Claude Code、Cline、Roo Code and Kilo Code, including improvements in generating visually polished front-end pages.\n- **Advanced reasoning**: GLM-4.6 shows a clear improvement in reasoning performance and supports tool use during inference, leading to stronger overall capability.\n- **More capable agents**: GLM-4.6 exhibits stronger performance in tool using and search-based agents, and integrates more effectively within agent frameworks.\n- **Refined writing**: Better aligns with human preferences in style and readability, and performs more naturally in role-playing scenarios.\n",
+        "modelIcon": "https://avatars.githubusercontent.com/u/223098841?s=200&v=4"
+      }
+    }
+  ],
+  "limit": 100,
+  "offset": 0,
+  "total": 4
+}
