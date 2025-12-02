@@ -16,6 +16,10 @@ To verify a NEAR AI model is operating in a secure trusted environment, there ar
 - [Request Model Attestation](#request-model-attestation) report from NEAR AI Cloud
 - [Verify Model Attestation](#verifying-model-attestation) report using NVIDIA & Intel attestation authenticators
 
+:::tip 
+See an example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo.
+:::
+
 ---
 
 ## Request Model Attestation

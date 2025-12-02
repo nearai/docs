@@ -18,6 +18,10 @@ You can verify each chat message with NEAR AI Cloud. For this you will need:
 2. [Chat Message **RESPONSE** Hash](#chat-message-response-hash)
 3. [Chat Message Signature](#chat-message-signature)
 
+:::tip 
+See an example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo.
+:::
+
 ---
 
 ## Chat Message Request Hash
