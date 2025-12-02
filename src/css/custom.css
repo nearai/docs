@@ -847,3 +847,33 @@ table tbody tr:hover {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(131, 210, 250, 0.5);
 }
+
+/* API Reference page - Scalar iframe embedding */
+.api-reference-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: calc(100vh - 60px);
+  margin: 0;
+  padding: 0;
+}
+
+.api-reference-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+/* Remove padding for API reference page */
+[id="api-reference"] .theme-doc-markdown {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+[id="api-reference"] .theme-doc-markdown > *:not(.api-reference-container) {
+  display: none;
+}
