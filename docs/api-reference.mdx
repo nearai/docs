@@ -1,0 +1,25 @@
+---
+id: api-reference
+title: API Reference
+sidebar_label: API Reference
+slug: /api
+description: Complete API reference documentation for NEAR AI Cloud
+hide_title: true
+hide_table_of_contents: true
+---
+
+import BrowserOnly from '@docusaurus/BrowserOnly';
+
+<div className="api-reference-container">
+  <BrowserOnly>
+    {() => (
+      <iframe
+        src="https://cloud-api.near.ai/docs"
+        className="api-reference-iframe"
+        title="NEAR AI Cloud API Documentation"
+        allow="fullscreen"
+      />
+    )}
+  </BrowserOnly>
+</div>
+

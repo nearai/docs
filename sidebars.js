@@ -60,6 +60,13 @@ const sidebars = {
         'cloud/verification/chat-verification',
       ],
     },
+    {
+      type: 'doc',
+      id: 'api-reference',
+      customProps: {
+        icon: '/img/icons/unified-api.svg',
+      },
+    },
   ],
 };
 

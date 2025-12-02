@@ -85,6 +85,11 @@ const config = {
             label: 'Docs',
           },
           {
+            to: 'api',
+            position: 'left',
+            label: 'API',
+          },
+          {
             href: 'https://cloud.near.ai',
             label: 'Developer Dashboard',
             position: 'right',
@@ -112,6 +117,10 @@ const config = {
               {
                 label: 'Verification',
                 to: 'cloud/verification',
+              },
+              {
+                label: 'API Reference',
+                to: 'api',
               },
             ],
           },
