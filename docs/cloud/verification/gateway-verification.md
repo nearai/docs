@@ -160,13 +160,13 @@ This ensures the exact Docker compose file is deployed to the TEE environment.
 
 ### Verify Source Code Provenance 
 
-Extract the `nearaidev/cloud-api` container image digests from the Docker compose manifest (matching `@sha256:xxx` patterns), fetch the source code provenance from Sigstore for each image, and build from the source to get the exact Docker image digest. This allows you to:
+Extract the `nearaidev/cloud-api` container image digests from the Docker compose manifest (matching `@sha256:xxx` patterns) and fetch the source code provenance from Sigstore for each image. This allows you to:
 
 1. Verify the container images were built from the expected source repository with exact release tag
 2. Review the GitHub Actions workflow that built the images
 3. Audit the build provenance and supply chain metadata
 4. Audit the source code of a given release
 
-The source code of the [cloud-api gateway](https://github.com/nearai/cloud-api) is reproducible, which means you can build from the source code of a given release and get the exact Docker image digest `@sha256:xxx`.
+The source code of the [cloud-api gateway](https://github.com/nearai/cloud-api) is reproducible, which means you can build from the source code of a given release and verify that the resulting Docker image digest matches the digest from the attestation (`@sha256:xxx`).
 
-This ensures the exact version of source code is built into the `nearaidev/cloud-api` Docker image and make it easy to audit and validate the source code. You can find one [Sigstore link example](https://search.sigstore.dev/?hash=sha256:f75c2a8f1a3d8a36ed6cd7479e848edf0a0e814381d7b83993a703201594bc14) in the [v0.1.7 release of cloud-api](https://github.com/nearai/cloud-api/releases/tag/v0.1.7).
+This ensures the exact version of source code is built into the `nearaidev/cloud-api` Docker image and makes it easy to audit and validate the source code. You can find one [Sigstore link example](https://search.sigstore.dev/?hash=sha256:f75c2a8f1a3d8a36ed6cd7479e848edf0a0e814381d7b83993a703201594bc14) in the [v0.1.7 release of cloud-api](https://github.com/nearai/cloud-api/releases/tag/v0.1.7).
