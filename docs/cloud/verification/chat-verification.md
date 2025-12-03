@@ -114,7 +114,7 @@ print(hash_hex)  #b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8
 This value is calculated from the **exact response body string**.
 
 :::info
-    Please note the streaming response contains two new lines at the end and should not be omitted when copying response as the hash value will change.
+    Please note that the streaming response contains two new lines at the end and should not be omitted when copying the response as the hash value will change.
 :::
 
 **_Example Response Body:_**

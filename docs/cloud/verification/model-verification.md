@@ -49,7 +49,6 @@ NONCE=$(openssl rand -hex 32)
 
 curl "https://cloud-api.near.ai/v1/attestation/report?model=deepseek-ai/DeepSeek-V3.1&signing_algo=ecdsa&nonce=${NONCE}" \
   -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
 ```
 
 </TabItem>
@@ -66,8 +65,8 @@ const response = await fetch(
   `https://cloud-api.near.ai/v1/attestation/report?model=${MODEL_NAME}&signing_algo=ecdsa&nonce=${nonce}`,
   {
     headers: {
-      'Content-Type': 'application/json',
-      },
+      'accept': 'application/json',
+    },
   }
 );
 ```
@@ -86,7 +85,7 @@ nonce = secrets.token_hex(32)
 response = requests.get(
     f'https://cloud-api.near.ai/v1/attestation/report?model={MODEL_NAME}&signing_algo=ecdsa&nonce={nonce}',
     headers={
-        'Content-Type': 'application/json',
+        'accept': 'application/json',
     }
 )
 ```

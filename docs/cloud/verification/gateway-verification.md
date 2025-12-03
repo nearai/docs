@@ -47,8 +47,7 @@ The `signing_algo` parameter specifies the signing algorithm used (`ecdsa` or `e
 NONCE=$(openssl rand -hex 32)
 
 curl "https://cloud-api.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce=${NONCE}" \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
+  -H 'accept: application/json'
 ```
 
 </TabItem>
@@ -64,8 +63,8 @@ const response = await fetch(
   `https://cloud-api.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce=${nonce}`,
   {
     headers: {
-      'Content-Type': 'application/json',
-      },
+      'accept': 'application/json',
+    },
   }
 );
 ```
@@ -83,7 +82,7 @@ nonce = secrets.token_hex(32)
 response = requests.get(
     f'https://cloud-api.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce={nonce}',
     headers={
-        'Content-Type': 'application/json',
+        'accept': 'application/json',
     }
 )
 ```
