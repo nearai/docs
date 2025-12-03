@@ -102,7 +102,7 @@ response = requests.get(
 
 - `signing_address`: Account address generated inside TEE that will be used to sign the chat response.
 
-- `nvidia_payload` and `intel_quote`: Attestation report formatted for NVIDIA TEE and Intel TEE respectively. You can use them to verify the integrity of the TEE. See [Verify the Attestation](#verifying-model-attestation) for more details.
+- `nvidia_payload` and `intel_quote`: Attestation report formatted for NVIDIA TEE and Intel TEE respectively. You can use them to verify the integrity of the TEE. See [Verifying Model Attestation](#verifying-model-attestation) for more details.
 
 - `all_attestations`: List attestations from all GPU nodes as multiple TEE nodes may be used to serve inference requests. You can utilize the `signing_address` from `all_attestations` to select the appropriate TEE node for verifying its integrity.
 
