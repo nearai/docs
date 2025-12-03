@@ -158,7 +158,7 @@ The attestation response includes Docker compose manifest information in the `ga
 
 This ensures the exact Docker compose file is deployed to the TEE environment.
 
-### Verify Source Code Provenance 
+### Verify Source Code Provenance
 
 Extract the `nearaidev/cloud-api` container image digests from the Docker compose manifest (matching `@sha256:xxx` patterns) and fetch the source code provenance from Sigstore for each image. This allows you to:
 
