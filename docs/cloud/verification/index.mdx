@@ -15,7 +15,9 @@ import { FeatureCard, FeatureCardGrid } from '@site/src/components/FeatureCard';
 This section will show you step-by-step processes for checking these proofs, validating digital signatures, and confirming that your AI interactions haven't been tampered with.
 
 :::tip 
-See an example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo.
+See an easy-to-follow example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo.
+
+A more complete verifier implementation is available in the [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) repo.
 :::
 
 ## How NEAR AI Cloud Verification Works
@@ -45,12 +47,12 @@ See an example implementation in the [NEAR AI Cloud Verification Example](https:
     description="Verify that AI models are running in secure TEE environments using NVIDIA and Intel attestation"
     href="/cloud/verification/model"
   />
-  {/* <FeatureCard
+  <FeatureCard
     icon={ModelsIcon}
     title="Gateway Verification"
     description="Verify that the private inference gateway is running in secure TEE environments using Intel attestation"
     href="/cloud/verification/gateway"
-  /> */}
+  />
   <FeatureCard
     icon={ChatIcon}
     title="Chat Verification"
