@@ -25,7 +25,7 @@ See an example implementation in the [NEAR AI Cloud Verifier](https://github.com
 
 ## Request Gateway Attestation
 
-The gateway attestation is included in the response when you request a model attestation. Use the following `GET` API endpoint:
+The gateway attestation can be requested standalone or is included in the response when you request a model attestation. To request gateway attestation standalone, use the following `GET` API endpoint:
 
 ```bash
 https://cloud-api.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce={nonce}
@@ -103,8 +103,7 @@ response = requests.get(
       "compose": "...",
       ...
     }
-  },
-  "model_attestations": [...]
+  }
 }
 ```
 

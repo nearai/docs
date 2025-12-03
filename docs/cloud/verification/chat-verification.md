@@ -215,7 +215,7 @@ For example, the response in the previous section, the `id` is:
  `chatcmpl-ba1b4314210adc3b`
 
 ```bash
-curl -X GET 'https://cloud-api.near.ai/signature/chatcmpl-ba1b4314210adc3b?model=deepseek-ai/DeepSeek-V3.1&signing_algo=ecdsa' \
+curl -X GET 'https://cloud-api.near.ai/v1/signature/chatcmpl-ba1b4314210adc3b?model=deepseek-ai/DeepSeek-V3.1&signing_algo=ecdsa' \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer <YOUR-NEARAI-CLOUD-API-KEY>"
 ```

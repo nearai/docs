@@ -18,6 +18,8 @@ To verify a NEAR AI model is operating in a secure trusted environment, there ar
 
 :::tip 
 See an example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo.
+
+A more complete verifier implementation is available in the [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) repo. 
 :::
 
 ---
@@ -124,7 +126,7 @@ response = requests.get(
 
 Once you have [requested a model attestation](#request-model-attestation) from NEAR AI Cloud, you can use the returned payload to verify its authenticity. You can verify:
 
-- **GPU attestation**: Submits GPU evidence payload to NVIDIA NRAS and verifies the nonce matches
+- **GPU attestation**: Submit GPU evidence payload to NVIDIA NRAS and verify the nonce matches
 - **Intel TDX quote**: Verifies TDX quote with [`dcap-qvl`](https://github.com/Phala-Network/dcap-qvl) library
 - **TDX report data**: Validates that report data binds the signing key (ECDSA or Ed25519) and nonce
 - **Compose manifest**: Displays Docker compose manifest and verifies it matches the mr_config measurement
@@ -293,7 +295,3 @@ Extract all container image digests from the Docker compose manifest (matching `
 3. Audit the build provenance and supply chain metadata
 
 Check each Sigstore link with an HTTP HEAD request to ensure provenance data is available (not 404).
-
-:::tip
-See an complete implementation in the [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) repo.
-:::
