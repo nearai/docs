@@ -284,7 +284,7 @@ The attestation response includes Docker compose manifest information in the `in
 3. Compare it with the `mr_config` measurement from the verified TDX quote
 4. Verify they match, proving the exact container configuration
 
-This ensures the exact Docker compose file is deployed to the TEE.
+This ensures the exact Docker compose file is deployed to the TEE environment.
 
 ### Verify Sigstore Provenance
 
@@ -294,4 +294,4 @@ Extract all container image digests from the Docker compose manifest (matching `
 2. Review the GitHub Actions workflow that built the images
 3. Audit the build provenance and supply chain metadata
 
-Check each Sigstore link with an HTTP HEAD request to ensure provenance data is available (not 404).
+Check each Sigstore link with an HTTP HEAD request to ensure provenance data is valid.

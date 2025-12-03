@@ -125,8 +125,8 @@ response = requests.get(
 
 Once you have [requested a gateway attestation](#request-gateway-attestation) from NEAR AI Cloud, you can use the returned payload to verify its authenticity. You can verify:
 
-- **TDX report data**: Validates that report data includes the nonce in request
 - **Intel TDX quote**: Verifies TDX quote with [`dcap-qvl`](https://github.com/Phala-Network/dcap-qvl) library
+- **TDX report data**: Validates that report data includes the nonce in request
 - **Compose manifest**: Displays Docker compose manifest and verifies it matches the mr_config measurement
 - **Sigstore provenance**: Verifies container image provenance links
 
@@ -156,7 +156,7 @@ The attestation response includes Docker compose manifest information in the `ga
 3. Compare it with the `mr_config` measurement from the verified TDX quote
 4. Verify they match, proving the exact container configuration
 
-This ensures the exact Docker compose file is deployed to the TEE.
+This ensures the exact Docker compose file is deployed to the TEE environment.
 
 ### Verify Sigstore Provenance
 
@@ -166,4 +166,4 @@ Extract all container image digests from the Docker compose manifest (matching `
 2. Review the GitHub Actions workflow that built the images
 3. Audit the build provenance and supply chain metadata
 
-Check each Sigstore link with an HTTP HEAD request to ensure provenance data is available (not 404).
+Check each Sigstore link with an HTTP HEAD request to ensure provenance data is valid.
