@@ -143,9 +143,10 @@ Alternatively, you can verify the Intel TDX quote at [TEE Attestation Explorer](
 ### Verify TDX Report Data
 
 The TDX report data validates that:
+- The report data binds the signing address (ECDSA or Ed25519) 
 - The report data embeds the request nonce
 
-This ensures nonce freshness and prevents replay attacks. The nonce you provided in the request should match the nonce embedded in the TDX report data.
+This ensures cryptographic binding between the signing address and the hardware, and prevents replay attacks through nonce freshness.
 
 ### Verify Compose Manifest
 
