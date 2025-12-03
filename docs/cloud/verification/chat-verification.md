@@ -210,7 +210,7 @@ GET https://cloud-api.near.ai/v1/signature/{chat_id}?model={model_id}&signing_al
 
 > **Implementation**: This endpoint is defined in the [NEAR AI Private ML SDK](https://github.com/nearai/private-ml-sdk/blob/a23fa797dfd7e676fba08cba68471b51ac9a13d9/vllm-proxy/src/app/api/v1/openai.py#L257).
 
-For example, the response in the previous section, the `id` is:
+For example, the `id` from the response in the previous section is:
 
  `chatcmpl-ba1b4314210adc3b`
 

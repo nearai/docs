@@ -31,7 +31,7 @@ The gateway attestation can be requested standalone or is included in the respon
 https://cloud-api.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce={nonce}
 ```
 
-The `signing_algo` parameter specifies the signing algorithm used (`ecdsa` or `ed25519`). The `nonce` parameter is a randomly generated 64 character hexadecimal string (32 bytes) that ensures attestation freshness and prevents replay attacks.
+The `signing_algo` parameter specifies the signing algorithm used (`ecdsa` or `ed25519`). The `nonce` parameter is optional but recommended. It should be a randomly generated 64 character hexadecimal string (32 bytes) that ensures attestation freshness and prevents replay attacks. If not provided, the server will generate one for you.
 
 <Tabs
   defaultValue="curl"
@@ -43,7 +43,7 @@ The `signing_algo` parameter specifies the signing algorithm used (`ecdsa` or `e
 <TabItem value="curl">
 
 ```bash
-# Generate a random 64-character hex nonce
+# Generate a random 64-character hex nonce (optional but recommended)
 NONCE=$(openssl rand -hex 32)
 
 curl "https://cloud-api.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce=${NONCE}" \
@@ -57,7 +57,7 @@ curl "https://cloud-api.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce=$
 ```js
 import crypto from 'crypto';
 
-// Generate a random 64-character hex nonce
+// Generate a random 64-character hex nonce (optional but recommended)
 const nonce = crypto.randomBytes(32).toString('hex');
 
 const response = await fetch(
@@ -77,7 +77,7 @@ const response = await fetch(
 import requests
 import secrets
 
-# Generate a random 64-character hex nonce
+# Generate a random 64-character hex nonce (optional but recommended)
 nonce = secrets.token_hex(32)
 
 response = requests.get(

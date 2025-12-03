@@ -98,13 +98,13 @@ response = requests.get(
  <summary>Example Response:</summary>
 ```json
 {      
-"model_attestations": [         \\ List of all GPU nodes in the network
-  {
-    "signing_address": "...",   \\ TEE Public Key
-    "nvidia_payload": "...",    \\ Attestation report used to verify w/ NVIDIA
-    "intel_quote": "..."        \\ Attestation report use to verify w/ Intel
-  }
-]
+  "model_attestations": [         \\ List of all GPU nodes in the network
+    {
+      "signing_address": "...",   \\ TEE Public Key
+      "nvidia_payload": "...",    \\ Attestation report used to verify w/ NVIDIA
+      "intel_quote": "..."        \\ Attestation report used to verify w/ Intel
+    }
+  ]
 }
 ```
 
