@@ -200,7 +200,7 @@ print(hash_hex)  # aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d
 
 From the Chat Message Response you will get a unique chat `id` that is used to fetch the Chat Message Signature from NEAR AI Cloud.
 
-By default, you can query another API with the value of `id` in the response in 5 minutes after chat completion. The signature will be persistent in the LLM gateway once it's queried.
+You can query the signature API with the value of `id` from the response at any time after chat completion. The signature is persistent in the LLM gateway for future verification.
 
 Use the following endpoint to get this signature:
 
@@ -248,7 +248,7 @@ This exactly matches the concatenated values we calculated in the previous secti
 - Response hash: `aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f`
 
 :::note
-    Due to resource limitations, signatures are kept in memory for **5 minutes** after the response is generated. However, once queried within this 5-minute window, the signature becomes persistent in the LLM gateway for future verification.
+    Signatures are persistent in the LLM gateway and can be queried at any time after chat completion for verification purposes.
 :::
 
 ---
