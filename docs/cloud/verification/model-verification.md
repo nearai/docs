@@ -129,7 +129,6 @@ Once you have [requested a model attestation](#request-model-attestation) from N
 - **Intel TDX quote**: Verifies TDX quote with [`dcap-qvl`](https://github.com/Phala-Network/dcap-qvl) library
 - **TDX report data**: Validates that report data binds the signing key (ECDSA or Ed25519) and nonce
 - **Compose manifest**: Displays Docker compose manifest and verifies it matches the mr_config measurement
-- **Sigstore provenance**: Verifies container image provenance links
 
 ### Verify GPU Attestation
 
@@ -284,13 +283,3 @@ The attestation response includes Docker compose manifest information in the `in
 4. Verify they match, proving the exact container configuration
 
 This ensures the exact Docker compose file is deployed to the TEE environment.
-
-### Verify Sigstore Provenance
-
-Extract all container image digests from the Docker compose manifest (matching `@sha256:xxx` patterns) and verify Sigstore accessibility for each image. This allows you to:
-
-1. Verify the container images were built from the expected source repository
-2. Review the GitHub Actions workflow that built the images
-3. Audit the build provenance and supply chain metadata
-
-Check each Sigstore link with an HTTP HEAD request to ensure provenance data is valid.
