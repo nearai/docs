@@ -39,14 +39,14 @@ The value is calculated from the **exact JSON request body string**.
     }
   ],
   "stream": true,
-  "model": "llama-3.3-70b-instruct"
+  "model": "deepseek-ai/DeepSeek-V3.1"
 }
 ```
 
 Which hashes to:
 
 ```bash
-31f46232b8ae6154e75a68256523851c1ce84f9ad53a1f8290c9d0576b95929f
+b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba
 ```
 
 Here is an example of how to get the sha256 hash of your message request body:
@@ -70,11 +70,11 @@ const requestBody = JSON.stringify({
     }
   ],
   "stream": true,
-  "model": "llama-3.3-70b-instruct"
+  "model": "deepseek-ai/DeepSeek-V3.1"
 });
 
 const hash = crypto.createHash('sha256').update(requestBody).digest('hex');
-console.log(hash); //31f46232b8ae6154e75a68256523851c1ce84f9ad53a1f8290c9d0576b95929f
+console.log(hash); //b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba
 ```
 
 </TabItem>
@@ -92,7 +92,7 @@ request_body = {
         }
     ],
     "stream": True,
-    "model": "llama-3.3-70b-instruct"
+    "model": "deepseek-ai/DeepSeek-V3.1"
 }
 
 # Convert to JSON string with same formatting as JavaScript
@@ -101,7 +101,7 @@ request_body_str = json.dumps(request_body, separators=(',', ':'))
 # Calculate SHA-256 hash
 hash_obj = hashlib.sha256(request_body_str.encode())
 hash_hex = hash_obj.hexdigest()
-print(hash_hex)  #31f46232b8ae6154e75a68256523851c1ce84f9ad53a1f8290c9d0576b95929f
+print(hash_hex)  #b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba
 ```
 
 </TabItem>
@@ -113,22 +113,31 @@ print(hash_hex)  #31f46232b8ae6154e75a68256523851c1ce84f9ad53a1f8290c9d0576b9592
 
 This value is calculated from the **exact response body string**.
 
+:::info
+    Please note that the streaming response contains two new lines at the end and should not be omitted when copying the response as the hash value will change.
+:::
+
 **_Example Response Body:_**
 
 ```bash
-data: {"id":"chatcmpl-13edbcd23c9e4139b796fa988a88451b","created":1756693844,"model":"phala/llama-3.3-70b-instruct","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"content":"I","role":"assistant"}}]}
+data: {"id":"chatcmpl-ba1b4314210adc3b","object":"chat.completion.chunk","created":1764763435,"model":"deepseek-ai/DeepSeek-V3.1","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning_content":null},"logprobs":null,"finish_reason":null}],"prompt_token_ids":null}
 
-data: {"id":"chatcmpl-13edbcd23c9e4139b796fa988a88451b","created":1756693844,"model":"phala/llama-3.3-70b-instruct","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"content":" agree"}}]}
+data: {"id":"chatcmpl-ba1b4314210adc3b","object":"chat.completion.chunk","created":1764763435,"model":"deepseek-ai/DeepSeek-V3.1","choices":[{"index":0,"delta":{"content":"Okay","reasoning_content":null},"logprobs":null,"finish_reason":null,"token_ids":null}]}
 
-data: {"id":"chatcmpl-13edbcd23c9e4139b796fa988a88451b","created":1756693844,"model":"phala/llama-3.3-70b-instruct","object":"chat.completion.chunk","choices":[{"finish_reason":"stop","index":0,"delta":{}}]}
+data: {"id":"chatcmpl-ba1b4314210adc3b","object":"chat.completion.chunk","created":1764763435,"model":"deepseek-ai/DeepSeek-V3.1","choices":[{"index":0,"delta":{"content":".","reasoning_content":null},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-ba1b4314210adc3b","object":"chat.completion.chunk","created":1764763435,"model":"deepseek-ai/DeepSeek-V3.1","choices":[{"index":0,"delta":{"content":"","reasoning_content":null},"logprobs":null,"finish_reason":"stop","stop_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-ba1b4314210adc3b","object":"chat.completion.chunk","created":1764763435,"model":"deepseek-ai/DeepSeek-V3.1","choices":[],"usage":{"prompt_tokens":13,"total_tokens":16,"completion_tokens":3}}
 
 data: [DONE]
+
 ```
 
 Which hashes to:
 
 ```bash
-5d679ec62b9d8e9681085814391bfef9e837b8cc08757f479302311b828284b2
+aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f
 ```
 
 Here is an example of how to get the sha256 hash of your message response body:
@@ -155,7 +164,7 @@ const response = await fetch('https://cloud-api.near.ai/v1/chat/completions', {
 
 const responseBody = await response.text();
 const hash = crypto.createHash('sha256').update(responseBody).digest('hex');
-console.log(hash); // 5d679ec62b9d8e9681085814391bfef9e837b8cc08757f479302311b828284b2
+console.log(hash); // aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f
 ```
 
 </TabItem>
@@ -179,7 +188,7 @@ response = requests.post(
 response_body = response.text
 hash_obj = hashlib.sha256(response_body.encode())
 hash_hex = hash_obj.hexdigest()
-print(hash_hex)  # 5d679ec62b9d8e9681085814391bfef9e837b8cc08757f479302311b828284b2
+print(hash_hex)  # aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f
 ```
 
 </TabItem>
@@ -201,12 +210,12 @@ GET https://cloud-api.near.ai/v1/signature/{chat_id}?model={model_id}&signing_al
 
 > **Implementation**: This endpoint is defined in the [NEAR AI Private ML SDK](https://github.com/nearai/private-ml-sdk/blob/a23fa797dfd7e676fba08cba68471b51ac9a13d9/vllm-proxy/src/app/api/v1/openai.py#L257).
 
-For example, the response in the previous section, the `id` is:
+For example, the `id` from the response in the previous section is:
 
- `chatcmpl-13edbcd23c9e4139b796fa988a88451b`
+ `chatcmpl-ba1b4314210adc3b`
 
 ```bash
-curl -X GET 'https://cloud-api.near.ai/signature/chatcmpl-13edbcd23c9e4139b796fa988a88451b?model=llama-3.3-70b-instruct&signing_algo=ecdsa' \
+curl -X GET 'https://cloud-api.near.ai/v1/signature/chatcmpl-ba1b4314210adc3b?model=deepseek-ai/DeepSeek-V3.1&signing_algo=ecdsa' \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer <YOUR-NEARAI-CLOUD-API-KEY>"
 ```
@@ -215,28 +224,28 @@ curl -X GET 'https://cloud-api.near.ai/signature/chatcmpl-13edbcd23c9e4139b796fa
 
 ```json
 {
-  "text": "31f46232b8ae6154e75a68256523851c1ce84f9ad53a1f8290c9d0576b95929f:5d679ec62b9d8e9681085814391bfef9e837b8cc08757f479302311b828284b2",
-  "signature": "0x5ed3ac0642bceb8cdd5b222cd2db36b92af2a4d427f11cd1bec0e5b732b94628015f32f2cec91865148bf9d6f56ab673645f6bc500421cd28ff120339ea7e1a01b",
-  "signing_address": "0x1d58EE32e9eB327c074294A2b8320C47E33b9316",
-  "signing_algo": "ecdsa"
+  "text":"b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba:aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f",
+  "signature":"0x649b30be41e53ac33cb3fe414c8f5fd30ad72cacaeac0f41c4977fee4b67506e185300f1978039306c406b398c4eda49c3dad476d5054c63fd811570815012cc1b",
+  "signing_address":"0x319f1b8BB3b723A5d098FFB67005Bdf7BB579ACa",
+  "signing_algo":"ecdsa"
 }
 ```
 
 The above response gives us all of the crucial information we need to verify that the message was executed in our trusted environment:
 
 - `text` - This is the [Chat Message REQUEST Hash](#chat-message-request-hash) & [Chat Message RESPONSE Hash](#chat-message-response-hash) concatenated with a `:` separator.
-- `signature` - This is the cryptographic signature of the `text` field, generated using the TEE's private key
+- `signature` - This is the cryptographic signature of the `text` field, generated using the TEE's private key 
 - `signing_address` - Public key of the TEE unique to the model we used
 - `signing_algo` - Cryptography curve used to sign
 
 You can see that `text` is:
 
-`31f46232b8ae6154e75a68256523851c1ce84f9ad53a1f8290c9d0576b95929f:5d679ec62b9d8e9681085814391bfef9e837b8cc08757f479302311b828284b2`
+`b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba:aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f`
 
 This exactly matches the concatenated values we calculated in the previous sections:
 
-- Request hash: `31f46232b8ae6154e75a68256523851c1ce84f9ad53a1f8290c9d0576b95929f`
-- Response hash: `5d679ec62b9d8e9681085814391bfef9e837b8cc08757f479302311b828284b2`
+- Request hash: `b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba`
+- Response hash: `aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f`
 
 :::note
     Due to resource limitations, signatures are kept in memory for **5 minutes** after the response is generated. However, once queried within this 5-minute window, the signature becomes persistent in the LLM gateway for future verification.
@@ -250,8 +259,8 @@ Signature verification can be easily done with any standard ECDSA verification l
 
 These tools will require:
 
-- `Address`: What the expected address is for the signature. In our case it will be the one retrieved from your attestation API query (see Model Verification page).
-- `Message`: The original message before signing. In our case it will be the sha256 hash of the request and response (`text` field from [Get Chat Message Signature](#chat-message-signature))
+- `Address`: What the expected address is for the signature. In our case it will be the one retrieved from your [attestation API query](./model) (see Model Verification page).
+- `Message`: The original message before signing. In our case it will be the sha256 hash of the request and response (`text` field from [Chat Message Signature](#chat-message-signature))
 - `Signature`: The signed message from above
 
 Here is an example of how to verify the Chat Message signature using `ethers`:
@@ -267,9 +276,9 @@ Here is an example of how to verify the Chat Message signature using `ethers`:
 ```js
 import { ethers } from 'ethers';
 
-const text = "65b0adb47d0450971803dfb18d0ce4af4a64d27420a43d5aad4066ebf10b81b5:e508d818744d175a62aae1a9fb3f373c075460cbe50bf962a88ac008c843dff1";
-const signature = "0xf28f537325c337fd96ae6e156783c904ca708dcd38fb8a476d1280dfc72dc88e4fcb5c3941bdd4f8fe5238a2253b975c6b02ea6a0a450b5b0f9296ab54cf24181b";
-const expectedAddress = "0xc51268C9b46140619CBC066A34441a6ca51F85f9";
+const text = "b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba:aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f";
+const signature = "0x649b30be41e53ac33cb3fe414c8f5fd30ad72cacaeac0f41c4977fee4b67506e185300f1978039306c406b398c4eda49c3dad476d5054c63fd811570815012cc1b";
+const expectedAddress = "0x319f1b8BB3b723A5d098FFB67005Bdf7BB579ACa";
 
 // Recover the address from the signature
 const recoveredAddress = ethers.verifyMessage(text, signature);
@@ -290,9 +299,9 @@ console.log("Signature valid:", isValid);
 from eth_account import Account
 from eth_account.messages import encode_defunct
 
-text = "65b0adb47d0450971803dfb18d0ce4af4a64d27420a43d5aad4066ebf10b81b5:e508d818744d175a62aae1a9fb3f373c075460cbe50bf962a88ac008c843dff1"
-signature = "0xf28f537325c337fd96ae6e156783c904ca708dcd38fb8a476d1280dfc72dc88e4fcb5c3941bdd4f8fe5238a2253b975c6b02ea6a0a450b5b0f9296ab54cf24181b"
-expected_address = "0xc51268C9b46140619CBC066A34441a6ca51F85f9"
+text = "b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba:aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f"
+signature = "0x649b30be41e53ac33cb3fe414c8f5fd30ad72cacaeac0f41c4977fee4b67506e185300f1978039306c406b398c4eda49c3dad476d5054c63fd811570815012cc1b"
+expected_address = "0x319f1b8BB3b723A5d098FFB67005Bdf7BB579ACa"
 
 # Create a message object that can be signed
 message = encode_defunct(text=text)

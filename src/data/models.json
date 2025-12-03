@@ -3,12 +3,12 @@
     {
       "modelId": "deepseek-ai/DeepSeek-V3.1",
       "inputCostPerToken": {
-        "amount": 1000,
+        "amount": 1050,
         "scale": 9,
         "currency": "USD"
       },
       "outputCostPerToken": {
-        "amount": 2500,
+        "amount": 3100,
         "scale": 9,
         "currency": "USD"
       },
@@ -27,12 +27,12 @@
     {
       "modelId": "openai/gpt-oss-120b",
       "inputCostPerToken": {
-        "amount": 200,
+        "amount": 150,
         "scale": 9,
         "currency": "USD"
       },
       "outputCostPerToken": {
-        "amount": 600,
+        "amount": 550,
         "scale": 9,
         "currency": "USD"
       },
@@ -56,7 +56,7 @@
         "currency": "USD"
       },
       "outputCostPerToken": {
-        "amount": 450,
+        "amount": 550,
         "scale": 9,
         "currency": "USD"
       },
@@ -75,12 +75,12 @@
     {
       "modelId": "zai-org/GLM-4.6",
       "inputCostPerToken": {
-        "amount": 750,
+        "amount": 850,
         "scale": 9,
         "currency": "USD"
       },
       "outputCostPerToken": {
-        "amount": 2000,
+        "amount": 3300,
         "scale": 9,
         "currency": "USD"
       },

@@ -17,7 +17,9 @@ To verify a NEAR AI model is operating in a secure trusted environment, there ar
 - [Verify Model Attestation](#verifying-model-attestation) report using NVIDIA & Intel attestation authenticators
 
 :::tip 
-See an example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo.
+See an easy-to-follow example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo.
+
+A more complete verifier implementation is available in the [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) repo. 
 :::
 
 ---
@@ -27,8 +29,10 @@ See an example implementation in the [NEAR AI Cloud Verification Example](https:
 To request a model attestation from NEAR AI cloud, use the following `GET` API endpoint:
 
 ```bash
-https://cloud-api.near.ai/v1/attestation/report?model={model_name}
+https://cloud-api.near.ai/v1/attestation/report?model={model_name}&signing_algo=ecdsa&nonce={nonce}
 ```
+
+The `signing_algo` parameter specifies the signing algorithm used (`ecdsa` or `ed25519`). The `nonce` parameter is optional but recommended. It should be a randomly generated 64 character hexadecimal string (32 bytes) that ensures attestation freshness and prevents replay attacks. If not provided, the server will generate one for you.
 
 <Tabs
   defaultValue="curl"
@@ -40,25 +44,29 @@ https://cloud-api.near.ai/v1/attestation/report?model={model_name}
 <TabItem value="curl">
 
 ```bash
-curl https://cloud-api.near.ai/v1/attestation/report?model=deepseek-ai/DeepSeek-V3.1 \
+# Generate a random 64-character hex nonce (optional but recommended)
+NONCE=$(openssl rand -hex 32)
+
+curl "https://cloud-api.near.ai/v1/attestation/report?model=deepseek-ai/DeepSeek-V3.1&signing_algo=ecdsa&nonce=${NONCE}" \
   -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
 ```
 
 </TabItem>
 <TabItem value="javascript">
 
 ```js
+import crypto from 'crypto';
+
 const MODEL_NAME = 'deepseek-ai/DeepSeek-V3.1'
+// Generate a random 64-character hex nonce (optional but recommended)
+const nonce = crypto.randomBytes(32).toString('hex');
 
 const response = await fetch(
-  `https://cloud-api.near.ai/v1/attestation/report?model=${MODEL_NAME}`,
+  `https://cloud-api.near.ai/v1/attestation/report?model=${MODEL_NAME}&signing_algo=ecdsa&nonce=${nonce}`,
   {
     headers: {
-      Authorization: `Bearer ${YOUR_NEARAI_CLOUD_API_KEY}`,
-      'Content-Type': 'application/json',
-      },
+      'accept': 'application/json',
+    },
   }
 );
 ```
@@ -68,14 +76,16 @@ const response = await fetch(
 
 ```python
 import requests
+import secrets
 
 MODEL_NAME = 'deepseek-ai/DeepSeek-V3.1'
+# Generate a random 64-character hex nonce (optional but recommended)
+nonce = secrets.token_hex(32)
 
 response = requests.get(
-    f'https://cloud-api.near.ai/v1/attestation/report?model={MODEL_NAME}',
+    f'https://cloud-api.near.ai/v1/attestation/report?model={MODEL_NAME}&signing_algo=ecdsa&nonce={nonce}',
     headers={
-        'Authorization': f'Bearer {YOUR_NEARAI_CLOUD_API_KEY}',
-        'Content-Type': 'application/json',
+        'accept': 'application/json',
     }
 )
 ```
@@ -86,45 +96,51 @@ response = requests.get(
 <details>
  <summary>Example Response:</summary>
 ```json
-{
-"signing_address": "...",     \\ TEE Public Key
-"nvidia_payload": "...",      \\ Attestation report used to verify w/ NVIDIA
-"intel_quote": "...",         \\ Attestation report use to verify w/ Intel
-"all_attestations": [         \\ List of all GPU nodes in the network
-  {
-    "signing_address": "...",
-    "nvidia_payload": "...",
-    "intel_quote": "..."
-  }
-]
+{      
+  "model_attestations": [         \\ List of all GPU nodes in the network
+    {
+      "signing_address": "...",   \\ TEE Public Key
+      "nvidia_payload": "...",    \\ Attestation report used to verify w/ NVIDIA
+      "intel_quote": "..."        \\ Attestation report used to verify w/ Intel
+    }
+  ]
 }
 ```
 
-- `signing_address`: Account address generated inside TEE that will be used to sign the chat response.
+- `model_attestations`: List attestations from all GPU nodes as multiple TEE nodes may be used to serve inference requests. 
 
-- `nvidia_payload` and `intel_quote`: Attestation report formatted for NVIDIA TEE and Intel TEE respectively. You can use them to verify the integrity of the TEE. See [Verify the Attestation](#verifying-model-attestation) for more details.
+- `signing_address`: Account address generated inside TEE that will be used to sign the chat response. You can utilize the `signing_address` from `model_attestations` to select the appropriate TEE node for verifying its integrity.
 
-- `all_attestations`: List attestations from all GPU nodes as multiple TEE nodes may be used to serve inference requests. You can utilize the `signing_address` from `all_attestations` to select the appropriate TEE node for verifying its integrity.
+- `nvidia_payload` and `intel_quote`: Attestation report formatted for NVIDIA TEE and Intel TEE respectively. You can use them to verify the integrity of the TEE. See [Verifying Model Attestation](#verifying-model-attestation) for more details.
 
 </details>
 
 
 
 :::note
-    This endpoint requires [NEAR AI Cloud Account & API Key](../quickstart)
-
     **Implementation**: This endpoint is defined in the [NEAR AI Private ML SDK](https://github.com/nearai/private-ml-sdk/blob/a23fa797dfd7e676fba08cba68471b51ac9a13d9/vllm-proxy/src/app/api/v1/openai.py#L170).
 :::
 
 ## Verifying Model Attestation
 
-Once you have [requested a model attestation](#request-model-attestation) from NEAR AI Cloud, you can use the returned payload to verify its authenticity for both GPU & CPU chips.
+Once you have [requested a model attestation](#request-model-attestation) from NEAR AI Cloud, you can use the returned payload to verify its authenticity. You can verify:
+
+- **GPU attestation**: Submit GPU evidence payload to NVIDIA NRAS and verify the nonce matches
+- **Intel TDX quote**: Verifies TDX quote with [`dcap-qvl`](https://github.com/Phala-Network/dcap-qvl) library
+- **TDX report data**: Validates that report data binds the signing key (ECDSA or Ed25519) and nonce
+- **Compose manifest**: Displays Docker compose manifest and verifies it matches the mr_config measurement
+- **Sigstore provenance**: Verifies container image provenance links
 
 ### Verify GPU Attestation
 
-NVIDIA offers a [Remote Attestation Service](https://docs.nvidia.com/attestation/technical-docs-nras/latest/nras_introduction.html) that allows you to verify that you are using a trusted environment with one of their GPUs. To verify this they require:
+NVIDIA offers a [Remote Attestation Service](https://docs.nvidia.com/attestation/technical-docs-nras/latest/nras_introduction.html) that allows you to verify that you are using a trusted environment with one of their GPUs. To verify:
 
-- `nonce` - A randomly generated 64 character hexadecimal string
+1. Submit the GPU evidence payload (`nvidia_payload`) to NVIDIA NRAS
+2. Verify the nonce in the GPU payload matches the request nonce
+3. Validate the NVIDIA attestation verdict is PASS
+
+The `nvidia_payload` contains:
+- `nonce` - The nonce from your attestation request
 - `arch` - Architecture of the GPU _(HOPPER or BLACKWELL)_
 - `evidence_list` - A list of GPU evidence items, each containing an evidence and a corresponding certificate
 
@@ -239,6 +255,42 @@ See official documentation: https://docs.api.nvidia.com/attestation/reference/at
 
 :::
 
+
 ### Verify TDX Quote
 
-You can verify the Intel TDX quote with the value of `intel_quote` at [TEE Attestation Explorer](https://proof.t16z.com/).
+You can verify the Intel TDX quote with the value of `intel_quote` using the [`dcap-qvl`](https://github.com/Phala-Network/dcap-qvl) library. This verifies:
+
+- The CPU TEE measurements are valid
+- The quote is authentic and signed by Intel
+- The TEE environment is genuine
+
+Alternatively, you can verify the Intel TDX quote at [TEE Attestation Explorer](https://proof.t16z.com/).
+
+### Verify TDX Report Data
+
+The TDX report data validates that:
+- The report data binds the signing address (ECDSA or Ed25519) 
+- The report data embeds the request nonce
+
+This ensures cryptographic binding between the signing address and the hardware, and prevents replay attacks through nonce freshness.
+
+### Verify Compose Manifest
+
+The attestation response includes Docker compose manifest information in the `info` field. To verify:
+
+1. Extract the Docker compose manifest from the attestation
+2. Calculate the SHA-256 hash of the compose manifest
+3. Compare it with the `mr_config` measurement from the verified TDX quote
+4. Verify they match, proving the exact container configuration
+
+This ensures the exact Docker compose file is deployed to the TEE environment.
+
+### Verify Sigstore Provenance
+
+Extract all container image digests from the Docker compose manifest (matching `@sha256:xxx` patterns) and verify Sigstore accessibility for each image. This allows you to:
+
+1. Verify the container images were built from the expected source repository
+2. Review the GitHub Actions workflow that built the images
+3. Audit the build provenance and supply chain metadata
+
+Check each Sigstore link with an HTTP HEAD request to ensure provenance data is valid.
