@@ -38,6 +38,21 @@ const sidebars = {
       },
     },
     {
+      type: 'category',
+      label: 'Configuration',
+      link: {
+        type: 'doc',
+        id: 'cloud/reasoning-models',
+      },
+      collapsed: false,
+      customProps: {
+        icon: '/img/icons/docs.svg',
+      },
+      items: [
+        'cloud/reasoning-models',
+      ],
+    },
+    {
       type: 'doc',
       id: 'cloud/private-inference',
       customProps: {

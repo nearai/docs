@@ -1,0 +1,159 @@
+---
+id: reasoning-models
+title: Reasoning Models
+sidebar_label: Reasoning Models
+slug: /cloud/reasoning-models
+description: "Learn how to enable and disable reasoning capabilities for supported models"
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Reasoning Models Configuration
+
+Some models in NEAR AI Cloud support advanced reasoning capabilities that allow them to "think" through problems before providing a final answer. This feature can improve the quality of responses for complex tasks that require step-by-step reasoning.
+
+## Overview
+
+Reasoning models can process information in two stages:
+1. **Thinking stage**: Internal reasoning process (not shown in final output by default)
+2. **Response stage**: The final answer provided to the user
+
+You can control whether a model uses reasoning by configuring the `chat_template_kwargs` parameter in your API requests.
+
+---
+
+## DeepSeek V3.1
+
+DeepSeek V3.1 supports reasoning through the `thinking` parameter in `chat_template_kwargs`.
+
+### Enable Reasoning
+
+To enable reasoning for DeepSeek V3.1, set `"thinking": true` in the `chat_template_kwargs`:
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "model": "deepseek-ai/DeepSeek-V3.1",
+    "messages": [
+      {"role": "user", "content": "What is sqrt of 11"}
+    ],
+    "temperature": 1,
+    "n": 1,
+    "chat_template_kwargs": {
+      "thinking": true
+    },
+    "stream": true
+  }'
+```
+
+### Disable Reasoning
+
+To disable reasoning, either omit the `chat_template_kwargs` parameter or set `"thinking": false`:
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "model": "deepseek-ai/DeepSeek-V3.1",
+    "messages": [
+      {"role": "user", "content": "What is sqrt of 11"}
+    ],
+    "temperature": 1,
+    "n": 1,
+    "stream": true
+  }'
+```
+
+---
+
+## GLM-4.6
+
+GLM-4.6 supports reasoning through the `enable_thinking` parameter in `chat_template_kwargs`. **Reasoning is enabled by default** for GLM-4.6.
+
+### Default Behavior (Reasoning Enabled)
+
+GLM-4.6 uses reasoning by default. You can explicitly enable it by setting `"enable_thinking": true`, or simply omit the parameter:
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "model": "zai-org/GLM-4.6",
+    "messages": [
+      {"role": "user", "content": "How much is 2+2?"}
+    ],
+    "temperature": 0.4,
+    "n": 1,
+    "chat_template_kwargs": {
+      "enable_thinking": true
+    },
+    "stream": true
+  }'
+```
+
+### Disable Reasoning
+
+To disable reasoning for GLM-4.6, you must explicitly set `"enable_thinking": false` in the `chat_template_kwargs`:
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "model": "zai-org/GLM-4.6",
+    "messages": [
+      {"role": "user", "content": "How much is 2+2?"}
+    ],
+    "temperature": 0.4,
+    "n": 1,
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "stream": true
+  }'
+```
+
+---
+
+## Model-Specific Parameters
+
+Different models use different parameter names for enabling reasoning:
+
+| Model | Parameter Name | Default Value |
+|-------|---------------|---------------|
+| DeepSeek V3.1 | `thinking` | `false` |
+| GLM-4.6 | `enable_thinking` | `true` |
+
+:::tip
+Always check the model documentation or use the model's specific parameter name. Using the wrong parameter name will not enable reasoning.
+:::
+
+---
+
+## When to Use Reasoning
+
+Reasoning is particularly useful for:
+- **Complex mathematical problems**: Multi-step calculations and problem-solving
+- **Logical reasoning**: Tasks requiring step-by-step analysis
+- **Code generation**: Complex programming problems that need careful planning
+- **Scientific questions**: Problems requiring structured thinking
+
+Reasoning may not be necessary for:
+- **Simple queries**: Straightforward questions with direct answers
+- **Fast responses**: When latency is critical and the problem is simple
+- **Cost optimization**: Reasoning can increase token usage and costs
+
+---
+
+## Best Practices
+
+1. **Test with and without reasoning**: Compare results to determine if reasoning improves output quality for your use case
+2. **Monitor token usage**: Reasoning can increase the number of tokens used, affecting costs
+3. **Use appropriate models**: Not all models support reasoning - check model capabilities before enabling
+4. **Stream responses**: When using reasoning, streaming can provide better user experience for longer responses
+
