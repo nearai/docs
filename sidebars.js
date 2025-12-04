@@ -17,70 +17,81 @@
 const sidebars = {
   docsSidebar: [
     {
-      type: 'doc',
-      id: 'cloud/introduction',
+      type: "doc",
+      id: "cloud/introduction",
       customProps: {
-        icon: '/img/icons/introduction.svg',
+        icon: "/img/icons/introduction.svg",
       },
     },
     {
-      type: 'doc',
-      id: 'cloud/quickstart',
+      type: "doc",
+      id: "cloud/quickstart",
       customProps: {
-        icon: '/img/icons/quickstart.svg',
+        icon: "/img/icons/quickstart.svg",
       },
     },
     {
-      type: 'doc',
-      id: 'cloud/models',
+      type: "doc",
+      id: "cloud/models",
       customProps: {
-        icon: '/img/icons/ai.svg',
+        icon: "/img/icons/ai.svg",
       },
     },
     {
-      type: 'category',
-      label: 'Configuration',
+      type: "category",
+      label: "Configuration",
       link: {
-        type: 'doc',
-        id: 'cloud/reasoning-models',
+        type: "doc",
+        id: "cloud/reasoning-models",
       },
       collapsed: false,
       customProps: {
-        icon: '/img/icons/docs.svg',
+        icon: "/img/icons/docs.svg",
       },
-      items: [
-        'cloud/reasoning-models',
-      ],
+      items: ["cloud/reasoning-models"],
     },
     {
-      type: 'doc',
-      id: 'cloud/private-inference',
+      type: "doc",
+      id: "cloud/private-inference",
       customProps: {
-        icon: '/img/icons/private-inference.svg',
+        icon: "/img/icons/private-inference.svg",
       },
     },
     {
-      type: 'category',
-      label: 'Verification',
+      type: "category",
+      label: "Verification",
       link: {
-        type: 'doc',
-        id: 'cloud/verification/verification',
+        type: "doc",
+        id: "cloud/verification/verification",
       },
       collapsed: true,
       customProps: {
-        icon: '/img/icons/verification.svg',
+        icon: "/img/icons/verification.svg",
       },
       items: [
-        'cloud/verification/model-verification',
-        'cloud/verification/gateway-verification',
-        'cloud/verification/chat-verification',
+        "cloud/verification/model-verification",
+        "cloud/verification/gateway-verification",
+        "cloud/verification/chat-verification",
       ],
     },
     {
-      type: 'doc',
-      id: 'api-reference',
+      type: "category",
+      label: "Guides",
+      link: {
+        type: "doc",
+        id: "cloud/guides/openai-compatibility",
+      },
+      collapsed: false,
       customProps: {
-        icon: '/img/icons/unified-api.svg',
+        icon: "/img/icons/docs.svg",
+      },
+      items: ["cloud/guides/openai-compatibility"],
+    },
+    {
+      type: "doc",
+      id: "api-reference",
+      customProps: {
+        icon: "/img/icons/unified-api.svg",
       },
     },
   ],
