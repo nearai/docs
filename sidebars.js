@@ -31,24 +31,17 @@ const sidebars = {
       },
     },
     {
-      type: "doc",
-      id: "cloud/models",
-      customProps: {
-        icon: "/img/icons/ai.svg",
-      },
-    },
-    {
       type: "category",
-      label: "Configuration",
+      label: "Models",
       link: {
         type: "doc",
-        id: "cloud/reasoning-models",
+        id: "cloud/models-overview",
       },
       collapsed: false,
       customProps: {
-        icon: "/img/icons/docs.svg",
+        icon: "/img/icons/ai.svg",
       },
-      items: ["cloud/reasoning-models"],
+      items: ["cloud/models-overview", "cloud/reasoning-models"],
     },
     {
       type: "doc",
