@@ -11,6 +11,7 @@ import TabItem from '@theme/TabItem';
 import ModelsIcon from '@site/static/img/icons/ai.svg';
 import PrivateInferenceIcon from '@site/static/img/icons/private-inference.svg';
 import VerificationIcon from '@site/static/img/icons/verification.svg';
+import UnifiedApiIcon from '@site/static/img/icons/unified-api.svg';
 import { FeatureCard, FeatureCardGrid } from '@site/src/components/FeatureCard';
 
 # NEAR AI Cloud Quickstart
@@ -132,6 +133,10 @@ The API will return a JSON response containing the model's completion:
 
 All inference is performed within Trusted Execution Environments (TEEs), ensuring your data remains private and verifiable.
 
+:::tip Using OpenAI SDKs?
+For advanced features like streaming, async operations, Files API, and Conversations API, see our comprehensive [OpenAI Compatibility Guide](/cloud/guides/openai-compatibility).
+:::
+
 ---
 
 ## Next Steps
@@ -154,6 +159,12 @@ All inference is performed within Trusted Execution Environments (TEEs), ensurin
     title="Verification"
     description="Understand how to verify and validate secure interactions with AI models"
     href="/cloud/verification"
+  />
+  <FeatureCard
+    icon={UnifiedApiIcon}
+    title="OpenAI Compatibility"
+    description="Use standard OpenAI SDKs with streaming, async, Files API, and more"
+    href="/cloud/guides/openai-compatibility"
   />
 </FeatureCardGrid>
 
