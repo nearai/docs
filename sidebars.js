@@ -37,7 +37,7 @@ const sidebars = {
         type: "doc",
         id: "cloud/models-overview",
       },
-      collapsed: false,
+      collapsed: true,
       customProps: {
         icon: "/img/icons/ai.svg",
       },
