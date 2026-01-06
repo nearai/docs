@@ -78,12 +78,37 @@ NEAR AI Cloud combines Intel TDX and NVIDIA TEE technologies to create isolated,
 - **[Cryptographic Attestation](/cloud/verification)** :
     Each TEE environment generates cryptographic proofs of its integrity and configuration, enabling independent verification of the secure execution environment.
 
+### Client-Side Encryption
+
+If you're using a standard OpenAI SDK or curl, your prompts are automatically protected by TLS encryption—no additional setup required.
+
+```mermaid
+flowchart LR
+    A["Your Machine"] -->|"🔒 Encrypted"| B["Internet"] -->|"🔒 Encrypted"| C["TEE: TLS Termination → LLM"]
+
+    style A fill:#1a1a2e,stroke:#4fc3f7,stroke-width:2px,color:#fff
+    style B fill:#1a1a2e,stroke:#ffb74d,stroke-width:2px,color:#fff
+    style C fill:#2e7d32,stroke:#81c784,stroke-width:2px,color:#fff
+```
+
+**Key insight:** TLS termination happens inside the TEE (green box), not at an external load balancer. Your prompts remain encrypted until they reach the secure enclave.
+
+Here's why this works:
+
+1. **Standard HTTPS = TLS encryption**: When you make API calls using the OpenAI SDK or curl, you're connecting via HTTPS. This means TLS encryption is applied automatically by your client before any data leaves your machine.
+
+2. **TLS terminates inside the TEE**: Unlike traditional cloud services where TLS terminates at an external load balancer, NEAR AI Cloud terminates TLS connections **inside the Trusted Execution Environment**. Your encrypted data travels from your laptop directly into the secure enclave before being decrypted.
+
+3. **No plaintext exposure**: Because TLS termination happens within the TEE, your prompts are never exposed in plaintext outside the hardware-secured environment—not to network infrastructure, not to cloud providers, not to anyone.
+
+This means you get the same seamless developer experience as any OpenAI-compatible API, while your data remains encrypted from your machine all the way into the secure TEE.
+
 ### The Inference Process
 
 When you make a request to NEAR AI Cloud, your data flows through a secure pipeline designed to maintain privacy at every step:
 
     1. **Request Initiation:**
-    You send chat completion requests to the LLM Gateway, which operates within a secure TEE environment and manages authentication.
+    You send chat completion requests via HTTPS to the LLM Gateway. TLS encryption protects your data in transit, and the TLS connection terminates inside the TEE, ensuring your prompts are decrypted only within the secure environment.
 
     2. **Secure Request Routing:**
     The LLM Gateway routes your request to the appropriate Private LLM Node based on the requested model, availability, and load balancing requirements.
@@ -136,7 +161,7 @@ NEAR AI Cloud's private inference implements multiple layers of security to prot
   TEEs create isolated execution environments enforced at the hardware level, preventing unauthorized access to memory and computation even from privileged system administrators or cloud providers.
 
 - **Secure Communication** :
-All communication between your applications and the LLM infrastructure uses end-to-end encryption, protecting data in transit from network-level attacks.
+All communication between your applications and the LLM infrastructure uses TLS encryption. Critically, TLS termination occurs inside the TEE—not at an external load balancer—so your prompts remain encrypted until they reach the secure enclave.
 
 - **Cryptographic Attestation** :
 Every TEE environment generates cryptographic proofs that verify the integrity of the execution environment, allowing you to independently confirm your computations occurred in a genuine, unmodified TEE.
