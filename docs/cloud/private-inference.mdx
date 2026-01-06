@@ -84,29 +84,11 @@ If you're using a standard OpenAI SDK or curl, your prompts are automatically pr
 
 ```mermaid
 flowchart LR
-    subgraph client["Your Machine"]
-        A["OpenAI SDK / curl"]
-    end
+    A["Your Machine"] -->|"🔒 Encrypted"| B["Internet"] -->|"🔒 Encrypted"| C["TEE: TLS Termination → LLM"]
 
-    subgraph network["Internet"]
-        B["TLS Encrypted Traffic"]
-    end
-
-    subgraph tee["Trusted Execution Environment"]
-        C["TLS Termination"]
-        D["LLM Gateway"]
-        E["Private LLM Node"]
-    end
-
-    A -->|"HTTPS request"| B
-    B -->|"Encrypted"| C
-    C -->|"Decrypted inside TEE"| D
-    D --> E
-
-    style client fill:#e1f5fe
-    style network fill:#fff3e0
-    style tee fill:#e8f5e9
-    style C fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    style A fill:#1a1a2e,stroke:#4fc3f7,stroke-width:2px,color:#fff
+    style B fill:#1a1a2e,stroke:#ffb74d,stroke-width:2px,color:#fff
+    style C fill:#2e7d32,stroke:#81c784,stroke-width:2px,color:#fff
 ```
 
 **Key insight:** TLS termination happens inside the TEE (green box), not at an external load balancer. Your prompts remain encrypted until they reach the secure enclave.
