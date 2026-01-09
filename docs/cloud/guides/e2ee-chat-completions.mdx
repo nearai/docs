@@ -532,9 +532,9 @@ console.log(decryptedContent);
 
 ## Important Notes
 
-### Streaming is Required for Responses API
+### Supported Endpoints
 
-When using E2EE with the `/v1/responses` endpoint, streaming mode must be enabled (`stream: true`). Non-streaming mode is not supported with encryption because encrypted chunks cannot be concatenated.
+E2EE is only supported on the **Chat Completions API** (`/v1/chat/completions`). The Response API (`/v1/responses`) does not support encrypted input messages.
 
 ### Message Format
 
