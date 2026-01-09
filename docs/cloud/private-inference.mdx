@@ -9,6 +9,7 @@ description: "Learn how NEAR AI Cloud's private inference leverages TEEs to prov
 import PrivateInferenceIcon from '@site/static/img/icons/private-inference.svg';
 import VerificationIcon from '@site/static/img/icons/verification.svg';
 import PerformanceIcon from '@site/static/img/icons/performance.svg';
+import DocsIcon from '@site/static/img/icons/docs.svg';
 import { FeatureCard, FeatureCardGrid } from '@site/src/components/FeatureCard';
 
 # Private Inference
@@ -195,5 +196,11 @@ Cryptographic signatures generated inside the TEE ensure that responses cannot b
     title="Verification"
     description="Understand how to verify and validate secure interactions with AI models"
     href="/cloud/verification"
+  />
+  <FeatureCard
+    icon={DocsIcon}
+    title="E2EE Chat Completions"
+    description="Add client-side encryption for defense-in-depth protection of your messages"
+    href="/cloud/guides/e2ee-chat-completions"
   />
 </FeatureCardGrid>
