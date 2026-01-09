@@ -78,7 +78,10 @@ const sidebars = {
       customProps: {
         icon: "/img/icons/docs.svg",
       },
-      items: ["cloud/guides/openai-compatibility"],
+      items: [
+        "cloud/guides/openai-compatibility",
+        "cloud/guides/e2ee-chat-completions",
+      ],
     },
     {
       type: "doc",
