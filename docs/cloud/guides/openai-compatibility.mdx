@@ -18,10 +18,22 @@ NEAR AI Cloud provides an API that is fully compatible with the OpenAI API speci
 To use the OpenAI SDKs with NEAR AI Cloud, you simply need to override the `base_url` and provide your NEAR AI `api_key`.
 
 ### Base URL
-The base URL for NEAR AI Cloud is:
+
+NEAR AI Cloud offers two base URL options:
+
+**Gateway** (routes to any model):
 ```
 https://cloud-api.near.ai/v1
 ```
+
+**Direct Completions** (connects straight to a model's TEE):
+```
+https://{slug}.completions.near.ai/v1
+```
+
+For example, `https://qwen35-122b.completions.near.ai/v1` connects directly to Qwen3.5-122B. See [completions.near.ai/endpoints](https://completions.near.ai/endpoints) for all available endpoints.
+
+Both URLs use the same API key and the same OpenAI-compatible API. Direct completions offer lower latency and a simpler trust model since TLS terminates directly in the model's TEE. See [Private Inference — Direct Completions](/cloud/private-inference#direct-completions) for details.
 
 ### API Key
 You can generate your API key in the [NEAR AI Cloud Dashboard](https://cloud.near.ai/api-keys).
