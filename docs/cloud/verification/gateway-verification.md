@@ -12,6 +12,10 @@ import TabItem from '@theme/TabItem';
 
 # Gateway Verification
 
+:::tip Direct Completions — No Gateway Verification Needed
+If you are using [direct completions endpoints](/cloud/private-inference#direct-completions) (e.g., `https://deepseek-v31.completions.near.ai`), your requests go straight to the model's TEE with no gateway in the path. In that case, only [Model Verification](/cloud/verification/model) is needed — you can skip gateway verification entirely.
+:::
+
 To verify the NEAR AI Cloud private inference gateway is operating in a secure trusted environment, you need to verify the gateway attestation. The gateway attestation proves that the API gateway itself runs in a Trusted Execution Environment (TEE).
 
 - [Request Gateway Attestation](#request-gateway-attestation) report from NEAR AI Cloud

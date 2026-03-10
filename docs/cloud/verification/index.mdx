@@ -20,6 +20,10 @@ See an easy-to-follow example implementation in the [NEAR AI Cloud Verification 
 A more complete verifier implementation is available in the [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) repo.
 :::
 
+:::tip Simplified Verification with Direct Completions
+When using [direct completions endpoints](/cloud/private-inference#direct-completions) (e.g., `https://deepseek-v31.completions.near.ai`), your requests go straight to the model's TEE. This means only **model verification** is needed — there is no gateway in the path, so [gateway verification](/cloud/verification/gateway) can be skipped entirely.
+:::
+
 ## How NEAR AI Cloud Verification Works
 
 1. **Secure Key Generation:** When NEAR AI Cloud initializes, it generates a unique cryptographic signing key pair inside the Trusted Execution Environment (TEE). The private key never leaves the secure hardware.

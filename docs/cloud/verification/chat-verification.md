@@ -202,10 +202,16 @@ From the Chat Message Response you will get a unique chat `id` that is used to f
 
 You can query the signature API with the value of `id` from the response at any time after chat completion. The signature is persistent in the LLM gateway for future verification.
 
-Use the following endpoint to get this signature:
+Use one of the following endpoints to get the signature:
 
+**Via Gateway:**
 ```bash
 GET https://cloud-api.near.ai/v1/signature/{chat_id}?model={model_id}&signing_algo=ecdsa
+```
+
+**Via Direct Completions:**
+```bash
+GET https://{slug}.completions.near.ai/v1/signature/{chat_id}?signing_algo=ecdsa
 ```
 
 > **Implementation**: This endpoint is defined in the [NEAR AI Private ML SDK](https://github.com/nearai/private-ml-sdk/blob/a23fa797dfd7e676fba08cba68471b51ac9a13d9/vllm-proxy/src/app/api/v1/openai.py#L257).
@@ -215,9 +221,15 @@ For example, the `id` from the response in the previous section is:
  `chatcmpl-ba1b4314210adc3b`
 
 ```bash
+# Via gateway:
 curl -X GET 'https://cloud-api.near.ai/v1/signature/chatcmpl-ba1b4314210adc3b?model=deepseek-ai/DeepSeek-V3.1&signing_algo=ecdsa' \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer <YOUR-NEARAI-CLOUD-API-KEY>"
+
+# Or via direct completions:
+# curl -X GET 'https://deepseek-v31.completions.near.ai/v1/signature/chatcmpl-ba1b4314210adc3b?signing_algo=ecdsa' \
+#     -H "Content-Type: application/json" \
+#     -H "Authorization: Bearer <YOUR-NEARAI-CLOUD-API-KEY>"
 ```
 
 ***Example Response:***

@@ -83,16 +83,30 @@ NEAR AI Cloud combines Intel TDX and NVIDIA TEE technologies to create isolated,
 
 If you're using a standard OpenAI SDK or curl, your prompts are automatically protected by TLS encryption—no additional setup required.
 
+NEAR AI Cloud supports two connection modes — both provide TLS termination inside a TEE:
+
+**Gateway mode** routes through `cloud-api.near.ai`, which runs in its own TEE before forwarding to the model TEE:
+
 ```mermaid
 flowchart LR
-    A["Your Machine"] -->|"🔒 Encrypted"| B["Internet"] -->|"🔒 Encrypted"| C["TEE: TLS Termination → LLM"]
+    A["Your Machine"] -->|"🔒 Encrypted"| B["Gateway TEE"] -->|"🔒 Encrypted"| C["Model TEE: TLS Termination → LLM"]
 
     style A fill:#1a1a2e,stroke:#4fc3f7,stroke-width:2px,color:#fff
-    style B fill:#1a1a2e,stroke:#ffb74d,stroke-width:2px,color:#fff
+    style B fill:#1b5e20,stroke:#66bb6a,stroke-width:2px,color:#fff
     style C fill:#2e7d32,stroke:#81c784,stroke-width:2px,color:#fff
 ```
 
-**Key insight:** TLS termination happens inside the TEE (green box), not at an external load balancer. Your prompts remain encrypted until they reach the secure enclave.
+**Direct completions mode** connects you straight to the model's TEE — one hop, one TEE to verify:
+
+```mermaid
+flowchart LR
+    A["Your Machine"] -->|"🔒 Encrypted"| C["Model TEE: TLS Termination → LLM"]
+
+    style A fill:#1a1a2e,stroke:#4fc3f7,stroke-width:2px,color:#fff
+    style C fill:#2e7d32,stroke:#81c784,stroke-width:2px,color:#fff
+```
+
+**Key insight:** In both modes, TLS termination happens inside the TEE (green boxes), not at an external load balancer. Your prompts remain encrypted until they reach the secure enclave.
 
 Here's why this works:
 
@@ -104,9 +118,46 @@ Here's why this works:
 
 This means you get the same seamless developer experience as any OpenAI-compatible API, while your data remains encrypted from your machine all the way into the secure TEE.
 
+### Direct Completions
+
+With direct completions, each model is available at its own subdomain under `completions.near.ai`. Your request goes straight to the model's TEE — no gateway hop needed.
+
+**Base URL format:**
+```
+https://{slug}.completions.near.ai/v1
+```
+
+**Available endpoints** (see [completions.near.ai/endpoints](https://completions.near.ai/endpoints) for the full list):
+
+| Subdomain | Model |
+|-----------|-------|
+| `deepseek-v31.completions.near.ai` | DeepSeek-V3.1 |
+| `qwen35-122b.completions.near.ai` | Qwen3.5-122B |
+| `qwen3-30b.completions.near.ai` | Qwen3-30B |
+| `gpt-oss-120b.completions.near.ai` | OpenAI GPT-OSS-120B |
+
+Each subdomain exposes the same OpenAI-compatible API as the gateway, plus model-specific endpoints:
+
+- `POST /v1/chat/completions` — Chat completions (with signing)
+- `POST /v1/completions` — Text completions
+- `POST /v1/embeddings` — Embeddings
+- `POST /v1/images/generations` — Image generation
+- `POST /v1/audio/transcriptions` — Audio transcription
+- `POST /v1/rerank` — Reranking
+- `GET /v1/models` — Available models
+- `GET /v1/attestation/report` — TEE attestation (TDX + GPU)
+- `GET /v1/signature/{chat_id}` — Retrieve cached signatures
+
+**Benefits of direct completions:**
+- **Fewer hops** — Your request reaches the model TEE directly, reducing latency
+- **Simpler trust model** — Only the model TEE needs to be verified (no [gateway verification](/cloud/verification/gateway) required)
+- **TLS binds to attestation** — The `include_tls_fingerprint=true` parameter on the attestation endpoint binds the TLS certificate to the attestation report
+
 ### The Inference Process
 
-When you make a request to NEAR AI Cloud, your data flows through a secure pipeline designed to maintain privacy at every step:
+When you make a request to NEAR AI Cloud, your data flows through a secure pipeline designed to maintain privacy at every step. The exact flow depends on whether you use the gateway or a direct completions endpoint.
+
+**Via Gateway (`cloud-api.near.ai`):**
 
     1. **Request Initiation:**
     You send chat completion requests via HTTPS to the LLM Gateway. TLS encryption protects your data in transit, and the TLS connection terminates inside the TEE, ensuring your prompts are decrypted only within the secure environment.
@@ -125,6 +176,20 @@ When you make a request to NEAR AI Cloud, your data flows through a secure pipel
 
     6. **Verifiable Response:**
     You receive the AI response along with cryptographic signatures and attestation data for independent verification.
+
+**Via Direct Completions (`{slug}.completions.near.ai`):**
+
+    1. **Direct Request:**
+    You send chat completion requests via HTTPS directly to the model's subdomain. TLS terminates inside the model's TEE — there is no intermediate gateway.
+
+    2. **Secure Inference:**
+    The model processes your request entirely within its TEE, where all data and model weights are protected by hardware-enforced isolation.
+
+    3. **Attestation & Signing:**
+    The TEE generates attestation reports and cryptographically signs both your request and the inference results.
+
+    4. **Verifiable Response:**
+    You receive the response with cryptographic signatures. Only [model verification](/cloud/verification/model) is needed — no gateway attestation to check.
 
 ---
 

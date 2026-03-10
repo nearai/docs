@@ -26,18 +26,27 @@ A more complete verifier implementation is available in the [NEAR AI Cloud Verif
 
 ## Request Model Attestation
 
-To request a model attestation from NEAR AI cloud, use the following `GET` API endpoint:
+To request a model attestation from NEAR AI cloud, use one of the following `GET` API endpoints:
 
+**Via Gateway:**
 ```bash
 https://cloud-api.near.ai/v1/attestation/report?model={model_name}&signing_algo=ecdsa&nonce={nonce}
 ```
 
+**Via Direct Completions:**
+```bash
+https://{slug}.completions.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce={nonce}
+```
+
 The `signing_algo` parameter specifies the signing algorithm used (`ecdsa` or `ed25519`). The `nonce` parameter is optional but recommended. It should be a randomly generated 64 character hexadecimal string (32 bytes) that ensures attestation freshness and prevents replay attacks. If not provided, the server will generate one for you.
+
+With direct completions, you can also pass `include_tls_fingerprint=true` to bind the TLS certificate fingerprint to the attestation report, providing additional assurance that the TLS connection terminates inside the TEE.
 
 <Tabs
   defaultValue="curl"
   values={[
-    {label: 'curl', value: 'curl'},
+    {label: 'curl (Gateway)', value: 'curl'},
+    {label: 'curl (Direct)', value: 'curl-direct'},
     {label: 'JavaScript', value: 'javascript'},
     {label: 'Python', value: 'python'},
     ]}>
@@ -48,7 +57,19 @@ The `signing_algo` parameter specifies the signing algorithm used (`ecdsa` or `e
 NONCE=$(openssl rand -hex 32)
 
 curl "https://cloud-api.near.ai/v1/attestation/report?model=deepseek-ai/DeepSeek-V3.1&signing_algo=ecdsa&nonce=${NONCE}" \
-  -H 'accept: application/json' \
+  -H 'accept: application/json'
+```
+
+</TabItem>
+<TabItem value="curl-direct">
+
+```bash
+# Generate a random 64-character hex nonce (optional but recommended)
+NONCE=$(openssl rand -hex 32)
+
+# Direct completions — no model parameter needed
+curl "https://deepseek-v31.completions.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce=${NONCE}&include_tls_fingerprint=true" \
+  -H 'accept: application/json'
 ```
 
 </TabItem>
@@ -61,6 +82,7 @@ const MODEL_NAME = 'deepseek-ai/DeepSeek-V3.1'
 // Generate a random 64-character hex nonce (optional but recommended)
 const nonce = crypto.randomBytes(32).toString('hex');
 
+// Via gateway:
 const response = await fetch(
   `https://cloud-api.near.ai/v1/attestation/report?model=${MODEL_NAME}&signing_algo=ecdsa&nonce=${nonce}`,
   {
@@ -69,6 +91,12 @@ const response = await fetch(
     },
   }
 );
+
+// Or via direct completions:
+// const response = await fetch(
+//   `https://deepseek-v31.completions.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce=${nonce}&include_tls_fingerprint=true`,
+//   { headers: { 'accept': 'application/json' } }
+// );
 ```
 
 </TabItem>
@@ -82,12 +110,19 @@ MODEL_NAME = 'deepseek-ai/DeepSeek-V3.1'
 # Generate a random 64-character hex nonce (optional but recommended)
 nonce = secrets.token_hex(32)
 
+# Via gateway:
 response = requests.get(
     f'https://cloud-api.near.ai/v1/attestation/report?model={MODEL_NAME}&signing_algo=ecdsa&nonce={nonce}',
     headers={
         'accept': 'application/json',
     }
 )
+
+# Or via direct completions:
+# response = requests.get(
+#     f'https://deepseek-v31.completions.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce={nonce}&include_tls_fingerprint=true',
+#     headers={'accept': 'application/json'}
+# )
 ```
 
 </TabItem>
