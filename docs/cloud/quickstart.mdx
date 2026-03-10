@@ -120,7 +120,7 @@ console.log(completion.choices[0].message.content);
 
 Direct completions connect you straight to the model's TEE — TLS terminates inside the model enclave with no intermediate gateway hop.
 
-Each model has its own subdomain. For example, DeepSeek-V3.1 is available at `deepseek-v31.completions.near.ai`:
+Each model has its own subdomain. For example, Qwen3.5-122B is available at `qwen35-122b.completions.near.ai`:
 
 <Tabs
   defaultValue="curl"
@@ -132,11 +132,11 @@ Each model has its own subdomain. For example, DeepSeek-V3.1 is available at `de
 <TabItem value="curl">
 
 ```bash
-curl https://deepseek-v31.completions.near.ai/v1/chat/completions \
+curl https://qwen35-122b.completions.near.ai/v1/chat/completions \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer YOUR_API_KEY" \
 -d '{
-    "model": "deepseek-ai/DeepSeek-V3.1",
+    "model": "Qwen/Qwen3.5-122B-A10B",
     "messages": [{
         "role": "user",
         "content": "Hello, NEAR AI!"
@@ -151,12 +151,12 @@ curl https://deepseek-v31.completions.near.ai/v1/chat/completions \
 import openai
 
 client = openai.OpenAI(
-    base_url="https://deepseek-v31.completions.near.ai/v1",
+    base_url="https://qwen35-122b.completions.near.ai/v1",
     api_key="YOUR_API_KEY"
 )
 
 response = client.chat.completions.create(
-    model="deepseek-ai/DeepSeek-V3.1",
+    model="Qwen/Qwen3.5-122B-A10B",
     messages=[{
         "role": "user", "content": "Hello, NEAR AI!"
     }]
@@ -172,12 +172,12 @@ print(response.choices[0].message.content)
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-    baseURL: 'https://deepseek-v31.completions.near.ai/v1',
+    baseURL: 'https://qwen35-122b.completions.near.ai/v1',
     apiKey: 'YOUR_API_KEY',
 });
 
 const completion = await openai.chat.completions.create({
-    model: 'deepseek-ai/DeepSeek-V3.1',
+    model: 'Qwen/Qwen3.5-122B-A10B',
     messages: [{
         role: 'user', content: 'Hello, NEAR AI!'
     }]

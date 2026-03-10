@@ -227,7 +227,7 @@ curl -X GET 'https://cloud-api.near.ai/v1/signature/chatcmpl-ba1b4314210adc3b?mo
     -H "Authorization: Bearer <YOUR-NEARAI-CLOUD-API-KEY>"
 
 # Or via direct completions:
-# curl -X GET 'https://deepseek-v31.completions.near.ai/v1/signature/chatcmpl-ba1b4314210adc3b?signing_algo=ecdsa' \
+# curl -X GET 'https://qwen35-122b.completions.near.ai/v1/signature/chatcmpl-ba1b4314210adc3b?signing_algo=ecdsa' \
 #     -H "Content-Type: application/json" \
 #     -H "Authorization: Bearer <YOUR-NEARAI-CLOUD-API-KEY>"
 ```

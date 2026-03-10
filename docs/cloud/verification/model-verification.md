@@ -68,7 +68,7 @@ curl "https://cloud-api.near.ai/v1/attestation/report?model=deepseek-ai/DeepSeek
 NONCE=$(openssl rand -hex 32)
 
 # Direct completions — no model parameter needed
-curl "https://deepseek-v31.completions.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce=${NONCE}&include_tls_fingerprint=true" \
+curl "https://qwen35-122b.completions.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce=${NONCE}&include_tls_fingerprint=true" \
   -H 'accept: application/json'
 ```
 
@@ -94,7 +94,7 @@ const response = await fetch(
 
 // Or via direct completions:
 // const response = await fetch(
-//   `https://deepseek-v31.completions.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce=${nonce}&include_tls_fingerprint=true`,
+//   `https://qwen35-122b.completions.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce=${nonce}&include_tls_fingerprint=true`,
 //   { headers: { 'accept': 'application/json' } }
 // );
 ```
@@ -120,7 +120,7 @@ response = requests.get(
 
 # Or via direct completions:
 # response = requests.get(
-#     f'https://deepseek-v31.completions.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce={nonce}&include_tls_fingerprint=true',
+#     f'https://qwen35-122b.completions.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce={nonce}&include_tls_fingerprint=true',
 #     headers={'accept': 'application/json'}
 # )
 ```
