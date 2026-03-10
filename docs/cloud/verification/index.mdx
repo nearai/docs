@@ -28,7 +28,7 @@ When using [direct completions endpoints](/cloud/private-inference#direct-comple
 
 1. **Secure Key Generation:** When NEAR AI Cloud initializes, it generates a unique cryptographic signing key pair inside the Trusted Execution Environment (TEE). The private key never leaves the secure hardware.
 
-2. **Hardware Attestation:** The system generates attestation reports that cryptographically prove it's running on genuine NVIDIA H100/H200/B100 hardware in TEE mode within a confidential VM.
+2. **Hardware Attestation:** The system generates attestation reports that cryptographically prove it's running on genuine NVIDIA H100/H200 hardware in TEE mode within a confidential VM.
 
 3. **Key Binding:** These attestation reports include the public key from step 1, creating a verifiable link between the secure hardware and the signing capability.
 
