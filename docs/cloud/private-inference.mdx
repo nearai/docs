@@ -129,12 +129,18 @@ https://{slug}.completions.near.ai/v1
 
 **Available endpoints** (see [completions.near.ai/endpoints](https://completions.near.ai/endpoints) for the full list):
 
-| Subdomain | Model |
-|-----------|-------|
-| `qwen35-122b.completions.near.ai` | Qwen3.5-122B |
-| `deepseek-v31.completions.near.ai` | DeepSeek-V3.1 |
-| `qwen3-30b.completions.near.ai` | Qwen3-30B |
-| `gpt-oss-120b.completions.near.ai` | OpenAI GPT-OSS-120B |
+| Subdomain | Model | Input | Output |
+|-----------|-------|-------|--------|
+| `qwen35-122b.completions.near.ai` | Qwen3.5-122B | Text | Text |
+| `deepseek-v31.completions.near.ai` | DeepSeek-V3.1 | Text | Text |
+| `qwen3-30b.completions.near.ai` | Qwen3-30B | Text | Text |
+| `gpt-oss-120b.completions.near.ai` | GPT-OSS-120B | Text | Text |
+| `glm-5.completions.near.ai` | GLM-5 | Text | Text |
+| `qwen3-vl-30b.completions.near.ai` | Qwen3-VL-30B | Text, Image | Text |
+| `flux2-klein.completions.near.ai` | FLUX.2-klein-4B | Text | Image |
+| `whisper-large-v3.completions.near.ai` | Whisper Large V3 | Audio | Text |
+| `qwen3-embedding.completions.near.ai` | Qwen3-Embedding-0.6B | Text | Embedding |
+| `qwen3-reranker.completions.near.ai` | Qwen3-Reranker-0.6B | Text | Score |
 
 Each subdomain exposes the same OpenAI-compatible API as the gateway, plus model-specific endpoints:
 
