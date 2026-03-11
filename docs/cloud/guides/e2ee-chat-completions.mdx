@@ -489,6 +489,7 @@ while (true) {
 | `X-Signing-Algo` | Encryption algorithm: `ecdsa` or `ed25519` |
 | `X-Client-Pub-Key` | Your public key in hex format |
 | `X-Model-Pub-Key` | Model's public key from attestation (for routing) |
+| `X-Encryption-Version` | *(Optional)* Protocol version: `1` (default, NaCl box) or `2` (HKDF-SHA256 + XChaCha20-Poly1305). Version 2 uses standard HKDF key derivation instead of the NaCl HSalsa20 construction. |
 
 ---
 
