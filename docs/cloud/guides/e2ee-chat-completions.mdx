@@ -76,12 +76,15 @@ sequenceDiagram
 
 ## Supported Algorithms
 
-NEAR AI Cloud supports two encryption algorithms:
+NEAR AI Cloud supports two encryption algorithms, each with two protocol versions:
 
-| Algorithm | Curve | Key Exchange | Encryption | Public Key Size |
-|-----------|-------|--------------|------------|-----------------|
-| **ECDSA** | SECP256K1 | ECDH | AES-256-GCM | 64 bytes (128 hex) |
-| **Ed25519** | Curve25519 | X25519 | ChaCha20-Poly1305 | 32 bytes (64 hex) |
+| Algorithm | Version | Curve | Key Exchange | Key Derivation | Encryption | Public Key Size |
+|-----------|---------|-------|--------------|----------------|------------|-----------------|
+| **ECDSA** | 1 | SECP256K1 | ECDH | HKDF-SHA256 | AES-256-GCM | 64 bytes (128 hex) |
+| **Ed25519** | 1 | Curve25519 | X25519 | NaCl HSalsa20 | XChaCha20-Poly1305 | 32 bytes (64 hex) |
+| **Ed25519** | 2 | Curve25519 | X25519 | HKDF-SHA256 | XChaCha20-Poly1305 | 32 bytes (64 hex) |
+
+**Ed25519 v2 is recommended** for new integrations. It uses standard HKDF-SHA256 key derivation instead of the NaCl-specific HSalsa20 construction, making it easier to implement with common cryptography libraries. Opt in by sending the `X-Encryption-Version: 2` header.
 
 ---
 
@@ -96,13 +99,18 @@ You can use either the gateway or a direct completions endpoint:
   values={[
     {label: 'curl (Gateway)', value: 'curl'},
     {label: 'curl (Direct)', value: 'curl-direct'},
-    {label: 'Python', value: 'python'},
+    {label: 'Python (ECDSA)', value: 'python'},
+    {label: 'Python (Ed25519)', value: 'python-ed25519'},
     {label: 'JavaScript', value: 'javascript'},
   ]}>
 <TabItem value="curl">
 
 ```bash
+# ECDSA
 curl "https://cloud-api.near.ai/v1/attestation/report?model=deepseek-ai/DeepSeek-V3.1&signing_algo=ecdsa"
+
+# Ed25519
+curl "https://cloud-api.near.ai/v1/attestation/report?model=deepseek-ai/DeepSeek-V3.1&signing_algo=ed25519"
 ```
 
 </TabItem>
@@ -110,7 +118,11 @@ curl "https://cloud-api.near.ai/v1/attestation/report?model=deepseek-ai/DeepSeek
 
 ```bash
 # Direct completions — no model parameter needed, the endpoint serves one model
+# ECDSA
 curl "https://qwen35-122b.completions.near.ai/v1/attestation/report?signing_algo=ecdsa"
+
+# Ed25519
+curl "https://qwen35-122b.completions.near.ai/v1/attestation/report?signing_algo=ed25519"
 ```
 
 </TabItem>
@@ -119,20 +131,13 @@ curl "https://qwen35-122b.completions.near.ai/v1/attestation/report?signing_algo
 ```python
 import requests
 
-# Via gateway:
 response = requests.get(
     "https://cloud-api.near.ai/v1/attestation/report",
     params={
         "model": "deepseek-ai/DeepSeek-V3.1",
-        "signing_algo": "ecdsa"  # or "ed25519"
+        "signing_algo": "ecdsa"
     }
 )
-
-# Or via direct completions:
-# response = requests.get(
-#     "https://qwen35-122b.completions.near.ai/v1/attestation/report",
-#     params={"signing_algo": "ecdsa"}
-# )
 
 attestation = response.json()
 model_public_key = attestation["model_attestations"][0]["signing_public_key"]
@@ -140,10 +145,34 @@ print(f"Model public key: {model_public_key}")
 ```
 
 </TabItem>
+<TabItem value="python-ed25519">
+
+```python
+import requests
+
+response = requests.get(
+    "https://cloud-api.near.ai/v1/attestation/report",
+    params={
+        "model": "deepseek-ai/DeepSeek-V3.1",
+        "signing_algo": "ed25519"
+    }
+)
+
+# For direct completions:
+# response = requests.get(
+#     "https://qwen35-122b.completions.near.ai/v1/attestation/report",
+#     params={"signing_algo": "ed25519"}
+# )
+
+attestation = response.json()
+model_public_key_hex = attestation["model_attestations"][0]["signing_public_key"]
+print(f"Model Ed25519 public key: {model_public_key_hex}")
+```
+
+</TabItem>
 <TabItem value="javascript">
 
 ```javascript
-// Via gateway:
 const response = await fetch(
   'https://cloud-api.near.ai/v1/attestation/report?' +
   new URLSearchParams({
@@ -151,12 +180,6 @@ const response = await fetch(
     signing_algo: 'ecdsa'  // or 'ed25519'
   })
 );
-
-// Or via direct completions:
-// const response = await fetch(
-//   'https://qwen35-122b.completions.near.ai/v1/attestation/report?' +
-//   new URLSearchParams({ signing_algo: 'ecdsa' })
-// );
 
 const attestation = await response.json();
 const modelPublicKey = attestation.model_attestations[0].signing_public_key;
@@ -243,14 +266,72 @@ console.log('Client public key:', clientPublicKeyHex);
 
 ## Step 3: Encrypt Your Messages
 
-Encrypt message content using the model's public key. The encryption uses ECIES (Elliptic Curve Integrated Encryption Scheme).
+Encrypt message content using the model's public key. Each algorithm uses a different encryption scheme:
+
+- **ECDSA**: ECIES with SECP256K1 ECDH + HKDF-SHA256 + AES-256-GCM
+- **Ed25519 v2**: X25519 ECDH + HKDF-SHA256 + XChaCha20-Poly1305
 
 <Tabs
-  defaultValue="python"
+  defaultValue="python-ed25519-v2"
   values={[
+    {label: 'Python (Ed25519 v2)', value: 'python-ed25519-v2'},
     {label: 'Python (ECDSA)', value: 'python'},
     {label: 'JavaScript (ECDSA)', value: 'javascript'},
   ]}>
+<TabItem value="python-ed25519-v2">
+
+```python
+import secrets
+from nacl.bindings import (
+    crypto_sign_ed25519_pk_to_curve25519,
+    crypto_aead_xchacha20poly1305_ietf_encrypt,
+    crypto_aead_xchacha20poly1305_ietf_NPUBBYTES,
+)
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.hazmat.primitives import hashes
+
+def encrypt_for_model_ed25519_v2(plaintext: str, model_ed25519_pub_hex: str) -> str:
+    """Encrypt using Ed25519 v2: X25519 ECDH + HKDF-SHA256 + XChaCha20-Poly1305."""
+    # Convert model's Ed25519 public key to X25519
+    model_ed25519_pub = bytes.fromhex(model_ed25519_pub_hex)
+    model_x25519_pub = crypto_sign_ed25519_pk_to_curve25519(model_ed25519_pub)
+
+    # Generate ephemeral X25519 key pair
+    ephemeral_private = X25519PrivateKey.generate()
+    ephemeral_public = ephemeral_private.public_key()
+
+    # X25519 ECDH key exchange
+    shared_secret = ephemeral_private.exchange(
+        X25519PublicKey.from_public_bytes(model_x25519_pub)
+    )
+
+    # Derive symmetric key with HKDF-SHA256
+    symmetric_key = HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=None,
+        info=b"ed25519_encryption",
+    ).derive(shared_secret)
+
+    # Encrypt with XChaCha20-Poly1305 (24-byte nonce)
+    nonce = secrets.token_bytes(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES)
+    ciphertext = crypto_aead_xchacha20poly1305_ietf_encrypt(
+        plaintext.encode(), None, nonce, symmetric_key
+    )
+
+    # Wire format: [ephemeral_pubkey (32 bytes)][nonce (24 bytes)][ciphertext + tag]
+    encrypted = ephemeral_public.public_bytes_raw() + nonce + ciphertext
+    return encrypted.hex()
+
+# Encrypt your message
+encrypted_content = encrypt_for_model_ed25519_v2(
+    "What is the capital of France?",
+    model_public_key_hex  # From Step 1
+)
+```
+
+</TabItem>
 <TabItem value="python">
 
 ```python
@@ -267,18 +348,18 @@ def encrypt_for_model(plaintext: str, model_public_key_hex: str) -> str:
     public_key_bytes = bytes.fromhex(model_public_key_hex)
     if len(public_key_bytes) == 64:
         public_key_bytes = b'\x04' + public_key_bytes  # Add uncompressed prefix
-    
+
     model_public_key = ec.EllipticCurvePublicKey.from_encoded_point(
         ec.SECP256K1(), public_key_bytes
     )
-    
+
     # Generate ephemeral key pair for this message
     ephemeral_private = ec.generate_private_key(ec.SECP256K1(), default_backend())
     ephemeral_public = ephemeral_private.public_key()
-    
+
     # ECDH key exchange
     shared_secret = ephemeral_private.exchange(ec.ECDH(), model_public_key)
-    
+
     # Derive AES key using HKDF
     hkdf = HKDF(
         algorithm=hashes.SHA256(),
@@ -288,19 +369,19 @@ def encrypt_for_model(plaintext: str, model_public_key_hex: str) -> str:
         backend=default_backend()
     )
     aes_key = hkdf.derive(shared_secret)
-    
+
     # Encrypt with AES-GCM
     nonce = os.urandom(12)
     aesgcm = AESGCM(aes_key)
     ciphertext = aesgcm.encrypt(nonce, plaintext.encode('utf-8'), None)
-    
+
     # Format: [ephemeral_public (65 bytes)][nonce (12 bytes)][ciphertext]
     ephemeral_public_bytes = ephemeral_public.public_bytes(
         encoding=serialization.Encoding.X962,
         format=serialization.PublicFormat.UncompressedPoint
     )
     encrypted_data = ephemeral_public_bytes + nonce + ciphertext
-    
+
     return encrypted_data.hex()
 
 # Encrypt your message
@@ -321,20 +402,20 @@ import { sha256 } from '@noble/hashes/sha256';
 
 async function encryptForModel(plaintext, modelPublicKeyHex) {
   const ec = new EC('secp256k1');
-  
+
   // Parse model's public key
   const modelPublicKey = ec.keyFromPublic(modelPublicKeyHex, 'hex');
-  
+
   // Generate ephemeral key pair
   const ephemeralKeyPair = ec.genKeyPair();
-  
+
   // ECDH key exchange
   const sharedSecret = ephemeralKeyPair.derive(modelPublicKey.getPublic());
   const sharedSecretBytes = Buffer.from(sharedSecret.toArray('be', 32));
-  
+
   // Derive AES key using HKDF
   const aesKey = hkdf(sha256, sharedSecretBytes, undefined, 'ecdsa_encryption', 32);
-  
+
   // Encrypt with AES-GCM
   const nonce = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', Buffer.from(aesKey), nonce);
@@ -343,13 +424,13 @@ async function encryptForModel(plaintext, modelPublicKeyHex) {
     cipher.final(),
     cipher.getAuthTag()
   ]);
-  
+
   // Format: [ephemeral_public (65 bytes)][nonce (12 bytes)][ciphertext]
   const ephemeralPublic = Buffer.from(
     ephemeralKeyPair.getPublic('array')
   );
   const result = Buffer.concat([ephemeralPublic, nonce, encrypted]);
-  
+
   return result.toString('hex');
 }
 
@@ -370,12 +451,45 @@ const encryptedContent = await encryptForModel(
 Send your encrypted messages with the required headers. The model will decrypt your message, process it, and encrypt the response using your public key.
 
 <Tabs
-  defaultValue="curl"
+  defaultValue="curl-ed25519-v2"
   values={[
-    {label: 'curl', value: 'curl'},
-    {label: 'Python', value: 'python'},
-    {label: 'JavaScript', value: 'javascript'},
+    {label: 'curl (Ed25519 v2)', value: 'curl-ed25519-v2'},
+    {label: 'curl (ECDSA)', value: 'curl'},
+    {label: 'Python (Ed25519 v2)', value: 'python-ed25519-v2'},
+    {label: 'Python (ECDSA)', value: 'python'},
+    {label: 'JavaScript (ECDSA)', value: 'javascript'},
   ]}>
+<TabItem value="curl-ed25519-v2">
+
+```bash
+# Via gateway:
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "X-Signing-Algo: ed25519" \
+  -H "X-Client-Pub-Key: YOUR_ED25519_PUBLIC_KEY_HEX" \
+  -H "X-Model-Pub-Key: MODEL_ED25519_PUBLIC_KEY_HEX" \
+  -H "X-Encryption-Version: 2" \
+  -d '{
+    "model": "deepseek-ai/DeepSeek-V3.1",
+    "messages": [{
+      "role": "user",
+      "content": "ENCRYPTED_CONTENT_HEX"
+    }],
+    "stream": false
+  }'
+
+# Or via direct completions (no X-Model-Pub-Key needed):
+# curl https://qwen35-122b.completions.near.ai/v1/chat/completions \
+#   -H "Content-Type: application/json" \
+#   -H "Authorization: Bearer YOUR_API_KEY" \
+#   -H "X-Signing-Algo: ed25519" \
+#   -H "X-Client-Pub-Key: YOUR_ED25519_PUBLIC_KEY_HEX" \
+#   -H "X-Encryption-Version: 2" \
+#   -d '{ ... }'
+```
+
+</TabItem>
 <TabItem value="curl">
 
 ```bash
@@ -406,12 +520,43 @@ curl https://cloud-api.near.ai/v1/chat/completions \
 ```
 
 </TabItem>
+<TabItem value="python-ed25519-v2">
+
+```python
+import requests
+
+base_url = "https://cloud-api.near.ai/v1"
+# base_url = "https://qwen35-122b.completions.near.ai/v1"  # Direct
+
+response = requests.post(
+    f"{base_url}/chat/completions",
+    headers={
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "X-Signing-Algo": "ed25519",
+        "X-Client-Pub-Key": client_public_key_hex,   # Your Ed25519 public key
+        "X-Model-Pub-Key": model_public_key_hex,     # Model's Ed25519 public key
+        "X-Encryption-Version": "2",
+    },
+    json={
+        "model": "deepseek-ai/DeepSeek-V3.1",
+        "messages": [{
+            "role": "user",
+            "content": encrypted_content  # Hex-encoded encrypted message
+        }],
+        "stream": False
+    },
+)
+response.raise_for_status()
+data = response.json()
+```
+
+</TabItem>
 <TabItem value="python">
 
 ```python
 import requests
 
-# Use gateway or direct completions URL
 base_url = "https://cloud-api.near.ai/v1"
 # base_url = "https://qwen35-122b.completions.near.ai/v1"  # Direct
 
@@ -445,7 +590,6 @@ for line in response.iter_lines():
 <TabItem value="javascript">
 
 ```javascript
-// Use gateway or direct completions URL
 const baseUrl = 'https://cloud-api.near.ai/v1';
 // const baseUrl = 'https://qwen35-122b.completions.near.ai/v1';  // Direct
 
@@ -498,11 +642,67 @@ while (true) {
 The response `content` fields will contain hex-encoded encrypted data. Decrypt using your private key.
 
 <Tabs
-  defaultValue="python"
+  defaultValue="python-ed25519-v2"
   values={[
+    {label: 'Python (Ed25519 v2)', value: 'python-ed25519-v2'},
     {label: 'Python (ECDSA)', value: 'python'},
     {label: 'JavaScript (ECDSA)', value: 'javascript'},
   ]}>
+<TabItem value="python-ed25519-v2">
+
+```python
+from nacl.bindings import (
+    crypto_sign_ed25519_sk_to_curve25519,
+    crypto_aead_xchacha20poly1305_ietf_decrypt,
+)
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.hazmat.primitives import hashes
+
+def decrypt_response_ed25519_v2(encrypted_hex: str, client_signing_key) -> str:
+    """Decrypt a v2 response using your Ed25519 private key."""
+    data = bytes.fromhex(encrypted_hex)
+
+    # Parse wire format: [ephemeral_pubkey (32 bytes)][nonce (24 bytes)][ciphertext + tag]
+    ephemeral_pub_bytes = data[:32]
+    nonce = data[32:56]
+    ciphertext = data[56:]
+
+    # Convert Ed25519 secret key to X25519
+    # client_signing_key is a nacl.signing.SigningKey
+    ed25519_secret_full = bytes(client_signing_key) + bytes(client_signing_key.verify_key)
+    client_x25519_secret = crypto_sign_ed25519_sk_to_curve25519(ed25519_secret_full)
+
+    # X25519 ECDH with the ephemeral public key from the response
+    ephemeral_pub = X25519PublicKey.from_public_bytes(ephemeral_pub_bytes)
+    client_private = X25519PrivateKey.from_private_bytes(client_x25519_secret)
+    shared_secret = client_private.exchange(ephemeral_pub)
+
+    # Derive symmetric key with HKDF-SHA256
+    symmetric_key = HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=None,
+        info=b"ed25519_encryption",
+    ).derive(shared_secret)
+
+    # Decrypt with XChaCha20-Poly1305
+    plaintext = crypto_aead_xchacha20poly1305_ietf_decrypt(
+        ciphertext, None, nonce, symmetric_key
+    )
+    return plaintext.decode("utf-8")
+
+# Decrypt response fields
+msg = data["choices"][0]["message"]
+
+if msg.get("content"):
+    print(decrypt_response_ed25519_v2(msg["content"], client_signing_key))
+
+if msg.get("reasoning_content"):
+    print(decrypt_response_ed25519_v2(msg["reasoning_content"], client_signing_key))
+```
+
+</TabItem>
 <TabItem value="python">
 
 ```python
@@ -515,20 +715,20 @@ from cryptography.hazmat.backends import default_backend
 def decrypt_response(encrypted_hex: str, private_key) -> str:
     """Decrypt a response using your ECDSA private key."""
     encrypted_data = bytes.fromhex(encrypted_hex)
-    
+
     # Parse format: [ephemeral_public (65 bytes)][nonce (12 bytes)][ciphertext]
     ephemeral_public_bytes = encrypted_data[:65]
     nonce = encrypted_data[65:77]
     ciphertext = encrypted_data[77:]
-    
+
     # Reconstruct ephemeral public key
     ephemeral_public = ec.EllipticCurvePublicKey.from_encoded_point(
         ec.SECP256K1(), ephemeral_public_bytes
     )
-    
+
     # ECDH key exchange with your private key
     shared_secret = private_key.exchange(ec.ECDH(), ephemeral_public)
-    
+
     # Derive AES key using HKDF
     hkdf = HKDF(
         algorithm=hashes.SHA256(),
@@ -538,11 +738,11 @@ def decrypt_response(encrypted_hex: str, private_key) -> str:
         backend=default_backend()
     )
     aes_key = hkdf.derive(shared_secret)
-    
+
     # Decrypt with AES-GCM
     aesgcm = AESGCM(aes_key)
     plaintext = aesgcm.decrypt(nonce, ciphertext, None)
-    
+
     return plaintext.decode('utf-8')
 
 # Decrypt response content
@@ -562,23 +762,23 @@ import { createDecipheriv } from 'crypto';
 async function decryptResponse(encryptedHex, privateKey) {
   const ec = new EC('secp256k1');
   const encrypted = Buffer.from(encryptedHex, 'hex');
-  
+
   // Parse format: [ephemeral_public (65 bytes)][nonce (12 bytes)][ciphertext]
   const ephemeralPublicBytes = encrypted.slice(0, 65);
   const nonce = encrypted.slice(65, 77);
   const ciphertext = encrypted.slice(77, -16);  // Exclude auth tag
   const authTag = encrypted.slice(-16);
-  
+
   // Reconstruct ephemeral public key
   const ephemeralPublic = ec.keyFromPublic(ephemeralPublicBytes);
-  
+
   // ECDH key exchange with your private key
   const sharedSecret = privateKey.derive(ephemeralPublic.getPublic());
   const sharedSecretBytes = Buffer.from(sharedSecret.toArray('be', 32));
-  
+
   // Derive AES key using HKDF
   const aesKey = hkdf(sha256, sharedSecretBytes, undefined, 'ecdsa_encryption', 32);
-  
+
   // Decrypt with AES-GCM
   const decipher = createDecipheriv('aes-256-gcm', Buffer.from(aesKey), nonce);
   decipher.setAuthTag(authTag);
@@ -586,7 +786,7 @@ async function decryptResponse(encryptedHex, privateKey) {
     decipher.update(ciphertext),
     decipher.final()
   ]);
-  
+
   return decrypted.toString('utf-8');
 }
 
@@ -603,17 +803,117 @@ console.log(decryptedContent);
 
 ---
 
+## Complete Example (Ed25519 v2)
+
+A self-contained Python script that performs the full E2EE flow: fetch the model's key, generate a client key pair, encrypt, send, and decrypt.
+
+**Requirements:** `pip install requests PyNaCl cryptography`
+
+```python
+import secrets, requests
+from nacl.signing import SigningKey
+from nacl.bindings import (
+    crypto_sign_ed25519_pk_to_curve25519,
+    crypto_sign_ed25519_sk_to_curve25519,
+    crypto_aead_xchacha20poly1305_ietf_encrypt,
+    crypto_aead_xchacha20poly1305_ietf_decrypt,
+    crypto_aead_xchacha20poly1305_ietf_NPUBBYTES,
+)
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.hazmat.primitives import hashes
+
+ENDPOINT = "https://cloud-api.near.ai"          # or direct: https://qwen35-122b.completions.near.ai
+API_KEY  = "sk-..."
+MODEL    = "deepseek-ai/DeepSeek-V3.1"
+
+# ── Helpers ─────────────────────────────────────────────────────────
+
+def v2_encrypt(plaintext: bytes, recipient_x25519_pub: bytes) -> bytes:
+    eph = X25519PrivateKey.generate()
+    shared = eph.exchange(X25519PublicKey.from_public_bytes(recipient_x25519_pub))
+    key = HKDF(hashes.SHA256(), 32, None, b"ed25519_encryption").derive(shared)
+    nonce = secrets.token_bytes(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES)
+    ct = crypto_aead_xchacha20poly1305_ietf_encrypt(plaintext, None, nonce, key)
+    return eph.public_key().public_bytes_raw() + nonce + ct
+
+def v2_decrypt(data: bytes, secret_x25519: bytes) -> bytes:
+    eph_pub = X25519PublicKey.from_public_bytes(data[:32])
+    nonce, ct = data[32:56], data[56:]
+    shared = X25519PrivateKey.from_private_bytes(secret_x25519).exchange(eph_pub)
+    key = HKDF(hashes.SHA256(), 32, None, b"ed25519_encryption").derive(shared)
+    return crypto_aead_xchacha20poly1305_ietf_decrypt(ct, None, nonce, key)
+
+# ── 1. Fetch model's Ed25519 public key ─────────────────────────────
+
+attestation = requests.get(
+    f"{ENDPOINT}/v1/attestation/report",
+    params={"model": MODEL, "signing_algo": "ed25519"},
+).json()
+model_ed25519_pub = bytes.fromhex(attestation["model_attestations"][0]["signing_public_key"])
+model_x25519_pub = crypto_sign_ed25519_pk_to_curve25519(model_ed25519_pub)
+
+# ── 2. Generate client Ed25519 key pair ──────────────────────────────
+
+client_sk = SigningKey.generate()
+client_pub_hex = bytes(client_sk.verify_key).hex()
+client_x25519_secret = crypto_sign_ed25519_sk_to_curve25519(
+    bytes(client_sk) + bytes(client_sk.verify_key)
+)
+
+# ── 3. Encrypt & send ───────────────────────────────────────────────
+
+encrypted_content = v2_encrypt(b"What is the capital of France?", model_x25519_pub).hex()
+
+resp = requests.post(
+    f"{ENDPOINT}/v1/chat/completions",
+    headers={
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json",
+        "X-Signing-Algo": "ed25519",
+        "X-Client-Pub-Key": client_pub_hex,
+        "X-Encryption-Version": "2",
+    },
+    json={
+        "model": MODEL,
+        "messages": [{"role": "user", "content": encrypted_content}],
+        "stream": False,
+    },
+)
+resp.raise_for_status()
+msg = resp.json()["choices"][0]["message"]
+
+# ── 4. Decrypt response ─────────────────────────────────────────────
+
+if msg.get("reasoning_content"):
+    print("Reasoning:", v2_decrypt(bytes.fromhex(msg["reasoning_content"]), client_x25519_secret).decode())
+
+if msg.get("content"):
+    print("Content:", v2_decrypt(bytes.fromhex(msg["content"]), client_x25519_secret).decode())
+```
+
+---
+
 ## Important Notes
 
 ### Supported Endpoints
 
-E2EE is only supported on the **Chat Completions API** (`/v1/chat/completions`). The Response API (`/v1/responses`) does not support encrypted input messages.
+E2EE is supported on the **Chat Completions API** (`/v1/chat/completions`), **Completions API** (`/v1/completions`), **Embeddings API** (`/v1/embeddings`), and **Images API** (`/v1/images/generations`). The Response API (`/v1/responses`) does not support encrypted input messages.
 
 ### Message Format
 
 - Encrypted message content must be hex-encoded
 - The `content` and `reasoning_content` fields in responses will be hex-encoded encrypted data
 - Each streaming chunk's content is independently encrypted
+
+### Python Dependencies for Ed25519 v2
+
+```bash
+pip install requests PyNaCl cryptography
+```
+
+- **PyNaCl** — Ed25519-to-X25519 key conversion and XChaCha20-Poly1305 AEAD
+- **cryptography** — X25519 ECDH key exchange and HKDF-SHA256 key derivation
 
 ### Verification
 
