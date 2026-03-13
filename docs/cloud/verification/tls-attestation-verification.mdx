@@ -14,7 +14,7 @@ TLS attestation replaces [End-to-End Encryption (E2EE)](/cloud/guides/e2ee-chat-
 
 NEAR AI runs inference models inside **Confidential VMs (CVMs)** — virtual machines backed by Intel TDX hardware that provide a Trusted Execution Environment (TEE). The key property: even the cloud operator cannot see or tamper with what runs inside the TEE.
 
-When you make an HTTPS request to a model endpoint, how do you know the TLS connection actually terminates inside the TEE — and not at some intermediary? TLS attestation answers this question.
+TLS attestation proves that the TLS connection used for your HTTPS requests terminates directly **inside the TEE**, ensuring your messages remain encrypted end-to-end
 
 ## What TLS Attestation Proves
 
