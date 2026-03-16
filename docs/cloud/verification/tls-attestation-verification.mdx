@@ -11,7 +11,9 @@ description: "How to verify that your HTTPS connection to NEAR AI terminates ins
 NEAR AI runs inference models inside **Confidential VMs (CVMs)** — virtual machines backed by Intel TDX hardware that provide a Trusted Execution Environment (TEE). The key property: even the cloud operator cannot see or tamper with what runs inside the TEE.
 
 TLS attestation proves that the TLS connection used for your HTTPS requests terminates directly **inside the TEE**, ensuring your messages remain encrypted end-to-end
-
+<Note>
+Check our [example](https://github.com/nearai/nearai-cloud-verifier/tree/main) on how to perform TSL Attestation Verification
+</Note>
 ## What TLS Attestation Proves
 
 TLS attestation binds the server's **TLS certificate** to the **TEE hardware attestation**:
