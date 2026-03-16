@@ -64,7 +64,7 @@ const sidebars = {
       items: [
         "cloud/verification/model-verification",
         "cloud/verification/gateway-verification",
-        "cloud/verification/tls",
+        "cloud/verification/tls-attestation-verification",
         "cloud/verification/chat-verification",
       ],
     },
