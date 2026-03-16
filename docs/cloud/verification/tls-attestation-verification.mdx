@@ -8,10 +8,6 @@ description: "How to verify that your HTTPS connection to NEAR AI terminates ins
 
 # TLS Attestation Verification
 
-:::info E2EE Deprecation
-TLS attestation replaces [End-to-End Encryption (E2EE)](/cloud/guides/e2ee-chat-completions) as the recommended approach for private inference. It provides equivalent security with better developer experience — verification happens before any data is sent, and a verified certificate can be pinned and reused across many requests without re-verifying each time. E2EE is currently only supported on DeepSeek and will be deprecated in the future.
-:::
-
 NEAR AI runs inference models inside **Confidential VMs (CVMs)** — virtual machines backed by Intel TDX hardware that provide a Trusted Execution Environment (TEE). The key property: even the cloud operator cannot see or tamper with what runs inside the TEE.
 
 TLS attestation proves that the TLS connection used for your HTTPS requests terminates directly **inside the TEE**, ensuring your messages remain encrypted end-to-end
