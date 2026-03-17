@@ -40,7 +40,7 @@ https://{slug}.completions.near.ai/v1/attestation/report?signing_algo=ecdsa&nonc
 
 The `signing_algo` parameter specifies the signing algorithm used (`ecdsa` or `ed25519`). The `nonce` parameter is optional but recommended. It should be a randomly generated 64 character hexadecimal string (32 bytes) that ensures attestation freshness and prevents replay attacks. If not provided, the server will generate one for you.
 
-With direct completions, you can also pass `include_tls_fingerprint=true` to bind the TLS certificate fingerprint to the attestation report, providing additional assurance that the TLS connection terminates inside the TEE.
+With direct completions, you can also pass `include_tls_fingerprint=true` to bind the TLS certificate fingerprint to the attestation report. This is disabled by default for compatibility with existing clients. Without the flag, `report_data` binds only the signing key and nonce. With the flag, `report_data[0:32]` becomes `SHA256(signing_address || tls_cert_fingerprint)`, which lets you verify that the HTTPS connection terminates inside the model TEE. See [TLS Attestation Verification](/cloud/verification/tls).
 
 <Tabs
   defaultValue="curl"

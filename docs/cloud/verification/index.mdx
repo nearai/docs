@@ -24,6 +24,10 @@ A more complete verifier implementation is available in the [NEAR AI Cloud Verif
 When using [direct completions endpoints](/cloud/private-inference#direct-completions) (e.g., `https://qwen35-122b.completions.near.ai`), your requests go straight to the model's TEE. This means only **model verification** is needed — there is no gateway in the path, so [gateway verification](/cloud/verification/gateway) can be skipped entirely.
 :::
 
+:::tip TLS Termination Inside the TEE
+If you also need to prove that your HTTPS connection terminates inside the same TEE, request attestation with `include_tls_fingerprint=true`. That opt-in flag changes the attested `report_data` from `signing_address || nonce` to `SHA256(signing_address || tls_cert_fingerprint) || nonce`. See [TLS Attestation Verification](/cloud/verification/tls).
+:::
+
 ## How NEAR AI Cloud Verification Works
 
 1. **Secure Key Generation:** When NEAR AI Cloud initializes, it generates a unique cryptographic signing key pair inside the Trusted Execution Environment (TEE). The private key never leaves the secure hardware.
@@ -56,6 +60,12 @@ When using [direct completions endpoints](/cloud/private-inference#direct-comple
     title="Gateway Verification"
     description="Verify that the private inference gateway is running in secure TEE environments using Intel attestation"
     href="/cloud/verification/gateway"
+  />
+  <FeatureCard
+    icon={ModelsIcon}
+    title="TLS Attestation Verification"
+    description="Verify that your HTTPS connection terminates inside the attested TEE by binding the TLS certificate into report_data"
+    href="/cloud/verification/tls"
   />
   <FeatureCard
     icon={ChatIcon}

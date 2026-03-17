@@ -37,6 +37,8 @@ https://cloud-api.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce={nonce}
 
 The `signing_algo` parameter specifies the signing algorithm used (`ecdsa` or `ed25519`). The `nonce` parameter is optional but recommended. It should be a randomly generated 64 character hexadecimal string (32 bytes) that ensures attestation freshness and prevents replay attacks. If not provided, the server will generate one for you.
 
+If you want to verify that the HTTPS connection to `cloud-api.near.ai` terminates inside the gateway TEE, add `include_tls_fingerprint=true` and follow [TLS Attestation Verification](/cloud/verification/tls). That opt-in flag binds the gateway's TLS certificate fingerprint into `report_data`; it is disabled by default for compatibility with existing clients.
+
 <Tabs
   defaultValue="curl"
   values={[

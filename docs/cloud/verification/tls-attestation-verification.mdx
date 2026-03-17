@@ -10,19 +10,26 @@ description: "How to verify that your HTTPS connection to NEAR AI terminates ins
 
 NEAR AI runs inference models inside **Confidential VMs (CVMs)** — virtual machines backed by Intel TDX hardware that provide a Trusted Execution Environment (TEE). The key property: even the cloud operator cannot see or tamper with what runs inside the TEE.
 
-TLS attestation proves that the TLS connection used for your HTTPS requests terminates directly **inside the TEE**, ensuring your messages remain encrypted end-to-end
-<Note>
-Check our [example](https://github.com/nearai/nearai-cloud-verifier/tree/main) on how to perform TSL Attestation Verification
-</Note>
+TLS attestation proves that the TLS connection used for your HTTPS requests terminates directly **inside the TEE**, ensuring your messages remain encrypted end-to-end.
+
+:::note
+Check our [example](https://github.com/nearai/nearai-cloud-verifier/tree/main) on how to perform TLS attestation verification.
+:::
+
 ## What TLS Attestation Proves
 
 TLS attestation binds the server's **TLS certificate** to the **TEE hardware attestation**:
 
-1. The TEE generates a TLS key pair and includes the certificate's **SPKI hash** (SHA-256 of the SubjectPublicKeyInfo) in the TDX attestation quote.
-2. Intel TDX hardware signs this quote — it cannot be forged.
-3. We verify the quote, then confirm the live TLS certificate matches the attested hash.
+1. You request `/v1/attestation/report?include_tls_fingerprint=true`.
+2. The TEE computes the certificate's **SPKI hash** (SHA-256 of the SubjectPublicKeyInfo) and binds it into the attested `report_data`.
+3. Intel TDX hardware signs this quote — it cannot be forged.
+4. You verify the quote, then confirm the live TLS certificate matches the attested hash.
 
 This proves the TLS private key is held by the TEE. Your HTTPS traffic is end-to-end encrypted all the way to the hardware enclave.
+
+:::note Opt-In Behavior
+`include_tls_fingerprint` is disabled by default so existing attestation clients keep the original `report_data` layout. Without the flag, `report_data[0:32]` contains the signing address bytes (padded or truncated to 32 bytes). With the flag, `report_data[0:32]` becomes `SHA256(signing_address || tls_cert_fingerprint)`.
+:::
 
 ## Trust Model
 
@@ -38,7 +45,7 @@ flowchart TD
     A["Intel TDX Hardware"] --> Q["TDX Quote<br/>(signed by CPU)"]
     B["NVIDIA GPU Hardware"] --> G["GPU Attestation<br/>(NVIDIA NRAS)"]
     Q --> C["mr_config_id<br/>↓<br/>Docker Compose file<br/>↓<br/>Container images"]
-    Q --> D["report_data[0:32]<br/>↓<br/>SHA256(signing_key || tls_cert)"]
+    Q --> D["report_data[0:32]<br/>↓<br/>SHA256(signing_address || tls_cert_fingerprint)"]
     Q --> E["report_data[32:64]<br/>↓<br/>nonce (freshness)"]
     D --> F["Live TLS cert match<br/>↓<br/>Your HTTPS connection"]
 ```
