@@ -1,6 +1,57 @@
 {
   "models": [
     {
+      "modelId": "anthropic/claude-haiku-4-5",
+      "inputCostPerToken": {
+        "amount": 1000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 5000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 100,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 200000,
+        "modelDisplayName": "Claude Haiku 4.5",
+        "modelDescription": "Anthropic's fastest model with near-frontier intelligence. Extended thinking support with 200K context window. Best for high-throughput, cost-sensitive workloads.",
+        "modelIcon": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Claude_AI_symbol.svg",
+        "ownedBy": "anthropic",
+        "aliases": [
+          "claude-haiku-4-5",
+          "haiku-4-5"
+        ],
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "anthropic",
+          "base_url": "https://api.anthropic.com/v1",
+          "model_name": "claude-haiku-4-5"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text",
+            "image"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
       "modelId": "anthropic/claude-opus-4-6",
       "inputCostPerToken": {
         "amount": 5000,
@@ -52,6 +103,57 @@
       }
     },
     {
+      "modelId": "anthropic/claude-opus-4-7",
+      "inputCostPerToken": {
+        "amount": 5000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 25000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 500,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 1000000,
+        "modelDisplayName": "Claude Opus 4.7",
+        "modelDescription": "Anthropic's most capable model. Next-generation built for long-running agents and complex coding tasks. 1M token context window with 128K max output.",
+        "modelIcon": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Claude_AI_symbol.svg",
+        "ownedBy": "anthropic",
+        "aliases": [
+          "claude-opus-4-7",
+          "opus-4-7"
+        ],
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "anthropic",
+          "base_url": "https://api.anthropic.com/v1",
+          "model_name": "claude-opus-4-7"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text",
+            "image"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
       "modelId": "anthropic/claude-sonnet-4-5",
       "inputCostPerToken": {
         "amount": 3000,
@@ -87,6 +189,57 @@
           "model_name": "claude-sonnet-4-5-20250929"
         },
         "attestationSupported": false
+      }
+    },
+    {
+      "modelId": "anthropic/claude-sonnet-4-6",
+      "inputCostPerToken": {
+        "amount": 3000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 15000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 300,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 1000000,
+        "modelDisplayName": "Claude Sonnet 4.6",
+        "modelDescription": "Anthropic's best balance of speed and intelligence. Extended thinking support with 1M token context window and 64K max output. Ideal for most production workloads.",
+        "modelIcon": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Claude_AI_symbol.svg",
+        "ownedBy": "anthropic",
+        "aliases": [
+          "claude-sonnet-4-6",
+          "sonnet-4-6"
+        ],
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "anthropic",
+          "base_url": "https://api.anthropic.com/v1",
+          "model_name": "claude-sonnet-4-6"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text",
+            "image"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
       }
     },
     {
@@ -131,14 +284,14 @@
       }
     },
     {
-      "modelId": "deepseek-ai/DeepSeek-V3.1",
+      "modelId": "google/gemini-2.5-flash",
       "inputCostPerToken": {
-        "amount": 1050,
+        "amount": 300,
         "scale": 9,
         "currency": "USD"
       },
       "outputCostPerToken": {
-        "amount": 3100,
+        "amount": 2500,
         "scale": 9,
         "currency": "USD"
       },
@@ -153,18 +306,173 @@
         "currency": "USD"
       },
       "metadata": {
-        "verifiable": true,
-        "contextLength": 128000,
-        "modelDisplayName": "DeepSeek V3.1",
-        "modelDescription": "DeepSeek V3.1 is a hybrid model that supports both thinking mode and non-thinking mode. Compared to the previous version, this upgrade brings improvements in multiple aspects:\n- **Hybrid thinking mode**: One model supports both thinking mode and non-thinking mode by changing the chat template.\n- **Smarter tool calling**: Through post-training optimization, the model's performance in tool usage and agent tasks has significantly improved.\n- **Higher thinking efficiency**: DeepSeek-V3.1-Think achieves comparable answer quality to DeepSeek-R1-0528, while responding more quickly.",
-        "modelIcon": "https://avatars.githubusercontent.com/u/148330874?s=200&v=4",
-        "ownedBy": "nearai",
+        "verifiable": false,
+        "contextLength": 1000000,
+        "modelDisplayName": "Gemini 2.5 Flash",
+        "modelDescription": "Google's fast hybrid reasoning model with 1M token context window. Optimized for speed and cost while maintaining strong performance across tasks.",
+        "modelIcon": "https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg",
+        "ownedBy": "google",
         "aliases": [
-          "deepseek/deepseek-chat-v3.1",
-          "deepseek-v3.1"
+          "gemini-2.5-flash"
         ],
-        "providerType": "vllm",
-        "attestationSupported": true
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "gemini",
+          "base_url": "https://generativelanguage.googleapis.com/v1beta",
+          "model_name": "gemini-2.5-flash"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text",
+            "image"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "google/gemini-2.5-flash-lite",
+      "inputCostPerToken": {
+        "amount": 100,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 400,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 1048576,
+        "modelDisplayName": "Gemini 2.5 Flash Lite",
+        "modelDescription": "Gemini 2.5 Flash-Lite is a lightweight reasoning model in the Gemini 2.5 family, optimized for ultra-low latency and cost efficiency. It offers improved throughput, faster token generation, and better performance...",
+        "modelIcon": "https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg",
+        "ownedBy": "google",
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "gemini",
+          "base_url": "https://generativelanguage.googleapis.com/v1beta",
+          "model_name": "gemini-2.5-flash-lite"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "google/gemini-2.5-pro",
+      "inputCostPerToken": {
+        "amount": 1250,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 10000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 1000000,
+        "modelDisplayName": "Gemini 2.5 Pro",
+        "modelDescription": "Google's strongest reasoning model. Excels at coding, math, and complex analysis with 1M token context window. Supports text and image input.",
+        "modelIcon": "https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg",
+        "ownedBy": "google",
+        "aliases": [
+          "gemini-2.5-pro"
+        ],
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "gemini",
+          "base_url": "https://generativelanguage.googleapis.com/v1beta",
+          "model_name": "gemini-2.5-pro"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text",
+            "image"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "google/gemini-3.1-flash-lite",
+      "inputCostPerToken": {
+        "amount": 250,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 1500,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 1048576,
+        "modelDisplayName": "Gemini 3.1 Flash Lite",
+        "modelDescription": "Gemini 3.1 Flash Lite is Google’s GA high-efficiency multimodal model optimized for low-latency, high-volume workloads. It supports text, image, video, audio, and PDF inputs, and is designed for lightweight agentic...",
+        "modelIcon": "https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg",
+        "ownedBy": "google",
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "gemini",
+          "base_url": "https://generativelanguage.googleapis.com/v1beta",
+          "model_name": "gemini-3.1-flash-lite"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
       }
     },
     {
@@ -206,6 +514,252 @@
       }
     },
     {
+      "modelId": "openai/gpt-4.1",
+      "inputCostPerToken": {
+        "amount": 2000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 8000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 500,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 1000000,
+        "modelDisplayName": "OpenAI GPT-4.1",
+        "modelDescription": "OpenAI's flagship production model with 1M token context window. Excels at instruction following, coding, and long-context tasks. 75% cheaper cached input reads.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "openai",
+        "aliases": [
+          "gpt-4.1"
+        ],
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "openai_compatible",
+          "base_url": "https://api.openai.com/v1",
+          "model_name": "gpt-4.1"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text",
+            "image"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "openai/gpt-4.1-mini",
+      "inputCostPerToken": {
+        "amount": 400,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 1600,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 100,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 1000000,
+        "modelDisplayName": "OpenAI GPT-4.1 Mini",
+        "modelDescription": "Cost-effective version of GPT-4.1 with the same 1M token context window. Great balance of capability and cost for production workloads.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "openai",
+        "aliases": [
+          "gpt-4.1-mini"
+        ],
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "openai_compatible",
+          "base_url": "https://api.openai.com/v1",
+          "model_name": "gpt-4.1-mini"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text",
+            "image"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "openai/gpt-4.1-nano",
+      "inputCostPerToken": {
+        "amount": 100,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 400,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 25,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 1000000,
+        "modelDisplayName": "OpenAI GPT-4.1 Nano",
+        "modelDescription": "OpenAI's most cost-efficient model with 1M token context. Ideal for classification, extraction, and high-volume tasks where cost matters most.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "openai",
+        "aliases": [
+          "gpt-4.1-nano"
+        ],
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "openai_compatible",
+          "base_url": "https://api.openai.com/v1",
+          "model_name": "gpt-4.1-nano"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text",
+            "image"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "openai/gpt-5",
+      "inputCostPerToken": {
+        "amount": 1250,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 10000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 125,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 400000,
+        "modelDisplayName": "OpenAI GPT-5",
+        "modelDescription": "OpenAI's next-generation model with enhanced reasoning and 400K context window. Strong performance across coding, math, and creative tasks.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "openai",
+        "aliases": [
+          "gpt-5"
+        ],
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "openai_compatible",
+          "base_url": "https://api.openai.com/v1",
+          "model_name": "gpt-5"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text",
+            "image"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.1",
+      "inputCostPerToken": {
+        "amount": 1250,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 10000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 400000,
+        "modelDisplayName": "GPT-5.1",
+        "modelDescription": "GPT-5.1 is the latest frontier-grade model in the GPT-5 series, offering stronger general-purpose reasoning, improved instruction adherence, and a more natural conversational style compared to GPT-5. It uses adaptive reasoning...",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "openai",
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "openai_compatible",
+          "base_url": "https://api.openai.com/v1",
+          "model_name": "gpt-5.1"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
       "modelId": "openai/gpt-5.2",
       "inputCostPerToken": {
         "amount": 1800,
@@ -232,7 +786,7 @@
         "contextLength": 400000,
         "modelDisplayName": "OpenAI GPT-5.2",
         "modelDescription": "OpenAI GPT-5.2 with 400k context window. Anonymized endpoint optimized for deep reasoning and large-context workflows.",
-        "modelIcon": "https://cdn.openai.com/API/docs/images/model-page/model-icons/gpt-5.2.png",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
         "ownedBy": "openai",
         "aliases": [
           "openai-gpt-5.2",
@@ -246,6 +800,282 @@
           "model_name": "gpt-5.2"
         },
         "attestationSupported": false
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.4",
+      "inputCostPerToken": {
+        "amount": 2500,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 15000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 1050000,
+        "modelDisplayName": "GPT-5.4",
+        "modelDescription": "GPT-5.4 is OpenAI’s latest frontier model, unifying the Codex and GPT lines into a single system. It features a 1M+ token context window (922K input, 128K output) with support for...",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "openai",
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "openai_compatible",
+          "base_url": "https://api.openai.com/v1",
+          "model_name": "gpt-5.4"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.4-mini",
+      "inputCostPerToken": {
+        "amount": 750,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 4500,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 400000,
+        "modelDisplayName": "GPT-5.4 Mini",
+        "modelDescription": "GPT-5.4 mini brings the core capabilities of GPT-5.4 to a faster, more efficient model optimized for high-throughput workloads. It supports text and image inputs with strong performance across reasoning, coding,...",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "openai",
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "openai_compatible",
+          "base_url": "https://api.openai.com/v1",
+          "model_name": "gpt-5.4-mini"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.4-nano",
+      "inputCostPerToken": {
+        "amount": 200,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 1250,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 400000,
+        "modelDisplayName": "GPT-5.4 Nano",
+        "modelDescription": "GPT-5.4 nano is the most lightweight and cost-efficient variant of the GPT-5.4 family, optimized for speed-critical and high-volume tasks. It supports text and image inputs and is designed for low-latency...",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "openai",
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "openai_compatible",
+          "base_url": "https://api.openai.com/v1",
+          "model_name": "gpt-5.4-nano"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.5",
+      "inputCostPerToken": {
+        "amount": 5000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 30000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 1050000,
+        "modelDisplayName": "GPT-5.5",
+        "modelDescription": "GPT-5.5 is OpenAI’s frontier model designed for complex professional workloads, building on GPT-5.4 with stronger reasoning, higher reliability, and improved token efficiency on hard tasks. It features a 1M+ token...",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "openai",
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "openai_compatible",
+          "base_url": "https://api.openai.com/v1",
+          "model_name": "gpt-5.5"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "openai/gpt-5-mini",
+      "inputCostPerToken": {
+        "amount": 250,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 2000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 400000,
+        "modelDisplayName": "GPT-5 Mini",
+        "modelDescription": "GPT-5 Mini is a compact version of GPT-5, designed to handle lighter-weight reasoning tasks. It provides the same instruction-following and safety-tuning benefits as GPT-5, but with reduced latency and cost....",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "openai",
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "openai_compatible",
+          "base_url": "https://api.openai.com/v1",
+          "model_name": "gpt-5-mini"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "openai/gpt-5-nano",
+      "inputCostPerToken": {
+        "amount": 50,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 400,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 400000,
+        "modelDisplayName": "GPT-5 Nano",
+        "modelDescription": "GPT-5-Nano is the smallest and fastest variant in the GPT-5 system, optimized for developer tools, rapid interactions, and ultra-low latency environments. While limited in reasoning depth compared to its larger...",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "openai",
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "openai_compatible",
+          "base_url": "https://api.openai.com/v1",
+          "model_name": "gpt-5-nano"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
       }
     },
     {
@@ -283,6 +1113,193 @@
         ],
         "providerType": "vllm",
         "attestationSupported": true
+      }
+    },
+    {
+      "modelId": "openai/o3",
+      "inputCostPerToken": {
+        "amount": 2000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 8000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 1000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 200000,
+        "modelDisplayName": "OpenAI o3",
+        "modelDescription": "OpenAI's flagship reasoning model. Uses chain-of-thought to solve complex math, coding, and logic problems. 200K context window.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "openai",
+        "aliases": [
+          "o3"
+        ],
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "openai_compatible",
+          "base_url": "https://api.openai.com/v1",
+          "model_name": "o3"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text",
+            "image"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "openai/o3-mini",
+      "inputCostPerToken": {
+        "amount": 1100,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 4400,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 200000,
+        "modelDisplayName": "o3 Mini",
+        "modelDescription": "OpenAI o3-mini is a cost-efficient language model optimized for STEM reasoning tasks, particularly excelling in science, mathematics, and coding. This model supports the `reasoning_effort` parameter, which can be set to...",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "openai",
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "openai_compatible",
+          "base_url": "https://api.openai.com/v1",
+          "model_name": "o3-mini"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "openai/o4-mini",
+      "inputCostPerToken": {
+        "amount": 1100,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 4400,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 550,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 200000,
+        "modelDisplayName": "OpenAI o4 Mini",
+        "modelDescription": "OpenAI's cost-effective reasoning model. Strong performance on math, coding, and scientific reasoning at a fraction of o3's cost. 200K context window.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "openai",
+        "aliases": [
+          "o4-mini"
+        ],
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "openai_compatible",
+          "base_url": "https://api.openai.com/v1",
+          "model_name": "o4-mini"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text",
+            "image"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "openai/whisper-large-v3",
+      "inputCostPerToken": {
+        "amount": 10,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 10,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": true,
+        "contextLength": 448,
+        "modelDisplayName": "Whisper Large v3",
+        "modelDescription": "Whisper is a state-of-the-art model for automatic speech recognition (ASR) and speech translation.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/14957082?s=200&v=4",
+        "ownedBy": "nearai",
+        "providerType": "vllm",
+        "attestationSupported": true,
+        "architecture": {
+          "inputModalities": [
+            "audio"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
       }
     },
     {
@@ -354,7 +1371,8 @@
         "aliases": [
           "qwen3.5-122b",
           "qwen3.5-122b-a10b",
-          "qwen3-5-122b"
+          "qwen3-5-122b",
+          "deepseek-ai/DeepSeek-V3.1"
         ],
         "providerType": "vllm",
         "attestationSupported": true,
@@ -369,7 +1387,130 @@
       }
     },
     {
-      "modelId": "zai-org/GLM-5-FP8",
+      "modelId": "Qwen/Qwen3-Embedding-0.6B",
+      "inputCostPerToken": {
+        "amount": 10,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 10,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": true,
+        "contextLength": 40960,
+        "modelDisplayName": "Qwen3-Embedding-0.6B",
+        "modelDescription": "The Qwen3 Embedding model series is the latest proprietary model of the Qwen family, specifically designed for text embedding tasks.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/223098841?s=200&v=4",
+        "ownedBy": "nearai",
+        "providerType": "vllm",
+        "attestationSupported": true,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "Qwen/Qwen3-Reranker-0.6B",
+      "inputCostPerToken": {
+        "amount": 10,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 10,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": true,
+        "contextLength": 40960,
+        "modelDisplayName": "Qwen3-Reranker-0.6B",
+        "modelDescription": "The Qwen3 Embedding model series is the latest proprietary model of the Qwen family, specifically designed for text embedding and ranking tasks.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/223098841?s=200&v=4",
+        "ownedBy": "nearai",
+        "providerType": "vllm",
+        "attestationSupported": true,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "Qwen/Qwen3-VL-30B-A3B-Instruct",
+      "inputCostPerToken": {
+        "amount": 150,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 550,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": true,
+        "contextLength": 256000,
+        "modelDisplayName": "Qwen3-VL-30B-A3B-Instruct",
+        "modelDescription": "Qwen3-VL-30B-A3B-Instruct is a vision-language model supporting text and image inputs.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/141221163?s=200&v=4",
+        "ownedBy": "nearai",
+        "providerType": "vllm",
+        "attestationSupported": true,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "zai-org/GLM-5.1-FP8",
       "inputCostPerToken": {
         "amount": 850,
         "scale": 9,
@@ -393,15 +1534,19 @@
       "metadata": {
         "verifiable": true,
         "contextLength": 202752,
-        "modelDisplayName": "GLM 5",
-        "modelDescription": "GLM-5 is an open-source foundation model built for complex systems engineering and long-horizon agent workflows. It delivers production-grade productivity for large-scale programming tasks, with performance aligned to top closed-source models, and is designed for expert developers building at the system level.",
+        "modelDisplayName": "GLM 5.1",
+        "modelDescription": "GLM-5.1 is an open-source foundation model built for complex systems engineering and long-horizon agent workflows. It delivers production-grade productivity for large-scale programming tasks, with performance aligned to top closed-source models, and is designed for expert developers building at the system level.",
         "modelIcon": "https://avatars.githubusercontent.com/u/223098841?s=200&v=4",
         "ownedBy": "nearai",
         "aliases": [
+          "zai-org/GLM-5-FP8",
           "glm-latest",
           "zai-org/GLM-latest",
           "GLM-5",
-          "zai-org/GLM-4.7"
+          "zai-org/GLM-4.7",
+          "glm",
+          "GLM-5.1",
+          "zai-org/GLM-5.1"
         ],
         "providerType": "vllm",
         "attestationSupported": true,
@@ -418,5 +1563,5 @@
   ],
   "limit": 100,
   "offset": 0,
-  "total": 10
+  "total": 34
 }
