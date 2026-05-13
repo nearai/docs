@@ -1422,7 +1422,7 @@
             "text"
           ],
           "outputModalities": [
-            "text"
+            "embedding"
           ]
         }
       }
@@ -1501,7 +1501,8 @@
         "attestationSupported": true,
         "architecture": {
           "inputModalities": [
-            "text"
+            "text",
+            "image"
           ],
           "outputModalities": [
             "text"
