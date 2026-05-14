@@ -514,6 +514,51 @@
       }
     },
     {
+      "modelId": "google/gemma-4-31B-it",
+      "inputCostPerToken": {
+        "amount": 130,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 400,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": true,
+        "contextLength": 32768,
+        "modelDisplayName": "Gemma 4 31B Instruct",
+        "modelDescription": "Gemma 4 31B Instruct is Google's open-weight 31B-parameter language model, tuned for instruction following and dialogue. Strong general-purpose performance with 32K context window.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/1342004?s=200&v=4",
+        "ownedBy": "nearai",
+        "aliases": [
+          "gemma-4-31b-it",
+          "google/gemma-4-31b-it"
+        ],
+        "providerType": "vllm",
+        "attestationSupported": true,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
       "modelId": "openai/gpt-4.1",
       "inputCostPerToken": {
         "amount": 2000,
@@ -1387,6 +1432,51 @@
       }
     },
     {
+      "modelId": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "inputCostPerToken": {
+        "amount": 170,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 1100,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": true,
+        "contextLength": 32768,
+        "modelDisplayName": "Qwen 3.6 35B A3B FP8",
+        "modelDescription": "Qwen 3.6 35B is a fast mixture-of-experts language model with ~3B active parameters per token. Strong at reasoning, coding, and multilingual tasks with 32K context window.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/141221163?s=200&v=4",
+        "ownedBy": "nearai",
+        "aliases": [
+          "qwen3.6-35b-a3b-fp8",
+          "qwen/qwen3.6-35b-a3b-fp8"
+        ],
+        "providerType": "vllm",
+        "attestationSupported": true,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
       "modelId": "Qwen/Qwen3-Embedding-0.6B",
       "inputCostPerToken": {
         "amount": 10,
@@ -1564,5 +1654,5 @@
   ],
   "limit": 100,
   "offset": 0,
-  "total": 34
+  "total": 36
 }
