@@ -167,7 +167,7 @@ Once you have [requested a model attestation](#request-model-attestation) from N
 
 ### Verify GPU Attestation
 
-NVIDIA offers a [Remote Attestation Service](https://docs.nvidia.com/attestation/technical-docs-nras/latest/nras_introduction.html) that allows you to verify that you are using a trusted environment with one of their GPUs. To verify:
+NVIDIA offers a [Remote Attestation Service](https://docs.nvidia.com/attestation/cloud-services/latest/nras/nras_introduction.html) that allows you to verify that you are using a trusted environment with one of their GPUs. To verify:
 
 1. Submit the GPU evidence payload (`nvidia_payload`) to NVIDIA NRAS
 2. Verify the nonce in the GPU payload matches the request nonce
