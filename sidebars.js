@@ -35,13 +35,13 @@ const sidebars = {
       label: "Models",
       link: {
         type: "doc",
-        id: "cloud/models-overview",
+        id: "cloud/models",
       },
       collapsed: true,
       customProps: {
         icon: "/img/icons/ai.svg",
       },
-      items: ["cloud/models-overview", "cloud/reasoning-models"],
+      items: ["cloud/models", "cloud/reasoning-models"],
     },
     {
       type: "doc",
