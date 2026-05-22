@@ -626,7 +626,7 @@
         "currency": "USD"
       },
       "cacheReadCostPerToken": {
-        "amount": 0,
+        "amount": 300,
         "scale": 9,
         "currency": "USD"
       },
