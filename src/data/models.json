@@ -476,6 +476,56 @@
       }
     },
     {
+      "modelId": "google/gemini-3.5-flash",
+      "inputCostPerToken": {
+        "amount": 1500,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 9000,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 150,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 1000000,
+        "modelDisplayName": "Gemini 3.5 Flash",
+        "modelDescription": "Google's high-efficiency multimodal model with 1M token context. Strong agentic and coding performance, rivaling larger flagship models on many tasks.",
+        "modelIcon": "https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg",
+        "ownedBy": "google",
+        "aliases": [
+          "gemini-3.5-flash"
+        ],
+        "providerType": "external",
+        "providerConfig": {
+          "backend": "gemini",
+          "base_url": "https://generativelanguage.googleapis.com/v1beta",
+          "model_name": "gemini-3.5-flash"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text",
+            "image"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
       "modelId": "google/gemini-3-pro",
       "inputCostPerToken": {
         "amount": 1250,
@@ -531,13 +581,13 @@
         "currency": "USD"
       },
       "cacheReadCostPerToken": {
-        "amount": 0,
+        "amount": 26,
         "scale": 9,
         "currency": "USD"
       },
       "metadata": {
         "verifiable": true,
-        "contextLength": 32768,
+        "contextLength": 262144,
         "modelDisplayName": "Gemma 4 31B Instruct",
         "modelDescription": "Gemma 4 31B Instruct is Google's open-weight 31B-parameter language model, tuned for instruction following and dialogue. Strong general-purpose performance with 32K context window.",
         "modelIcon": "https://avatars.githubusercontent.com/u/1342004?s=200&v=4",
@@ -551,6 +601,57 @@
         "architecture": {
           "inputModalities": [
             "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "moonshotai/kimi-k2.6",
+      "inputCostPerToken": {
+        "amount": 800,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 3500,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 300,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 262144,
+        "modelDisplayName": "Kimi K2.6",
+        "modelDescription": "Moonshot AI's frontier MoE model with 256K context window. Excels at complex reasoning, math, coding, and multilingual tasks with native vision support.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/148031206?s=200&v=4",
+        "ownedBy": "moonshotai",
+        "aliases": [
+          "kimi-k2.6"
+        ],
+        "providerType": "external",
+        "providerConfig": {
+          "api_key": "***",
+          "backend": "openai_compatible",
+          "base_url": "https://openrouter.ai/api/v1",
+          "model_name": "moonshotai/kimi-k2.6"
+        },
+        "attestationSupported": false,
+        "architecture": {
+          "inputModalities": [
+            "text",
+            "image"
           ],
           "outputModalities": [
             "text"
@@ -822,7 +923,7 @@
         "currency": "USD"
       },
       "cacheReadCostPerToken": {
-        "amount": 0,
+        "amount": 180,
         "scale": 9,
         "currency": "USD"
       },
@@ -1141,7 +1242,7 @@
         "currency": "USD"
       },
       "cacheReadCostPerToken": {
-        "amount": 0,
+        "amount": 30,
         "scale": 9,
         "currency": "USD"
       },
@@ -1307,6 +1408,46 @@
       }
     },
     {
+      "modelId": "openai/privacy-filter",
+      "inputCostPerToken": {
+        "amount": 10,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": true,
+        "contextLength": 512,
+        "modelDisplayName": "Privacy Filter",
+        "modelDescription": "PII detection (token classification) — returns spans for emails, phones, addresses, names, account numbers, secrets. NEAR AI runs this model in a TEE; prompts are not anonymized by the model itself, the cloud-api wraps it to do redaction.",
+        "ownedBy": "nearai",
+        "providerType": "vllm",
+        "attestationSupported": true,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
       "modelId": "openai/whisper-large-v3",
       "inputCostPerToken": {
         "amount": 10,
@@ -1365,7 +1506,7 @@
         "currency": "USD"
       },
       "cacheReadCostPerToken": {
-        "amount": 0,
+        "amount": 30,
         "scale": 9,
         "currency": "USD"
       },
@@ -1402,7 +1543,7 @@
         "currency": "USD"
       },
       "cacheReadCostPerToken": {
-        "amount": 0,
+        "amount": 80,
         "scale": 9,
         "currency": "USD"
       },
@@ -1449,13 +1590,13 @@
         "currency": "USD"
       },
       "cacheReadCostPerToken": {
-        "amount": 0,
+        "amount": 56,
         "scale": 9,
         "currency": "USD"
       },
       "metadata": {
         "verifiable": true,
-        "contextLength": 32768,
+        "contextLength": 262144,
         "modelDisplayName": "Qwen 3.6 35B A3B FP8",
         "modelDescription": "Qwen 3.6 35B is a fast mixture-of-experts language model with ~3B active parameters per token. Strong at reasoning, coding, and multilingual tasks with 32K context window.",
         "modelIcon": "https://avatars.githubusercontent.com/u/141221163?s=200&v=4",
@@ -1466,6 +1607,56 @@
         ],
         "providerType": "vllm",
         "attestationSupported": true,
+        "architecture": {
+          "inputModalities": [
+            "text"
+          ],
+          "outputModalities": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "modelId": "qwen/qwen3.7-max",
+      "inputCostPerToken": {
+        "amount": 2800,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "outputCostPerToken": {
+        "amount": 7500,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "costPerImage": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "cacheReadCostPerToken": {
+        "amount": 0,
+        "scale": 9,
+        "currency": "USD"
+      },
+      "metadata": {
+        "verifiable": false,
+        "contextLength": 1000000,
+        "modelDisplayName": "Qwen3.7 Max",
+        "modelDescription": "Qwen's most capable proprietary model with 1M context window. Strong at reasoning, coding, math, and multilingual tasks.",
+        "modelIcon": "https://avatars.githubusercontent.com/u/141221163?s=200&v=4",
+        "ownedBy": "qwen",
+        "aliases": [
+          "qwen3.7-max"
+        ],
+        "providerType": "external",
+        "providerConfig": {
+          "api_key": "***",
+          "backend": "openai_compatible",
+          "base_url": "https://openrouter.ai/api/v1",
+          "model_name": "qwen/qwen3.7-max"
+        },
+        "attestationSupported": false,
         "architecture": {
           "inputModalities": [
             "text"
@@ -1576,7 +1767,7 @@
         "currency": "USD"
       },
       "cacheReadCostPerToken": {
-        "amount": 0,
+        "amount": 30,
         "scale": 9,
         "currency": "USD"
       },
@@ -1618,7 +1809,7 @@
         "currency": "USD"
       },
       "cacheReadCostPerToken": {
-        "amount": 0,
+        "amount": 170,
         "scale": 9,
         "currency": "USD"
       },
@@ -1654,5 +1845,5 @@
   ],
   "limit": 100,
   "offset": 0,
-  "total": 36
+  "total": 40
 }
