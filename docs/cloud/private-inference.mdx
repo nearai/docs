@@ -131,16 +131,18 @@ https://{slug}.completions.near.ai/v1
 
 | Subdomain | Model | Input | Output |
 |-----------|-------|-------|--------|
+| `glm-5-1.completions.near.ai` | GLM-5.1 | Text | Text |
 | `qwen35-122b.completions.near.ai` | Qwen3.5-122B | Text | Text |
-| `deepseek-v31.completions.near.ai` | DeepSeek-V3.1 | Text | Text |
+| `qwen3-6-35b.completions.near.ai` | Qwen3.6-35B | Text | Text |
 | `qwen3-30b.completions.near.ai` | Qwen3-30B | Text | Text |
 | `gpt-oss-120b.completions.near.ai` | GPT-OSS-120B | Text | Text |
-| `glm-5.completions.near.ai` | GLM-5 | Text | Text |
+| `gemma-4-31b.completions.near.ai` | Gemma 4 31B | Text | Text |
 | `qwen3-vl-30b.completions.near.ai` | Qwen3-VL-30B | Text, Image | Text |
 | `flux2-klein.completions.near.ai` | FLUX.2-klein-4B | Text | Image |
 | `whisper-large-v3.completions.near.ai` | Whisper Large V3 | Audio | Text |
 | `qwen3-embedding.completions.near.ai` | Qwen3-Embedding-0.6B | Text | Embedding |
 | `qwen3-reranker.completions.near.ai` | Qwen3-Reranker-0.6B | Text | Score |
+| `privacy-filter.completions.near.ai` | Privacy Filter | Text | PII classification |
 
 Each subdomain exposes the same OpenAI-compatible API as the gateway, plus model-specific endpoints:
 
@@ -150,6 +152,7 @@ Each subdomain exposes the same OpenAI-compatible API as the gateway, plus model
 - `POST /v1/images/generations` — Image generation
 - `POST /v1/audio/transcriptions` — Audio transcription
 - `POST /v1/rerank` — Reranking
+- `POST /v1/privacy/classify` — PII detection (`/v1/privacy/redact` is additionally available via the gateway)
 - `GET /v1/models` — Available models
 - `GET /v1/attestation/report` — TEE attestation (TDX + GPU)
 - `GET /v1/signature/{chat_id}` — Retrieve cached signatures

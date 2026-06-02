@@ -67,7 +67,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="deepseek-ai/DeepSeek-V3.1",
+    model="zai-org/GLM-5.1-FP8",
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "Explain quantum computing in simple terms."}
@@ -92,7 +92,7 @@ client = AsyncOpenAI(
 
 async def main():
     stream = await client.chat.completions.create(
-        model="deepseek-ai/DeepSeek-V3.1",
+        model="zai-org/GLM-5.1-FP8",
         messages=[{"role": "user", "content": "Tell me a story about space."}],
         stream=True,
     )
@@ -128,7 +128,7 @@ const openai = new OpenAI({
 async function main() {
   const completion = await openai.chat.completions.create({
     messages: [{ role: 'user', content: 'What is the capital of France?' }],
-    model: 'deepseek-ai/DeepSeek-V3.1',
+    model: 'zai-org/GLM-5.1-FP8',
   });
 
   console.log(completion.choices[0].message.content);
@@ -149,7 +149,7 @@ const openai = new OpenAI({
 
 async function main() {
   const stream = await openai.chat.completions.create({
-    model: 'deepseek-ai/DeepSeek-V3.1',
+    model: 'zai-org/GLM-5.1-FP8',
     messages: [{ role: 'user', content: 'Write a haiku about coding.' }],
     stream: true,
   });
@@ -169,12 +169,22 @@ main();
 
 NEAR AI Cloud supports the following core OpenAI API features:
 
-- **Chat Completions** (`/v1/chat/completions`)
+- **Chat Completions** (`/v1/chat/completions`) - Including tool calling, structured outputs, and [reasoning](/cloud/reasoning-models)
+- **Completions** (`/v1/completions`) - Legacy text completions
 - **Models List** (`/v1/models`)
+- **Embeddings** (`/v1/embeddings`) - See [Beyond Chat](/cloud/guides/specialized-endpoints#embeddings)
+- **Images** (`/v1/images/generations`, `/v1/images/edits`) - See [Beyond Chat](/cloud/guides/specialized-endpoints#image-generation)
+- **Audio Transcription** (`/v1/audio/transcriptions`) - See [Beyond Chat](/cloud/guides/specialized-endpoints#audio-transcription)
 - **Files** (`/v1/files`) - Upload, list, retrieve, and delete files
 - **Conversations** (`/v1/conversations`) - Manage multi-turn conversations
-- **Responses** (`/v1/responses`) - Generate responses with advanced tool calling
+- **Responses** (`/v1/responses`) - Generate responses with advanced tool calling, including built-in [Web Search](/cloud/guides/web-search)
 - **Streaming** (Server-Sent Events)
+
+NEAR AI Cloud also provides non-OpenAI extensions:
+
+- **Reranking** (`/v1/rerank`) - Score documents against a query
+- **PII Detection** (`/v1/privacy/classify`, `/v1/privacy/redact`) - Detect and redact personally identifiable information
+- **Attestation & Signatures** (`/v1/attestation/report`, `/v1/signature/{chat_id}`) - See [Verification](/cloud/verification)
 
 ### Files API Example
 
@@ -271,7 +281,7 @@ print(f"Conversation ID: {conversation.id}")
 # 2. Generate a response
 response = client.responses.create(
     conversation_id=conversation.id,
-    model="deepseek-ai/DeepSeek-V3.1",
+    model="zai-org/GLM-5.1-FP8",
     input=[
         {"type": "message", "role": "user", "content": "Tell me a fun fact about it."}
     ]
@@ -301,7 +311,7 @@ async function main() {
   // 2. Generate a response
   const response = await openai.responses.create({
     conversation_id: conversation.id,
-    model: 'deepseek-ai/DeepSeek-V3.1',
+    model: 'zai-org/GLM-5.1-FP8',
     input: [
         { type: 'message', role: 'user', content: 'Tell me a fun fact about it.' }
     ]

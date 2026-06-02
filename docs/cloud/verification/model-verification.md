@@ -56,7 +56,7 @@ With direct completions, you can also pass `include_tls_fingerprint=true` to bin
 # Generate a random 64-character hex nonce (optional but recommended)
 NONCE=$(openssl rand -hex 32)
 
-curl "https://cloud-api.near.ai/v1/attestation/report?model=deepseek-ai/DeepSeek-V3.1&signing_algo=ecdsa&nonce=${NONCE}" \
+curl "https://cloud-api.near.ai/v1/attestation/report?model=zai-org/GLM-5.1-FP8&signing_algo=ecdsa&nonce=${NONCE}" \
   -H 'accept: application/json'
 ```
 
@@ -78,7 +78,7 @@ curl "https://qwen35-122b.completions.near.ai/v1/attestation/report?signing_algo
 ```js
 import crypto from 'crypto';
 
-const MODEL_NAME = 'deepseek-ai/DeepSeek-V3.1'
+const MODEL_NAME = 'zai-org/GLM-5.1-FP8'
 // Generate a random 64-character hex nonce (optional but recommended)
 const nonce = crypto.randomBytes(32).toString('hex');
 
@@ -106,7 +106,7 @@ const response = await fetch(
 import requests
 import secrets
 
-MODEL_NAME = 'deepseek-ai/DeepSeek-V3.1'
+MODEL_NAME = 'zai-org/GLM-5.1-FP8'
 # Generate a random 64-character hex nonce (optional but recommended)
 nonce = secrets.token_hex(32)
 

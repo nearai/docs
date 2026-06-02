@@ -22,31 +22,26 @@ You can verify each chat message with NEAR AI Cloud. For this you will need:
 See an example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo.
 :::
 
+:::info Use Direct Completions for byte-exact verification
+The signature is generated **inside the model TEE** over the exact bytes the TEE received and sent. When you connect through the gateway (`cloud-api.near.ai`), streamed responses are re-serialized in transit, so the response bytes you receive may not hash to the signed value. To verify hashes byte-for-byte, send your request to the model's [direct completions endpoint](/cloud/private-inference#direct-completions) (`{slug}.completions.near.ai`) — the examples below use `qwen35-122b.completions.near.ai`.
+:::
+
 ---
 
 ## Chat Message Request Hash
 
-The value is calculated from the **exact JSON request body string**.
+The value is calculated from the **exact JSON request body string** as it was sent over the wire.
 
 **_Example:_**
 
 ```json
-{
-  "messages": [
-    {
-      "content": "Respond with only two words.",
-      "role": "user"
-    }
-  ],
-  "stream": true,
-  "model": "deepseek-ai/DeepSeek-V3.1"
-}
+{"messages":[{"content":"Respond with only two words.","role":"user"}],"stream":true,"model":"Qwen/Qwen3.5-122B-A10B","chat_template_kwargs":{"enable_thinking":false}}
 ```
 
 Which hashes to:
 
 ```bash
-b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba
+2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad
 ```
 
 Here is an example of how to get the sha256 hash of your message request body:
@@ -70,11 +65,12 @@ const requestBody = JSON.stringify({
     }
   ],
   "stream": true,
-  "model": "deepseek-ai/DeepSeek-V3.1"
+  "model": "Qwen/Qwen3.5-122B-A10B",
+  "chat_template_kwargs": {"enable_thinking": false}
 });
 
 const hash = crypto.createHash('sha256').update(requestBody).digest('hex');
-console.log(hash); //b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba
+console.log(hash); //2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad
 ```
 
 </TabItem>
@@ -92,7 +88,8 @@ request_body = {
         }
     ],
     "stream": True,
-    "model": "deepseek-ai/DeepSeek-V3.1"
+    "model": "Qwen/Qwen3.5-122B-A10B",
+    "chat_template_kwargs": {"enable_thinking": False}
 }
 
 # Convert to JSON string with same formatting as JavaScript
@@ -101,7 +98,7 @@ request_body_str = json.dumps(request_body, separators=(',', ':'))
 # Calculate SHA-256 hash
 hash_obj = hashlib.sha256(request_body_str.encode())
 hash_hex = hash_obj.hexdigest()
-print(hash_hex)  #b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba
+print(hash_hex)  #2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad
 ```
 
 </TabItem>
@@ -120,15 +117,15 @@ This value is calculated from the **exact response body string**.
 **_Example Response Body:_**
 
 ```bash
-data: {"id":"chatcmpl-ba1b4314210adc3b","object":"chat.completion.chunk","created":1764763435,"model":"deepseek-ai/DeepSeek-V3.1","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning_content":null},"logprobs":null,"finish_reason":null}],"prompt_token_ids":null}
+data: {"choices":[{"delta":{"content":"","reasoning_content":null,"role":"assistant"},"finish_reason":null,"index":0,"logprobs":null,"matched_stop":null}],"created":1780404899,"id":"afa7975eaf844b1888776cf41548e230","model":"Qwen/Qwen3.5-122B-A10B","object":"chat.completion.chunk"}
 
-data: {"id":"chatcmpl-ba1b4314210adc3b","object":"chat.completion.chunk","created":1764763435,"model":"deepseek-ai/DeepSeek-V3.1","choices":[{"index":0,"delta":{"content":"Okay","reasoning_content":null},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+data: {"choices":[{"delta":{"content":"Under","reasoning_content":null},"finish_reason":null,"index":0,"logprobs":null,"matched_stop":null}],"created":1780404899,"id":"afa7975eaf844b1888776cf41548e230","model":"Qwen/Qwen3.5-122B-A10B","object":"chat.completion.chunk"}
 
-data: {"id":"chatcmpl-ba1b4314210adc3b","object":"chat.completion.chunk","created":1764763435,"model":"deepseek-ai/DeepSeek-V3.1","choices":[{"index":0,"delta":{"content":".","reasoning_content":null},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+data: {"choices":[{"delta":{"content":"stood.","reasoning_content":null},"finish_reason":null,"index":0,"logprobs":null,"matched_stop":null}],"created":1780404899,"id":"afa7975eaf844b1888776cf41548e230","model":"Qwen/Qwen3.5-122B-A10B","object":"chat.completion.chunk"}
 
-data: {"id":"chatcmpl-ba1b4314210adc3b","object":"chat.completion.chunk","created":1764763435,"model":"deepseek-ai/DeepSeek-V3.1","choices":[{"index":0,"delta":{"content":"","reasoning_content":null},"logprobs":null,"finish_reason":"stop","stop_reason":null,"token_ids":null}]}
+data: {"choices":[{"delta":{"reasoning_content":null},"finish_reason":"stop","index":0,"logprobs":null,"matched_stop":248046}],"created":1780404899,"id":"afa7975eaf844b1888776cf41548e230","model":"Qwen/Qwen3.5-122B-A10B","object":"chat.completion.chunk"}
 
-data: {"id":"chatcmpl-ba1b4314210adc3b","object":"chat.completion.chunk","created":1764763435,"model":"deepseek-ai/DeepSeek-V3.1","choices":[],"usage":{"prompt_tokens":13,"total_tokens":16,"completion_tokens":3}}
+data: {"choices":[],"created":1780404899,"id":"afa7975eaf844b1888776cf41548e230","model":"Qwen/Qwen3.5-122B-A10B","object":"chat.completion.chunk","usage":{"completion_tokens":4,"prompt_tokens":18,"prompt_tokens_details":null,"reasoning_tokens":0,"total_tokens":22}}
 
 data: [DONE]
 
@@ -137,7 +134,7 @@ data: [DONE]
 Which hashes to:
 
 ```bash
-aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f
+8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c
 ```
 
 Here is an example of how to get the sha256 hash of your message response body:
@@ -152,7 +149,7 @@ Here is an example of how to get the sha256 hash of your message response body:
 <TabItem value="javascript">
 
 ```js
-const response = await fetch('https://cloud-api.near.ai/v1/chat/completions', {
+const response = await fetch('https://qwen35-122b.completions.near.ai/v1/chat/completions', {
   method: 'POST',
   headers: {
     'accept': 'application/json',
@@ -164,7 +161,7 @@ const response = await fetch('https://cloud-api.near.ai/v1/chat/completions', {
 
 const responseBody = await response.text();
 const hash = crypto.createHash('sha256').update(responseBody).digest('hex');
-console.log(hash); // aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f
+console.log(hash); // 8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c
 ```
 
 </TabItem>
@@ -176,19 +173,19 @@ import requests
 import os
 
 response = requests.post(
-    'https://cloud-api.near.ai/v1/chat/completions',
+    'https://qwen35-122b.completions.near.ai/v1/chat/completions',
     headers={
         'accept': 'application/json',
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {os.environ["NEARAI_CLOUD_API_KEY"]}'
     },
-    json=request_body  # Uses the request_body from previous example
+    data=request_body_str  # Uses the exact string from the previous example
 )
 
 response_body = response.text
 hash_obj = hashlib.sha256(response_body.encode())
 hash_hex = hash_obj.hexdigest()
-print(hash_hex)  # aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f
+print(hash_hex)  # 8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c
 ```
 
 </TabItem>
@@ -200,68 +197,62 @@ print(hash_hex)  # aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d
 
 From the Chat Message Response you will get a unique chat `id` that is used to fetch the Chat Message Signature from NEAR AI Cloud.
 
-You can query the signature API with the value of `id` from the response at any time after chat completion. The signature is persistent in the LLM gateway for future verification.
+You can query the signature API with the value of `id` from the response after chat completion.
 
 Use one of the following endpoints to get the signature:
-
-**Via Gateway:**
-```bash
-GET https://cloud-api.near.ai/v1/signature/{chat_id}?model={model_id}&signing_algo=ecdsa
-```
 
 **Via Direct Completions:**
 ```bash
 GET https://{slug}.completions.near.ai/v1/signature/{chat_id}?signing_algo=ecdsa
 ```
 
-> **Implementation**: This endpoint is defined in the [NEAR AI Private ML SDK](https://github.com/nearai/private-ml-sdk/blob/a23fa797dfd7e676fba08cba68471b51ac9a13d9/vllm-proxy/src/app/api/v1/openai.py#L257).
+**Via Gateway:**
+```bash
+GET https://cloud-api.near.ai/v1/signature/{chat_id}?model={model_id}&signing_algo=ecdsa
+```
 
 For example, the `id` from the response in the previous section is:
 
- `chatcmpl-ba1b4314210adc3b`
+ `afa7975eaf844b1888776cf41548e230`
 
 ```bash
-# Via gateway:
-curl -X GET 'https://cloud-api.near.ai/v1/signature/chatcmpl-ba1b4314210adc3b?model=deepseek-ai/DeepSeek-V3.1&signing_algo=ecdsa' \
+# Via direct completions:
+curl -X GET 'https://qwen35-122b.completions.near.ai/v1/signature/afa7975eaf844b1888776cf41548e230?signing_algo=ecdsa' \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer <YOUR-NEARAI-CLOUD-API-KEY>"
-
-# Or via direct completions:
-# curl -X GET 'https://qwen35-122b.completions.near.ai/v1/signature/chatcmpl-ba1b4314210adc3b?signing_algo=ecdsa' \
-#     -H "Content-Type: application/json" \
-#     -H "Authorization: Bearer <YOUR-NEARAI-CLOUD-API-KEY>"
 ```
+
+:::note
+A model can be served by multiple TEE nodes behind the same domain. The signature is cached on the node that served your chat completion, so a lookup may transiently return `Chat id not found or expired` if it lands on a different node — simply retry until you hit the right one.
+:::
 
 ***Example Response:***
 
 ```json
 {
-  "text":"b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba:aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f",
-  "signature":"0x649b30be41e53ac33cb3fe414c8f5fd30ad72cacaeac0f41c4977fee4b67506e185300f1978039306c406b398c4eda49c3dad476d5054c63fd811570815012cc1b",
-  "signing_address":"0x319f1b8BB3b723A5d098FFB67005Bdf7BB579ACa",
+  "text":"Qwen/Qwen3.5-122B-A10B:2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad:8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c",
+  "signature":"0xed381e84d059198d1826e44dbbbac9501caaa8f79f913f27578acafa5be852e6103fe34fabd6446d7fde3f5250c0a16e109fe088a562bae08ac13d081a66d0761b",
+  "signing_address":"0x6525e128afcffebf7eed05d485d7be983cdae934",
   "signing_algo":"ecdsa"
 }
 ```
 
 The above response gives us all of the crucial information we need to verify that the message was executed in our trusted environment:
 
-- `text` - This is the [Chat Message REQUEST Hash](#chat-message-request-hash) & [Chat Message RESPONSE Hash](#chat-message-response-hash) concatenated with a `:` separator.
+- `text` - The model ID, the [Chat Message REQUEST Hash](#chat-message-request-hash), and the [Chat Message RESPONSE Hash](#chat-message-response-hash) concatenated with `:` separators (`{model_id}:{request_hash}:{response_hash}`)
 - `signature` - This is the cryptographic signature of the `text` field, generated using the TEE's private key 
-- `signing_address` - Public key of the TEE unique to the model we used
+- `signing_address` - Public key of the TEE node that served the request
 - `signing_algo` - Cryptography curve used to sign
 
 You can see that `text` is:
 
-`b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba:aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f`
+`Qwen/Qwen3.5-122B-A10B:2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad:8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c`
 
-This exactly matches the concatenated values we calculated in the previous sections:
+This exactly matches the model we requested and the values we calculated in the previous sections:
 
-- Request hash: `b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba`
-- Response hash: `aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f`
-
-:::note
-    Signatures are persistent in the LLM gateway and can be queried at any time after chat completion for verification purposes.
-:::
+- Model: `Qwen/Qwen3.5-122B-A10B`
+- Request hash: `2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad`
+- Response hash: `8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c`
 
 ---
 
@@ -272,7 +263,7 @@ Signature verification can be easily done with any standard ECDSA verification l
 These tools will require:
 
 - `Address`: What the expected address is for the signature. In our case it will be the one retrieved from your [attestation API query](./model) (see Model Verification page).
-- `Message`: The original message before signing. In our case it will be the sha256 hash of the request and response (`text` field from [Chat Message Signature](#chat-message-signature))
+- `Message`: The original message before signing. In our case it will be the `text` field from [Chat Message Signature](#chat-message-signature) (`{model_id}:{request_hash}:{response_hash}`)
 - `Signature`: The signed message from above
 
 Here is an example of how to verify the Chat Message signature using `ethers`:
@@ -288,9 +279,9 @@ Here is an example of how to verify the Chat Message signature using `ethers`:
 ```js
 import { ethers } from 'ethers';
 
-const text = "b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba:aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f";
-const signature = "0x649b30be41e53ac33cb3fe414c8f5fd30ad72cacaeac0f41c4977fee4b67506e185300f1978039306c406b398c4eda49c3dad476d5054c63fd811570815012cc1b";
-const expectedAddress = "0x319f1b8BB3b723A5d098FFB67005Bdf7BB579ACa";
+const text = "Qwen/Qwen3.5-122B-A10B:2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad:8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c";
+const signature = "0xed381e84d059198d1826e44dbbbac9501caaa8f79f913f27578acafa5be852e6103fe34fabd6446d7fde3f5250c0a16e109fe088a562bae08ac13d081a66d0761b";
+const expectedAddress = "0x6525e128afcffebf7eed05d485d7be983cdae934";
 
 // Recover the address from the signature
 const recoveredAddress = ethers.verifyMessage(text, signature);
@@ -311,9 +302,9 @@ console.log("Signature valid:", isValid);
 from eth_account import Account
 from eth_account.messages import encode_defunct
 
-text = "b524f8f4b611b43526aa988c636cf1d7e72aa661876c3d969e2c2acae125a8ba:aae79d9de9c46f0a9c478481ceb84df5742a88067a6ab8bac9e98664d712d58f"
-signature = "0x649b30be41e53ac33cb3fe414c8f5fd30ad72cacaeac0f41c4977fee4b67506e185300f1978039306c406b398c4eda49c3dad476d5054c63fd811570815012cc1b"
-expected_address = "0x319f1b8BB3b723A5d098FFB67005Bdf7BB579ACa"
+text = "Qwen/Qwen3.5-122B-A10B:2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad:8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c"
+signature = "0xed381e84d059198d1826e44dbbbac9501caaa8f79f913f27578acafa5be852e6103fe34fabd6446d7fde3f5250c0a16e109fe088a562bae08ac13d081a66d0761b"
+expected_address = "0x6525e128afcffebf7eed05d485d7be983cdae934"
 
 # Create a message object that can be signed
 message = encode_defunct(text=text)

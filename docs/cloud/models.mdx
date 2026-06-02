@@ -8,7 +8,16 @@ description: "Explore NEAR AI Cloud model catalog"
 
 import { ModelList } from '@site/src/components/ModelList';
 
-NEAR AI Cloud provides access to leading AI models, each optimized for different use cases ranging from advanced reasoning and tool calling to long-context processing and multilingual tasks. All models run in secure TEE environments with transparent, pay-per-use pricing.
+NEAR AI Cloud provides access to leading AI models, each optimized for different use cases ranging from advanced reasoning and tool calling to long-context processing, embeddings, reranking, image generation, and audio transcription — all with transparent, pay-per-use pricing.
+
+The catalog contains two kinds of models:
+
+- **TEE-hosted models** (marked <span className="badge badge--success">TEE</span>) run on NEAR AI's own GPU fleet inside [Trusted Execution Environments](/cloud/private-inference). They support [attestation, signatures, and verification](/cloud/verification), are reachable through [direct completions endpoints](/cloud/private-inference#direct-completions), and nobody — not even NEAR — can see your prompts or outputs.
+- **Third-party models** (OpenAI, Anthropic, Gemini, and others) are proxied to their providers through the NEAR AI gateway for convenience. They offer the same unified API and billing, but the TEE privacy and verifiability guarantees do not extend to the upstream provider.
+
+:::tip Model metadata
+The [`/v1/models`](https://cloud-api.near.ai/v1/models) endpoint reports each model's context length, max output length, pricing (including discounted cache-read pricing — see [Prompt Caching](/cloud/guides/prompt-caching)), supported features (`tools`, `structured_outputs`, `reasoning`), supported sampling parameters, and input/output modalities.
+:::
 
 ## Quick Reference
 
