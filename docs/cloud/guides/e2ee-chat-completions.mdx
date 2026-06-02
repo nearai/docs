@@ -535,6 +535,7 @@ const data = await response.json();
 | `X-Client-Pub-Key` | Your Ed25519 public key in hex format (32 bytes / 64 hex chars) |
 | `X-Encryption-Version` | Set to `2` |
 | `X-Model-Pub-Key` | Model's Ed25519 public key from attestation (required when using the gateway for routing) |
+| `X-Encrypt-All-Fields` | Optional. Set to `true` to extend encryption beyond message content to tool definitions, tool calls, and other sensitive fields — see [Encrypting All Fields](#encrypting-all-fields-tool-calling) |
 
 ---
 
@@ -639,6 +640,64 @@ if (msg.reasoning_content) {
 
 </TabItem>
 </Tabs>
+
+---
+
+## Encrypting All Fields (Tool Calling) {#encrypting-all-fields-tool-calling}
+
+By default, E2EE covers the message fields `content`, `reasoning_content`, `reasoning`, and `audio.data`. If you use **tool calling**, the tool definitions and the model's tool calls also contain sensitive data. Send `X-Encrypt-All-Fields: true` to extend encryption to:
+
+| Direction | Additional encrypted fields |
+|-----------|------------------------------|
+| Request | `tools[].function.name`, `.description`, `.parameters` (JSON schema, encrypted as a string), `tool_choice.function.name`, message `name` and `refusal`, `tool_calls[].function.{name, arguments}` on assistant/tool messages |
+| Response | `tool_calls[].function.{name, arguments}`, `refusal`, `logprobs` token strings |
+
+With the flag set, encrypt each of these fields client-side with the model's public key exactly like message content (the `parameters` JSON schema is serialized to a string and encrypted whole), and decrypt the corresponding response fields with your private key:
+
+```python
+tool = {
+    "type": "function",
+    "function": {
+        "name": v2_encrypt(b"get_weather", model_x25519_pub).hex(),
+        "description": v2_encrypt(b"Get current weather for a city", model_x25519_pub).hex(),
+        "parameters": v2_encrypt(json.dumps({
+            "type": "object",
+            "properties": {"city": {"type": "string"}},
+            "required": ["city"],
+        }).encode(), model_x25519_pub).hex(),
+    },
+}
+
+resp = requests.post(
+    f"{ENDPOINT}/v1/chat/completions",
+    headers={
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json",
+        "X-Signing-Algo": "ed25519",
+        "X-Client-Pub-Key": client_pub_hex,
+        "X-Encryption-Version": "2",
+        "X-Encrypt-All-Fields": "true",
+    },
+    json={
+        "model": MODEL,
+        "messages": [{"role": "user", "content": encrypted_content}],
+        "tools": [tool],
+        "stream": False,
+    },
+)
+
+# Tool calls come back encrypted — decrypt name and arguments
+for tc in resp.json()["choices"][0]["message"].get("tool_calls") or []:
+    name = v2_decrypt(bytes.fromhex(tc["function"]["name"]), client_x25519_secret).decode()
+    args = v2_decrypt(bytes.fromhex(tc["function"]["arguments"]), client_x25519_secret).decode()
+    print(name, args)  # get_weather {"city": "Paris"}
+```
+
+When continuing the conversation, encrypt the `tool_calls` you echo back on the assistant message and the tool result `content` on the `tool` role message the same way.
+
+:::note
+When using the server-side [web search](/cloud/guides/web-search) tool with E2EE, the injected `nearai_tool_result.output` chunks are always encrypted to your key, regardless of `X-Encrypt-All-Fields`.
+:::
 
 ---
 

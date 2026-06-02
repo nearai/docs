@@ -142,4 +142,4 @@ curl https://cloud-api.near.ai/v1/privacy/redact \
 
 ---
 
-All of the above also work on each model's own [direct completions endpoint](/cloud/private-inference#direct-completions) (e.g. `qwen3-embedding.completions.near.ai`, `flux2-klein.completions.near.ai`), where TLS terminates directly inside the model's TEE.
+Except for `/v1/privacy/redact` (gateway only), all of the above also work on each model's own [direct completions endpoint](/cloud/private-inference#direct-completions) (e.g. `qwen3-embedding.completions.near.ai`, `flux2-klein.completions.near.ai`, `privacy-filter.completions.near.ai` for `/v1/privacy/classify`), where TLS terminates directly inside the model's TEE.

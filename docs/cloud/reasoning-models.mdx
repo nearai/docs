@@ -23,6 +23,8 @@ For most TEE-hosted models you can control whether the model uses reasoning by c
 
 :::tip Which models support reasoning?
 Check the `supported_features` array in the [`/v1/models`](https://cloud-api.near.ai/v1/models) response — reasoning-capable models list `"reasoning"`.
+
+Known gap: `Qwen/Qwen3.5-122B-A10B` currently reasons by default even though its metadata does not yet list the `"reasoning"` flag ([cloud-api#703](https://github.com/nearai/cloud-api/issues/703)).
 :::
 
 ---
