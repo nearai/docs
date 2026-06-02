@@ -22,11 +22,19 @@ function formatContext(contextLength) {
 }
 
 function ModelCard({ model }) {
-  const { modelId, inputCostPerToken, outputCostPerToken, metadata } = model;
+  const {
+    modelId,
+    inputCostPerToken,
+    outputCostPerToken,
+    cacheReadCostPerToken,
+    metadata,
+  } = model;
   const displayName = metadata?.modelDisplayName || modelId.split("/").pop();
   const description = metadata?.modelDescription || "";
   const contextLength = metadata?.contextLength;
   const iconUrl = metadata?.modelIcon;
+  const isTee = Boolean(metadata?.verifiable);
+  const hasCacheRead = Boolean(cacheReadCostPerToken?.amount);
 
   return (
     <div className="doc-model-card">
@@ -39,7 +47,17 @@ function ModelCard({ model }) {
           )}
         </div>
         <div>
-          <h3>{displayName}</h3>
+          <h3>
+            {displayName}{" "}
+            {isTee && (
+              <span
+                className="badge badge--success"
+                title="Runs in a Trusted Execution Environment — verifiable and private"
+              >
+                TEE
+              </span>
+            )}
+          </h3>
         </div>
       </div>
       {description && (
@@ -49,6 +67,9 @@ function ModelCard({ model }) {
         <span>{formatContext(contextLength)} context</span>
         <span>{formatPrice(inputCostPerToken)} input</span>
         <span>{formatPrice(outputCostPerToken)} output</span>
+        {hasCacheRead && (
+          <span>{formatPrice(cacheReadCostPerToken)} cache read</span>
+        )}
       </div>
       <p>
         <strong>Model ID:</strong>
@@ -65,6 +86,7 @@ function ModelTable({ models }) {
         <tr>
           <th>Model</th>
           <th>Model ID</th>
+          <th>TEE</th>
           <th>Context</th>
           <th>Input Price</th>
           <th>Output Price</th>
@@ -80,6 +102,7 @@ function ModelTable({ models }) {
               <td>
                 <CodeBlock language="text">{model.modelId}</CodeBlock>
               </td>
+              <td>{model.metadata?.verifiable ? "✅" : ""}</td>
               <td>{formatContext(model.metadata?.contextLength)}</td>
               <td>{formatPrice(model.inputCostPerToken)}</td>
               <td>{formatPrice(model.outputCostPerToken)}</td>

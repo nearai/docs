@@ -16,79 +16,35 @@ Some models in NEAR AI Cloud support advanced reasoning capabilities that allow 
 ## Overview
 
 Reasoning models can process information in two stages:
-1. **Thinking stage**: Internal reasoning process (not shown in final output by default)
-2. **Response stage**: The final answer provided to the user
+1. **Thinking stage**: Internal reasoning process, returned in the `reasoning_content` field of the response message
+2. **Response stage**: The final answer, returned in the `content` field
 
-You can control whether a model uses reasoning by configuring the `chat_template_kwargs` parameter in your API requests.
+For most TEE-hosted models you can control whether the model uses reasoning by configuring the `chat_template_kwargs` parameter in your API requests. Reasoning output is billed as completion tokens and reported separately as `reasoning_tokens` in the `usage` object.
 
----
-
-## DeepSeek V3.1
-
-DeepSeek V3.1 supports reasoning through the `thinking` parameter in `chat_template_kwargs`.
-
-### Enable Reasoning
-
-To enable reasoning for DeepSeek V3.1, set `"thinking": true` in the `chat_template_kwargs`:
-
-```bash
-curl https://cloud-api.near.ai/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{
-    "model": "deepseek-ai/DeepSeek-V3.1",
-    "messages": [
-      {"role": "user", "content": "What is sqrt of 11"}
-    ],
-    "temperature": 1,
-    "n": 1,
-    "chat_template_kwargs": {
-      "thinking": true
-    },
-    "stream": true
-  }'
-```
-
-### Disable Reasoning
-
-To disable reasoning, either omit the `chat_template_kwargs` parameter or set `"thinking": false`:
-
-```bash
-curl https://cloud-api.near.ai/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{
-    "model": "deepseek-ai/DeepSeek-V3.1",
-    "messages": [
-      {"role": "user", "content": "What is sqrt of 11"}
-    ],
-    "temperature": 1,
-    "n": 1,
-    "stream": true
-  }'
-```
+:::tip Which models support reasoning?
+Check the `supported_features` array in the [`/v1/models`](https://cloud-api.near.ai/v1/models) response — reasoning-capable models list `"reasoning"`.
+:::
 
 ---
 
-## GLM-5
+## GLM-5.1
 
-GLM-5 supports reasoning through the `enable_thinking` parameter in `chat_template_kwargs`. **Reasoning is enabled by default** for GLM-5.
+GLM-5.1 supports reasoning through the `enable_thinking` parameter in `chat_template_kwargs`. **Reasoning is enabled by default** for GLM-5.1.
 
 ### Default Behavior (Reasoning Enabled)
 
-GLM-5 uses reasoning by default. You can explicitly enable it by setting `"enable_thinking": true`, or simply omit the parameter:
+GLM-5.1 uses reasoning by default. You can explicitly enable it by setting `"enable_thinking": true`, or simply omit the parameter:
 
 ```bash
 curl https://cloud-api.near.ai/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
-    "model": "zai-org/GLM-5-FP8",
+    "model": "zai-org/GLM-5.1-FP8",
     "messages": [
       {"role": "user", "content": "How much is 2+2?"}
     ],
     "temperature": 0.4,
-    "n": 1,
     "chat_template_kwargs": {
       "enable_thinking": true
     },
@@ -98,19 +54,18 @@ curl https://cloud-api.near.ai/v1/chat/completions \
 
 ### Disable Reasoning
 
-To disable reasoning for GLM-5, you must explicitly set `"enable_thinking": false` in the `chat_template_kwargs`:
+To disable reasoning for GLM-5.1, you must explicitly set `"enable_thinking": false` in the `chat_template_kwargs`:
 
 ```bash
 curl https://cloud-api.near.ai/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
-    "model": "zai-org/GLM-5-FP8",
+    "model": "zai-org/GLM-5.1-FP8",
     "messages": [
       {"role": "user", "content": "How much is 2+2?"}
     ],
     "temperature": 0.4,
-    "n": 1,
     "chat_template_kwargs": {
       "enable_thinking": false
     },
@@ -120,9 +75,9 @@ curl https://cloud-api.near.ai/v1/chat/completions \
 
 ---
 
-## Qwen3.5-122B
+## Qwen3.5-122B and Qwen3.6-35B
 
-Qwen3.5-122B has reasoning enabled by default. The model will include `reasoning_content` in responses automatically. To disable reasoning, set `"enable_thinking": false` in the `chat_template_kwargs`:
+Qwen3.5-122B (`Qwen/Qwen3.5-122B-A10B`) and Qwen3.6-35B (`Qwen/Qwen3.6-35B-A3B-FP8`) have reasoning enabled by default. The model will include `reasoning_content` in responses automatically. To disable reasoning, set `"enable_thinking": false` in the `chat_template_kwargs`:
 
 ```bash
 curl https://cloud-api.near.ai/v1/chat/completions \
@@ -142,19 +97,69 @@ curl https://cloud-api.near.ai/v1/chat/completions \
 
 ---
 
+## GPT-OSS-120B
+
+GPT-OSS-120B (`openai/gpt-oss-120b`) always reasons before answering — its reasoning cannot be disabled. Instead, you control how much it thinks with the standard OpenAI `reasoning_effort` parameter (`low`, `medium`, or `high`; defaults to `medium`):
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "model": "openai/gpt-oss-120b",
+    "messages": [
+      {"role": "user", "content": "How much is 2+2?"}
+    ],
+    "reasoning_effort": "low",
+    "stream": true
+  }'
+```
+
+---
+
 ## Model-Specific Parameters
 
-Different models use different parameter names for enabling reasoning:
+Different models use different parameter names for controlling reasoning:
 
-| Model | Model ID | Parameter Name | Default Value |
-|-------|----------|---------------|---------------|
-| DeepSeek V3.1 | `deepseek-ai/DeepSeek-V3.1` | `thinking` | `false` |
-| GLM-5 | `zai-org/GLM-5-FP8` | `enable_thinking` | `true` |
-| Qwen3.5-122B | `Qwen/Qwen3.5-122B-A10B` | `enable_thinking` | `true` |
+| Model | Model ID | Parameter | Default |
+|-------|----------|-----------|---------|
+| GLM-5.1 | `zai-org/GLM-5.1-FP8` | `chat_template_kwargs.enable_thinking` | `true` |
+| Qwen3.5-122B | `Qwen/Qwen3.5-122B-A10B` | `chat_template_kwargs.enable_thinking` | `true` |
+| Qwen3.6-35B | `Qwen/Qwen3.6-35B-A3B-FP8` | `chat_template_kwargs.enable_thinking` | `true` |
+| GPT-OSS-120B | `openai/gpt-oss-120b` | `reasoning_effort` (`low`/`medium`/`high`) | `medium`, always on |
 
 :::tip
 Always check the model documentation or use the model's specific parameter name. Using the wrong parameter name will not enable reasoning.
 :::
+
+Third-party models served through the gateway (OpenAI `o`-series and GPT-5.x, Anthropic Claude, Gemini Pro, Kimi, ...) use their provider's standard reasoning controls, such as `reasoning_effort`.
+
+---
+
+## Reading Reasoning Output
+
+When reasoning is active, responses contain the reasoning trace alongside the answer:
+
+```json
+{
+  "choices": [{
+    "message": {
+      "role": "assistant",
+      "content": "2 + 2 = 4",
+      "reasoning_content": "The user asks a simple arithmetic question..."
+    }
+  }],
+  "usage": {
+    "prompt_tokens": 13,
+    "completion_tokens": 81,
+    "reasoning_tokens": 73,
+    "total_tokens": 94
+  }
+}
+```
+
+- `reasoning_content` — the model's internal thinking (streamed as `delta.reasoning_content` chunks when `stream: true`)
+- `usage.reasoning_tokens` — how many completion tokens were spent thinking
 
 ---
 
@@ -176,7 +181,6 @@ Reasoning may not be necessary for:
 ## Best Practices
 
 1. **Test with and without reasoning**: Compare results to determine if reasoning improves output quality for your use case
-2. **Monitor token usage**: Reasoning can increase the number of tokens used, affecting costs
+2. **Monitor token usage**: Reasoning can increase the number of tokens used, affecting costs — watch `usage.reasoning_tokens`
 3. **Use appropriate models**: Not all models support reasoning - check model capabilities before enabling
 4. **Stream responses**: When using reasoning, streaming can provide better user experience for longer responses
-

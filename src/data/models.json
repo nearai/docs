@@ -48,7 +48,19 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 8192,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "max_tokens",
+          "stop"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs"
+        ]
       }
     },
     {
@@ -99,7 +111,20 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 32768,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "max_tokens",
+          "stop"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "reasoning"
+        ]
       }
     },
     {
@@ -150,7 +175,20 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 32768,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "max_tokens",
+          "stop"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "reasoning"
+        ]
       }
     },
     {
@@ -188,7 +226,19 @@
           "base_url": "https://api.anthropic.com/v1",
           "model_name": "claude-sonnet-4-5-20250929"
         },
-        "attestationSupported": false
+        "attestationSupported": false,
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "max_tokens",
+          "stop"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs"
+        ]
       }
     },
     {
@@ -239,7 +289,20 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "max_tokens",
+          "stop"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "reasoning"
+        ]
       }
     },
     {
@@ -280,7 +343,13 @@
           "outputModalities": [
             "image"
           ]
-        }
+        },
+        "huggingFaceId": "black-forest-labs/FLUX.2-klein-4B",
+        "quantization": "bf16",
+        "maxOutputLength": 1,
+        "supportedSamplingParameters": [
+          "seed"
+        ]
       }
     },
     {
@@ -330,7 +399,20 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 8192,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "max_tokens",
+          "stop"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode"
+        ]
       }
     },
     {
@@ -376,7 +458,20 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 8192,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "max_tokens",
+          "stop"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode"
+        ]
       }
     },
     {
@@ -426,7 +521,21 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "max_tokens",
+          "stop"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode",
+          "reasoning"
+        ]
       }
     },
     {
@@ -472,7 +581,20 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 8192,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "max_tokens",
+          "stop"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode"
+        ]
       }
     },
     {
@@ -522,45 +644,20 @@
           "outputModalities": [
             "text"
           ]
-        }
-      }
-    },
-    {
-      "modelId": "google/gemini-3-pro",
-      "inputCostPerToken": {
-        "amount": 1250,
-        "scale": 9,
-        "currency": "USD"
-      },
-      "outputCostPerToken": {
-        "amount": 15000,
-        "scale": 9,
-        "currency": "USD"
-      },
-      "costPerImage": {
-        "amount": 0,
-        "scale": 9,
-        "currency": "USD"
-      },
-      "cacheReadCostPerToken": {
-        "amount": 0,
-        "scale": 9,
-        "currency": "USD"
-      },
-      "metadata": {
-        "verifiable": false,
-        "contextLength": 1000000,
-        "modelDisplayName": "Gemini 3 Pro Preview",
-        "modelDescription": "Google's Gemini 3 Pro Preview - a highly capable multimodal model with an industry-leading 1M token context window. Optimized for complex reasoning, code generation, and long document analysis. Anonymized, not TEE-protected.",
-        "modelIcon": "https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg",
-        "ownedBy": "google",
-        "providerType": "external",
-        "providerConfig": {
-          "backend": "gemini",
-          "base_url": "https://generativelanguage.googleapis.com/v1beta",
-          "model_name": "gemini-3-pro-preview"
         },
-        "attestationSupported": false
+        "maxOutputLength": 8192,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "max_tokens",
+          "stop"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode"
+        ]
       }
     },
     {
@@ -605,7 +702,23 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "huggingFaceId": "google/gemma-4-31B-it",
+        "quantization": "bf16",
+        "maxOutputLength": 8192,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools"
+        ]
       }
     },
     {
@@ -656,7 +769,23 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "huggingFaceId": "moonshotai/Kimi-K2.6",
+        "maxOutputLength": 8192,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs"
+        ]
       }
     },
     {
@@ -706,7 +835,22 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode"
+        ]
       }
     },
     {
@@ -756,7 +900,22 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode"
+        ]
       }
     },
     {
@@ -806,7 +965,22 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode"
+        ]
       }
     },
     {
@@ -856,7 +1030,23 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode",
+          "reasoning"
+        ]
       }
     },
     {
@@ -902,7 +1092,23 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode",
+          "reasoning"
+        ]
       }
     },
     {
@@ -945,7 +1151,23 @@
           "base_url": "https://api.openai.com/v1",
           "model_name": "gpt-5.2"
         },
-        "attestationSupported": false
+        "attestationSupported": false,
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode",
+          "reasoning"
+        ]
       }
     },
     {
@@ -991,7 +1213,23 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode",
+          "reasoning"
+        ]
       }
     },
     {
@@ -1037,7 +1275,23 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode",
+          "reasoning"
+        ]
       }
     },
     {
@@ -1083,7 +1337,23 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode",
+          "reasoning"
+        ]
       }
     },
     {
@@ -1129,7 +1399,23 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode",
+          "reasoning"
+        ]
       }
     },
     {
@@ -1175,7 +1461,23 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode",
+          "reasoning"
+        ]
       }
     },
     {
@@ -1221,7 +1523,23 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode",
+          "reasoning"
+        ]
       }
     },
     {
@@ -1258,7 +1576,24 @@
           "gpt-oss-120b"
         ],
         "providerType": "vllm",
-        "attestationSupported": true
+        "attestationSupported": true,
+        "huggingFaceId": "openai/gpt-oss-120b",
+        "quantization": "bf16",
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "reasoning"
+        ]
       }
     },
     {
@@ -1308,7 +1643,18 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 32768,
+        "supportedSamplingParameters": [
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "reasoning"
+        ]
       }
     },
     {
@@ -1354,7 +1700,18 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 32768,
+        "supportedSamplingParameters": [
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "reasoning"
+        ]
       }
     },
     {
@@ -1404,7 +1761,18 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 32768,
+        "supportedSamplingParameters": [
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "reasoning"
+        ]
       }
     },
     {
@@ -1444,7 +1812,8 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 1024
       }
     },
     {
@@ -1485,7 +1854,12 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "huggingFaceId": "openai/whisper-large-v3",
+        "maxOutputLength": 1024,
+        "supportedSamplingParameters": [
+          "temperature"
+        ]
       }
     },
     {
@@ -1522,7 +1896,24 @@
           "qwen3-30b-a3b-instruct-2507"
         ],
         "providerType": "vllm",
-        "attestationSupported": true
+        "attestationSupported": true,
+        "huggingFaceId": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "quantization": "bf16",
+        "maxOutputLength": 8192,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs"
+        ]
       }
     },
     {
@@ -1569,7 +1960,24 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "huggingFaceId": "Qwen/Qwen3.5-122B-A10B",
+        "quantization": "bf16",
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs"
+        ]
       }
     },
     {
@@ -1614,7 +2022,23 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "huggingFaceId": "Qwen/Qwen3.6-35B-A3B-FP8",
+        "quantization": "fp8",
+        "maxOutputLength": 8192,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "reasoning"
+        ]
       }
     },
     {
@@ -1664,7 +2088,23 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "json_mode"
+        ]
       }
     },
     {
@@ -1705,7 +2145,10 @@
           "outputModalities": [
             "embedding"
           ]
-        }
+        },
+        "huggingFaceId": "Qwen/Qwen3-Embedding-0.6B",
+        "quantization": "bf16",
+        "maxOutputLength": 1024
       }
     },
     {
@@ -1746,7 +2189,10 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "huggingFaceId": "Qwen/Qwen3-Reranker-0.6B",
+        "quantization": "bf16",
+        "maxOutputLength": 1024
       }
     },
     {
@@ -1788,7 +2234,24 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "huggingFaceId": "Qwen/Qwen3-VL-30B-A3B-Instruct",
+        "quantization": "bf16",
+        "maxOutputLength": 8192,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs"
+        ]
       }
     },
     {
@@ -1839,11 +2302,29 @@
           "outputModalities": [
             "text"
           ]
-        }
+        },
+        "huggingFaceId": "zai-org/GLM-5.1-FP8",
+        "quantization": "fp8",
+        "maxOutputLength": 16384,
+        "supportedSamplingParameters": [
+          "temperature",
+          "top_p",
+          "top_k",
+          "frequency_penalty",
+          "presence_penalty",
+          "max_tokens",
+          "stop",
+          "seed"
+        ],
+        "supportedFeatures": [
+          "tools",
+          "structured_outputs",
+          "reasoning"
+        ]
       }
     }
   ],
   "limit": 100,
   "offset": 0,
-  "total": 40
+  "total": 39
 }

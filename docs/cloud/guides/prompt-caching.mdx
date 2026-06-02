@@ -1,0 +1,65 @@
+---
+id: prompt-caching
+title: Prompt Caching
+sidebar_label: Prompt Caching
+slug: /cloud/guides/prompt-caching
+description: "How NEAR AI Cloud caches prompt prefixes to reduce latency and cost"
+---
+
+# Prompt Caching
+
+NEAR AI Cloud automatically caches prompt prefixes on TEE-hosted models. When consecutive requests share a common prefix — a long system prompt, conversation history, few-shot examples, or a large document — the cached portion is reused instead of being recomputed, which lowers both latency and cost.
+
+## How It Works
+
+Prompt caching is **automatic** — there is nothing to enable and no API changes are required:
+
+1. The inference engine (vLLM / SGLang) keeps the KV-cache of recently processed prompt prefixes inside the TEE.
+2. When a new request arrives whose prompt starts with a cached prefix, only the new suffix is computed.
+3. Cached input tokens are billed at the model's discounted **cache-read** rate instead of the regular input rate.
+
+Per-model cache-read pricing is listed on the [Models page](/cloud/models) and in the [`/v1/models`](https://cloud-api.near.ai/v1/models) response (`pricing.input_cache_read`).
+
+## Tracking Cache Hits
+
+The number of input tokens served from cache is reported in the `usage` object of every response:
+
+**Chat Completions** (`/v1/chat/completions`):
+
+```json
+{
+  "usage": {
+    "prompt_tokens": 614,
+    "prompt_tokens_details": { "cached_tokens": 576 },
+    "completion_tokens": 5,
+    "total_tokens": 619
+  }
+}
+```
+
+**Responses API** (`/v1/responses`):
+
+```json
+{
+  "usage": {
+    "input_tokens": 3302,
+    "input_tokens_details": { "cached_tokens": 1216 },
+    "output_tokens": 133,
+    "output_tokens_details": { "reasoning_tokens": 96 },
+    "total_tokens": 3435
+  }
+}
+```
+
+On the first request with a given prefix, `cached_tokens` is `0` (or `prompt_tokens_details` is `null`). Repeat the request — or send another request sharing the same prefix — and `cached_tokens` reflects the reused portion.
+
+## Getting the Most Out of the Cache
+
+- **Put stable content first.** The cache matches *prefixes*: keep your system prompt, instructions, and reference documents at the start of the message list, and the parts that change (the user's latest question) at the end.
+- **Keep prefixes byte-identical.** Any change at position *N* invalidates the cache from that point on — even reordered JSON keys or a timestamp in the system prompt.
+- **Short prompts may not be cached.** There is a minimum prefix length (one engine-internal cache block) before caching kicks in; very short prompts are always computed in full.
+- **The cache is per model deployment.** Cache state lives inside each model's TEE and is evicted over time as capacity is needed. Frequent traffic against the same prefix keeps it warm.
+
+:::note Privacy
+The cache never leaves the TEE — cached prefixes are part of the same hardware-isolated inference state as the rest of your request and are inaccessible to NEAR or the infrastructure provider.
+:::
