@@ -643,7 +643,7 @@ if (msg.reasoning_content) {
 
 ---
 
-## Encrypting All Fields (Tool Calling) {#encrypting-all-fields-tool-calling}
+## Encrypting All Fields (Tool Calling)
 
 By default, E2EE covers the message fields `content`, `reasoning_content`, `reasoning`, and `audio.data`. If you use **tool calling**, the tool definitions and the model's tool calls also contain sensitive data. Send `X-Encrypt-All-Fields: true` to extend encryption to:
 
