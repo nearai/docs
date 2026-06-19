@@ -101,8 +101,8 @@ Set `model` to the NEAR model that should synthesize the final answer. NEAR AI C
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `analysis_models` | Yes | Panel models to ask before synthesis. Model names may include or omit a leading `~`; NEAR AI strips it before direct endpoint lookup. |
-| `model` | No | Judge model. Defaults to the first analysis model when omitted. |
+| `analysis_models` | Yes* | Panel models to ask before synthesis. Required unless the deployment configures `FUSION_DEFAULT_ANALYSIS_MODELS`. Model names may include or omit a leading `~`; NEAR AI strips it before direct endpoint lookup. |
+| `model` | No | Judge model. Defaults to the model of the first successful panel result when omitted. |
 | `max_tool_calls` | No | Maximum inner web-search tool calls for panel and judge requests. |
 | `max_completion_tokens` | No | Token cap for panel and judge completions. |
 | `temperature` | No | Sampling temperature for panel and judge calls. |
