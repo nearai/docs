@@ -1,0 +1,187 @@
+---
+id: fusion
+title: Fusion
+sidebar_label: Fusion
+slug: /cloud/guides/fusion
+description: "Use server-side multi-model deliberation from OpenAI-compatible clients"
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Fusion
+
+Fusion runs a private, server-side deliberation across multiple models and returns one OpenAI-compatible chat completion. Your client sends one request to NEAR AI Cloud; the inference proxy fans out to the configured panel models, optionally asks a judge model for structured guidance, then synthesizes the final answer with the original model.
+
+Fusion is available on `/v1/chat/completions` through the Cloud API gateway. Cloud API remains a pass-through: it bills the single request from the final aggregate `usage`, which includes panel, judge, and synthesis model tokens.
+
+## Request Shapes
+
+NEAR AI Cloud accepts OpenRouter-style Fusion configuration in either a server tool or a plugin entry.
+
+<Tabs
+  defaultValue="tool"
+  values={[
+    {label: 'Server tool', value: 'tool'},
+    {label: 'Plugin', value: 'plugin'},
+  ]}>
+<TabItem value="tool">
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "Qwen/Qwen3.6-27B-FP8",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Compare SQLite and Postgres for a mobile sync backend. Be concise."
+      }
+    ],
+    "tools": [
+      {
+        "type": "openrouter:fusion",
+        "parameters": {
+          "analysis_models": [
+            "Qwen/Qwen3.6-27B-FP8",
+            "zai-org/GLM-5.2-FP8"
+          ],
+          "model": "zai-org/GLM-5.2-FP8",
+          "max_completion_tokens": 512,
+          "temperature": 0.2
+        }
+      }
+    ],
+    "tool_choice": "required"
+  }'
+```
+
+</TabItem>
+<TabItem value="plugin">
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "Qwen/Qwen3.6-27B-FP8",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Compare SQLite and Postgres for a mobile sync backend. Be concise."
+      }
+    ],
+    "plugins": [
+      {
+        "id": "fusion",
+        "analysis_models": [
+          "Qwen/Qwen3.6-27B-FP8",
+          "zai-org/GLM-5.2-FP8"
+        ],
+        "model": "zai-org/GLM-5.2-FP8",
+        "max_completion_tokens": 512,
+        "temperature": 0.2
+      }
+    ],
+    "tool_choice": "required"
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+Use `tool_choice: "required"` when you want Fusion to run immediately. If you omit it, the outer model can decide whether to call Fusion.
+
+:::note
+Use the top-level request `model` for the model that should synthesize the final answer. The Fusion `parameters.model` or plugin `model` field selects the judge model. NEAR AI Cloud does not route the OpenRouter virtual model alias `openrouter/fusion`; the Cloud API gateway routes by real model name before the request reaches the inference proxy.
+:::
+
+## Parameters
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `analysis_models` | Yes* | Panel models to ask before synthesis. Required unless the deployment configures `FUSION_DEFAULT_ANALYSIS_MODELS`. Model names may include or omit a leading `~`; NEAR AI strips it before direct endpoint lookup. |
+| `model` | No | Judge model. Defaults to the request `model` when omitted. |
+| `max_tool_calls` | No | Maximum inner web-search tool calls for panel and judge requests. |
+| `max_completion_tokens` | No | Token cap for panel and judge completions. |
+| `temperature` | No | Sampling temperature for panel and judge calls. |
+| `reasoning` | No | Reasoning configuration forwarded to panel and judge models when supported. |
+
+## Response Metadata
+
+The response remains OpenAI-compatible and may include a top-level `nearai_fusion` object:
+
+```json
+{
+  "id": "chatcmpl-...",
+  "object": "chat.completion",
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "..."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1200,
+    "completion_tokens": 800,
+    "total_tokens": 2000
+  },
+  "nearai_fusion": {
+    "status": "invoked",
+    "forced": true,
+    "panel": [
+      {
+        "model": "Qwen/Qwen3.6-27B-FP8",
+        "status": "ok",
+        "verifiable": true,
+        "usage": {
+          "prompt_tokens": 300,
+          "completion_tokens": 200,
+          "total_tokens": 500
+        }
+      }
+    ],
+    "judge": {
+      "model": "zai-org/GLM-5.2-FP8",
+      "status": "ok"
+    },
+    "aggregate_usage": {
+      "prompt_tokens": 1200,
+      "completion_tokens": 800,
+      "total_tokens": 2000
+    }
+  }
+}
+```
+
+Raw panel answers are not returned by default. Panel failures are reported in metadata when at least one panel succeeds; if every panel fails, the request fails with a Fusion error.
+
+## Web Search
+
+Fusion can use NEAR AI's `web_context_search` tool inside panel and judge calls. Include `{"type": "web_context_search"}` in the same `tools` array and set `max_tool_calls` in the Fusion configuration to bound inner search calls.
+
+```json
+{
+  "tools": [
+    {
+      "type": "openrouter:fusion",
+      "parameters": {
+        "analysis_models": ["Qwen/Qwen3.6-27B-FP8", "zai-org/GLM-5.2-FP8"],
+        "max_tool_calls": 1
+      }
+    },
+    { "type": "web_context_search" }
+  ],
+  "tool_choice": "required"
+}
+```
+
+## See Also
+
+- [OpenAI Compatibility](/cloud/guides/openai-compatibility) — SDK setup and base URLs
+- [Web Search](/cloud/guides/web-search) — server-side web context search
+- [Models](/cloud/models) — available model names and capabilities

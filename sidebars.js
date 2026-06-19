@@ -82,6 +82,7 @@ const sidebars = {
       items: [
         "cloud/guides/openai-compatibility",
         "cloud/guides/prompt-caching",
+        "cloud/guides/fusion",
         "cloud/guides/web-search",
         "cloud/guides/specialized-endpoints",
         "cloud/guides/e2ee-chat-completions",
