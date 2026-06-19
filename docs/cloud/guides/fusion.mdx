@@ -94,7 +94,7 @@ curl https://cloud-api.near.ai/v1/chat/completions \
 Use `tool_choice: "required"` when you want Fusion to run immediately. If you omit it, the outer model can decide whether to call Fusion.
 
 :::note
-Set `model` to the NEAR model that should synthesize the final answer. NEAR AI Cloud does not route the OpenRouter virtual model alias `openrouter/fusion`; the Cloud API gateway routes by real model name before the request reaches the inference proxy.
+Use the top-level request `model` for the model that should synthesize the final answer. The Fusion `parameters.model` or plugin `model` field selects the judge model. NEAR AI Cloud does not route the OpenRouter virtual model alias `openrouter/fusion`; the Cloud API gateway routes by real model name before the request reaches the inference proxy.
 :::
 
 ## Parameters
