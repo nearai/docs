@@ -38,6 +38,10 @@ NEAR AI Cloud uses an OpenAI-compatible API, making it easy to integrate with ex
 Replace `YOUR_API_KEY` with the API key you generated in the setup steps above.
 :::
 
+:::tip Request IDs
+Gateway and direct completions responses include an `X-Request-Id` response header. Support may ask you for it when debugging a request. The value is opaque support/debugging metadata, not W3C `traceparent` or distributed trace context. If you send your own `X-Request-Id`, use a non-sensitive UUID value; `X-Request-Id` values must not contain secrets or PII. `X-Org-Id` and `X-Workspace-Id` are internal tenant headers; public clients cannot set or override them.
+:::
+
 <Tabs
   defaultValue="gateway"
   values={[
@@ -264,4 +268,3 @@ For advanced features like streaming, async operations, Files API, and Conversat
     href="/cloud/guides/openai-compatibility"
   />
 </FeatureCardGrid>
-
