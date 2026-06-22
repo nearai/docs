@@ -142,20 +142,26 @@ https://{slug}.completions.near.ai/v1
 | `whisper-large-v3.completions.near.ai` | Whisper Large V3 | Audio | Text |
 | `qwen3-embedding.completions.near.ai` | Qwen3-Embedding-0.6B | Text | Embedding |
 | `qwen3-reranker.completions.near.ai` | Qwen3-Reranker-0.6B | Text | Score |
-| `privacy-filter.completions.near.ai` | Privacy Filter | Text | PII classification |
 
-Each subdomain exposes the same OpenAI-compatible API as the gateway, plus model-specific endpoints:
+Each subdomain exposes the served direct route set for that model:
 
 - `POST /v1/chat/completions` — Chat completions (with signing)
 - `POST /v1/completions` — Text completions
+- `POST /v1/tokenize` — Tokenization
 - `POST /v1/embeddings` — Embeddings
-- `POST /v1/images/generations` — Image generation
-- `POST /v1/audio/transcriptions` — Audio transcription
 - `POST /v1/rerank` — Reranking
-- `POST /v1/privacy/classify` — PII detection (`/v1/privacy/redact` is additionally available via the gateway)
+- `POST /v1/score` — Scoring
+- `POST /v1/images/generations` — Image generation
+- `POST /v1/images/edits` — Image editing
+- `POST /v1/audio/transcriptions` — Audio transcription
+- `POST /v1/privacy/classify` — Privacy classification on privacy-filter deployments
 - `GET /v1/models` — Available models
 - `GET /v1/attestation/report` — TEE attestation (TDX + GPU)
 - `GET /v1/signature/{chat_id}` — Retrieve cached signatures
+
+`/v1/privacy/classify` is also forwarded by direct completions endpoints when the selected privacy-filter backend serves it. `/v1/privacy/redact` remains a gateway privacy endpoint on `https://cloud-api.near.ai/v1`.
+
+Gateway and direct completions responses include an `X-Request-Id` response header. Support may ask you for that opaque value when debugging a request. It is support/debugging metadata, not W3C `traceparent` or distributed trace context. If you send your own `X-Request-Id`, use a non-sensitive UUID value; `X-Request-Id` values must not contain secrets or PII. `X-Org-Id` and `X-Workspace-Id` are internal tenant headers; public clients cannot set or override them.
 
 **Benefits of direct completions:**
 - **Fewer hops** — Your request reaches the model TEE directly, reducing latency

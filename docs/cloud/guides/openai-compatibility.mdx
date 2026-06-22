@@ -38,6 +38,12 @@ Both URLs use the same API key and the same OpenAI-compatible API. Direct comple
 ### API Key
 You can generate your API key in the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations).
 
+### Request IDs
+
+Gateway responses from `https://cloud-api.near.ai/v1` and direct completions responses from `https://{slug}.completions.near.ai/v1` include an `X-Request-Id` response header. Support may ask you for this value when debugging a request.
+
+`X-Request-Id` is opaque support/debugging metadata; it is not W3C `traceparent` or distributed trace context. If you send your own `X-Request-Id`, use a non-sensitive UUID value. `X-Request-Id` values must not contain secrets or PII. `X-Org-Id` and `X-Workspace-Id` are internal tenant headers; public clients cannot set or override them.
+
 ## Usage Examples
 
 <Tabs
@@ -183,7 +189,8 @@ NEAR AI Cloud supports the following core OpenAI API features:
 NEAR AI Cloud also provides non-OpenAI extensions:
 
 - **Reranking** (`/v1/rerank`) - Score documents against a query
-- **PII Detection** (`/v1/privacy/classify`, `/v1/privacy/redact`) - Detect and redact personally identifiable information
+- **Privacy classification** (`/v1/privacy/classify`) - Detect personally identifiable information through the gateway, or through a privacy-filter direct completions backend when that backend is selected and available
+- **Privacy redaction** (`/v1/privacy/redact`) - Gateway-only endpoint for redacting personally identifiable information
 - **Attestation & Signatures** (`/v1/attestation/report`, `/v1/signature/{chat_id}`) - See [Verification](/cloud/verification)
 
 ### Files API Example
@@ -346,4 +353,3 @@ client = OpenAI()
 // JavaScript
 const openai = new OpenAI();
 ```
-

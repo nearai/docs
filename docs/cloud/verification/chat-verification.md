@@ -108,7 +108,7 @@ print(hash_hex)  #2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2
 
 ## Chat Message Response Hash
 
-This value is calculated from the **exact response body string**.
+This value is calculated from the **exact response payload string**.
 
 :::info
     Please note that the streaming response contains two new lines at the end and should not be omitted when copying the response as the hash value will change.
@@ -137,7 +137,7 @@ Which hashes to:
 8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c
 ```
 
-Here is an example of how to get the sha256 hash of your message response body:
+Here is an example of how to get the sha256 hash of your message response payload:
 
 <Tabs
   defaultValue="javascript"

@@ -11,7 +11,9 @@ import TabItem from '@theme/TabItem';
 
 # Beyond Chat: Embeddings, Images, Audio & More
 
-NEAR AI Cloud is not limited to chat completions. The same gateway (`cloud-api.near.ai`) and [direct completions endpoints](/cloud/private-inference#direct-completions) serve specialized TEE-hosted models for embeddings, reranking, image generation, audio transcription, and PII detection — with the same API key, the same OpenAI-compatible conventions, and the same hardware privacy guarantees.
+NEAR AI Cloud is not limited to chat completions. The same gateway (`cloud-api.near.ai`) and [direct completions endpoints](/cloud/private-inference#direct-completions) serve specialized TEE-hosted models for embeddings, reranking, scoring, image generation, and audio transcription. Privacy classification is available through the gateway and may also be served by a direct completions endpoint when the selected privacy-filter backend supports it; privacy redaction remains gateway-only. Both modes use the same API key, the same OpenAI-compatible conventions, and the same hardware privacy guarantees for TEE-hosted models.
+
+Gateway and direct completions responses include an `X-Request-Id` response header. Support may ask you for that opaque value when debugging a request. It is support/debugging metadata, not W3C `traceparent` or distributed trace context. If you send your own `X-Request-Id`, use a non-sensitive UUID value; `X-Request-Id` values must not contain secrets or PII. `X-Org-Id` and `X-Workspace-Id` are internal tenant headers; public clients cannot set or override them.
 
 ## Embeddings
 
@@ -136,10 +138,14 @@ curl https://cloud-api.near.ai/v1/privacy/redact \
 
 `input` accepts a string or an array of strings for both endpoints.
 
+`/v1/privacy/classify` can also be served on `https://{slug}.completions.near.ai/v1` when the selected privacy-filter backend supports it.
+
+`/v1/privacy/redact` is gateway-only and is served at `https://cloud-api.near.ai/v1`.
+
 ## Vision (Image Input)
 
 `Qwen/Qwen3-VL-30B-A3B-Instruct` accepts images in standard OpenAI chat format (`image_url` content parts) on `/v1/chat/completions`. Check `input_modalities` in [`/v1/models`](https://cloud-api.near.ai/v1/models) to see which models accept images.
 
 ---
 
-Except for `/v1/privacy/redact` (gateway only), all of the above also work on each model's own [direct completions endpoint](/cloud/private-inference#direct-completions) (e.g. `qwen3-embedding.completions.near.ai`, `flux2-klein.completions.near.ai`, `privacy-filter.completions.near.ai` for `/v1/privacy/classify`), where TLS terminates directly inside the model's TEE.
+Embeddings, reranking, scoring, image generation, image editing, and audio transcription also work on each matching model's own [direct completions endpoint](/cloud/private-inference#direct-completions) (for example, `qwen3-embedding.completions.near.ai`, `qwen3-reranker.completions.near.ai`, or `flux2-klein.completions.near.ai`), where TLS terminates directly inside the model's TEE. See [Private Inference](/cloud/private-inference#direct-completions) for the served direct route list, including `/v1/tokenize`, `/v1/score`, and `/v1/images/edits`.
