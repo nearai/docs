@@ -1,0 +1,75 @@
+.copyMarkdownBar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+}
+
+.copyMarkdownButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 8.5rem;
+  min-height: 2.25rem;
+  padding: 0 1rem;
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  background: linear-gradient(
+    180deg,
+    var(--accent-gradient-top) 0%,
+    var(--accent-gradient-bottom) 100%
+  );
+  color: var(--near-white);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  transition:
+    transform 150ms ease-out,
+    border-color 150ms ease-out,
+    background 150ms ease-out,
+    color 150ms ease-out;
+}
+
+.copyMarkdownButton:hover:not(:disabled) {
+  border-color: var(--accent-border-hover);
+  color: var(--near-blue-light);
+  transform: translateY(-1px);
+}
+
+.copyMarkdownButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.copyMarkdownButton:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.copyMarkdownButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.copyMarkdownStatus {
+  min-height: 1.05rem;
+  color: var(--near-blue-light);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+@media screen and (max-width: 480px) {
+  .copyMarkdownBar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .copyMarkdownButton {
+    width: 100%;
+  }
+}
