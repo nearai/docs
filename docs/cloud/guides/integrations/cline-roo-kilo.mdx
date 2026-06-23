@@ -1,0 +1,171 @@
+---
+id: cline-roo-kilo
+title: Cline, Roo Code, and Kilo Code
+sidebar_label: Cline, Roo Code, and Kilo Code
+slug: /cloud/guides/integrations/cline-roo-kilo
+description: "Configure Cline, Roo Code, and Kilo Code with NEAR AI Cloud's OpenAI-compatible API."
+---
+
+# Cline, Roo Code, and Kilo Code
+
+Cline, Roo Code, and Kilo Code can use NEAR AI Cloud through OpenAI-compatible provider settings. They share the same gateway base URL and model IDs, but their model refresh behavior differs.
+
+Use these values unless you have a tool-specific reason to choose a different model:
+
+| Setting | Value |
+| --- | --- |
+| Base URL | `https://cloud-api.near.ai/v1` |
+| API key | A NEAR AI Cloud API key |
+| Model ID | `z-ai/glm-5.2` |
+
+## Prerequisites
+
+- A NEAR AI Cloud API key stored in the tool's secret field, keychain, or an environment variable such as `NEARAI_API_KEY`.
+- A Cline, Roo Code, or Kilo Code install that supports custom OpenAI-compatible providers.
+- The current model ID from [Model Discovery](/cloud/guides/integrations/model-discovery) if you are not using `z-ai/glm-5.2`.
+
+## Base URL
+
+For provider configuration fields, use the gateway base URL:
+
+```text
+https://cloud-api.near.ai/v1
+```
+
+Do not paste the full chat completions request URL into a base URL field. The tools append the request path themselves.
+
+## Model ID
+
+Use `z-ai/glm-5.2` as the model ID. Copy model IDs exactly as returned by:
+
+```bash
+curl https://cloud-api.near.ai/v1/models
+```
+
+## Configure Cline
+
+In Cline settings, configure the provider with:
+
+| Field | Value |
+| --- | --- |
+| API Provider | `OpenAI Compatible` |
+| Base URL | `https://cloud-api.near.ai/v1` |
+| API Key | Your NEAR AI Cloud API key |
+| Model ID | `z-ai/glm-5.2` |
+
+After saving, run a small prompt in Cline. If the model is not listed, enter the model ID manually.
+
+## Configure Roo Code
+
+In Roo Code settings, configure the provider with:
+
+| Field | Value |
+| --- | --- |
+| API Provider | `OpenAI Compatible` |
+| Base URL | `https://cloud-api.near.ai/v1` |
+| API Key | Your NEAR AI Cloud API key |
+| Model ID | `z-ai/glm-5.2` |
+
+Roo Code requires native OpenAI tool calling. If the selected model or provider path does not support OpenAI-compatible tool calls, Roo Code will fail tool-use workflows even if basic chat requests work. Choose a NEAR AI Cloud model whose `/v1/models` record includes tool support when you need Roo Code's coding-agent tools.
+
+## Configure Kilo Code
+
+Kilo Code supports a custom provider flow. In the Providers tab, add a custom provider with:
+
+| Field | Value |
+| --- | --- |
+| Provider ID | `nearai` |
+| Display name | `NEAR AI Cloud` |
+| Provider API | `OpenAI Compatible` |
+| Base URL | `https://cloud-api.near.ai/v1` |
+| API key | Your NEAR AI Cloud API key |
+| Models | Select `z-ai/glm-5.2` if auto-fetched, or add it manually |
+
+When the base URL is valid, Kilo can auto-fetch models from NEAR AI Cloud's OpenAI-compatible `/v1/models` endpoint. If auto-fetch does not show the model, add `z-ai/glm-5.2` manually with display name `GLM 5.2`.
+
+If you use Kilo's config file for a manual model, keep the provider ID and model ID aligned:
+
+```json
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "model": "nearai/z-ai/glm-5.2",
+  "provider": {
+    "nearai": {
+      "options": {
+        "apiKey": "{env:NEARAI_API_KEY}",
+        "baseURL": "https://cloud-api.near.ai/v1"
+      },
+      "models": {
+        "z-ai/glm-5.2": {
+          "name": "GLM 5.2",
+          "tool_call": true,
+          "reasoning": true,
+          "limit": {
+            "context": 500000,
+            "output": 131072
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Use fresh limits from `/v1/models` if NEAR AI Cloud changes model metadata.
+
+## Refresh models
+
+When NEAR releases a new model:
+
+1. Run `curl https://cloud-api.near.ai/v1/models` and copy the new `id`.
+2. In Cline, paste the ID into the OpenAI Compatible model field if the picker does not show it.
+3. In Roo Code, paste the ID into the OpenAI Compatible model field and confirm the model supports native OpenAI tool calling before using agent workflows.
+4. In Kilo Code, re-save the `nearai` provider so it auto-fetches from `/v1/models`; if the model is still missing, add the ID manually in the provider's model list or `kilo.jsonc`.
+
+## Quick test
+
+Before debugging tool settings, verify the NEAR AI Cloud gateway and model:
+
+```bash
+curl -fsSL https://cloud-api.near.ai/v1/models \
+  | jq -e '.data[] | select(.id == "z-ai/glm-5.2")'
+```
+
+Then test a chat completion:
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Authorization: Bearer $NEARAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "z-ai/glm-5.2",
+    "messages": [
+      {"role": "user", "content": "Reply with only: near-ai-ok"}
+    ],
+    "max_tokens": 20
+  }'
+```
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| `model not listed` | The tool cached an older model list, or the model must be entered manually. | Check `/v1/models`, copy `z-ai/glm-5.2`, then paste it into Cline or Roo manually. For Kilo, re-save the provider to auto-fetch from `/v1/models`, or add the model manually. |
+| `401` | Missing, invalid, or expired NEAR AI Cloud API key. | Generate or copy a NEAR AI Cloud API key, store it in the tool's API key field or `NEARAI_API_KEY`, and retry without logging the key. |
+| Wrong base URL includes `/chat/completions` | A full request URL was pasted into a base URL field. | Use `https://cloud-api.near.ai/v1` in provider settings. Keep `/chat/completions` only in curl or HTTP request URLs. |
+| Roo Code tool calls fail | Roo Code requires native OpenAI tool calling. | Use a NEAR AI Cloud model whose metadata includes tool support, and verify basic chat plus tool-use workflows after saving. |
+| Kilo shows the provider but no usable model | Auto-fetch failed or model limits were not set for a manual model. | Re-save the provider, then add `z-ai/glm-5.2` manually if needed. For manual config, set context and output limits from `/v1/models`. |
+
+## Sources Checked
+
+Sources checked on 2026-06-23: Cline OpenAI Compatible provider docs, Roo Code OpenAI Compatible provider docs, Kilo Code OpenAI Compatible provider docs, Kilo Code custom models docs, and NEAR AI Cloud `/v1/models`.
+
+## Related guides
+
+- [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)
+- [OpenAI Compatibility](/cloud/guides/openai-compatibility)
+- [Private Inference - Direct Completions](/cloud/private-inference#direct-completions)
+- [Available Models](/cloud/models)
+- [Continue](/cloud/guides/integrations/continue)
+- [Aider and Zed](/cloud/guides/integrations/aider-zed)
+- [OpenCode and Goose](/cloud/guides/opencode-goose)

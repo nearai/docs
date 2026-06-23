@@ -1,0 +1,181 @@
+---
+id: litellm
+title: LiteLLM Proxy
+sidebar_label: LiteLLM
+slug: /cloud/guides/integrations/litellm
+description: "Configure the LiteLLM Python SDK and LiteLLM Proxy to use NEAR AI Cloud."
+---
+
+# LiteLLM Proxy
+
+Use LiteLLM with NEAR AI Cloud by routing LiteLLM's OpenAI-compatible provider to the NEAR AI Cloud gateway.
+
+## Prerequisites
+
+- LiteLLM Python SDK or LiteLLM Proxy.
+- A NEAR AI Cloud API key from the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations).
+- `NEARAI_API_KEY` exported in the shell or injected into the proxy container.
+
+Keep the NEAR AI Cloud API key in an environment variable. Do not paste a real key into checked-in Python files or `config.yaml`.
+
+```bash
+export NEARAI_API_KEY="your-near-ai-api-key"
+```
+
+## Base URL
+
+Use the NEAR AI Cloud gateway base URL:
+
+```text
+https://cloud-api.near.ai/v1
+```
+
+Do not append `/chat/completions` to `api_base`. LiteLLM and the OpenAI client add the request path when they make chat completion calls.
+
+## Model ID
+
+Use LiteLLM's OpenAI-compatible prefix for the upstream model:
+
+```text
+openai/z-ai/glm-5.2
+```
+
+The `openai/` prefix tells LiteLLM to send the request through OpenAI-compatible chat completions. The NEAR AI Cloud model ID after the prefix is `z-ai/glm-5.2`.
+
+Check [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery) when you need the freshest NEAR AI Cloud model list.
+
+## Configure
+
+### Python SDK
+
+Call NEAR AI Cloud directly from the LiteLLM Python SDK:
+
+```python
+import os
+
+import litellm
+
+response = litellm.completion(
+    model="openai/z-ai/glm-5.2",
+    api_base="https://cloud-api.near.ai/v1",
+    api_key=os.environ["NEARAI_API_KEY"],
+    messages=[
+        {
+            "role": "user",
+            "content": "Reply with only: near-ai-ok",
+        }
+    ],
+    max_tokens=20,
+)
+
+print(response.choices[0].message.content)
+```
+
+### Proxy `config.yaml`
+
+Expose NEAR AI Cloud through LiteLLM Proxy with a local model alias:
+
+```yaml
+model_list:
+  - model_name: nearai-glm-5.2
+    litellm_params:
+      model: openai/z-ai/glm-5.2
+      api_base: https://cloud-api.near.ai/v1
+      api_key: os.environ/NEARAI_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+```
+
+Start the proxy with the config:
+
+```bash
+export NEARAI_API_KEY="your-near-ai-api-key"
+export LITELLM_MASTER_KEY="sk-your-litellm-proxy-key"
+litellm --config ./config.yaml
+```
+
+Clients that call your proxy use the proxy alias:
+
+```bash
+curl http://127.0.0.1:4000/chat/completions \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "nearai-glm-5.2",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with only: near-ai-ok"
+      }
+    ],
+    "max_tokens": 20
+  }'
+```
+
+## Refresh models
+
+LiteLLM Proxy uses the entries in `model_list`; it does not automatically add every NEAR AI Cloud model to your config. When NEAR AI Cloud releases a new model:
+
+1. Run `curl https://cloud-api.near.ai/v1/models`.
+2. Copy the new model's `id`.
+3. Add or update a `model_list` entry.
+4. Set `litellm_params.model` to `openai/<model-id>`.
+5. Restart or reload LiteLLM Proxy so the new alias appears.
+
+You can generate starter entries from `/v1/models` and then review them before using the config:
+
+```bash
+curl -fsSL https://cloud-api.near.ai/v1/models \
+  | jq -r '.data[].id | "- model_name: nearai-" + gsub("[^A-Za-z0-9._-]"; "-") + "\n  litellm_params:\n    model: openai/" + . + "\n    api_base: https://cloud-api.near.ai/v1\n    api_key: os.environ/NEARAI_API_KEY"'
+```
+
+Review generated aliases for readability and remove models you do not want to expose through your proxy.
+
+## Quick test
+
+Before debugging LiteLLM, verify the same key, base URL, and NEAR AI Cloud model with curl:
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Authorization: Bearer $NEARAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "z-ai/glm-5.2",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with only: near-ai-ok"
+      }
+    ],
+    "max_tokens": 20
+  }'
+```
+
+If curl fails, fix the NEAR AI Cloud key, model ID, or network path before changing LiteLLM settings.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| model not listed in LiteLLM Proxy | The proxy only exposes `model_list` aliases, or the config was not reloaded after adding the model. | Add a `model_list` entry with a readable `model_name`, set `litellm_params.model` to `openai/z-ai/glm-5.2`, then restart or reload the proxy. |
+| `401` | `NEARAI_API_KEY` is missing, invalid, or not visible to the Python process or proxy container. | Export `NEARAI_API_KEY` in the same shell that runs Python or pass it into the proxy container. Keep `api_key: os.environ/NEARAI_API_KEY` in the proxy config. |
+| Wrong base URL includes `/chat/completions` | The full curl URL was pasted into `api_base`. | Set `api_base: https://cloud-api.near.ai/v1`. Use `/chat/completions` only in full request URLs such as curl smoke tests or requests sent to the proxy. |
+| LiteLLM returns a routing or provider error | The LiteLLM upstream model value is missing the OpenAI-compatible provider prefix. | Use `openai/z-ai/glm-5.2` in the SDK and in `litellm_params.model`. Proxy callers can use your local alias, such as `nearai-glm-5.2`. |
+
+## Related guides
+
+- [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)
+- [OpenAI Compatibility](/cloud/guides/openai-compatibility)
+- [Available Models](/cloud/models)
+- [Private Inference - Direct Completions](/cloud/private-inference#direct-completions)
+- [LibreChat](/cloud/guides/integrations/librechat)
+- [Open WebUI](/cloud/guides/integrations/open-webui)
+
+## Sources Checked
+
+Sources checked on 2026-06-23:
+
+- [LiteLLM OpenAI-compatible endpoints](https://docs.litellm.ai/docs/providers/openai_compatible)
+- [LiteLLM proxy config](https://docs.litellm.ai/docs/proxy/configs)
+- [LiteLLM API key/base configuration](https://docs.litellm.ai/docs/set_keys)

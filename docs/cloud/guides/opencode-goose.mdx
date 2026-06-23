@@ -1,0 +1,234 @@
+---
+id: opencode-goose
+title: OpenCode and Goose
+sidebar_label: OpenCode and Goose
+slug: /cloud/guides/opencode-goose
+description: "Configure OpenCode and Goose to use NEAR AI Cloud as an OpenAI-compatible provider"
+---
+
+# OpenCode and Goose
+
+NEAR AI Cloud exposes an OpenAI-compatible API, so agent clients that support OpenAI-compatible providers can use NEAR AI models with only a base URL, API key, and model ID.
+
+Use this guide when a model is available through NEAR AI Cloud but does not yet appear in an agent client's model picker. For example, the primary GLM 5.2 model ID is `z-ai/glm-5.2`, available through the gateway base URL `https://cloud-api.near.ai/v1`. The direct completions endpoint `https://glm-5-2.completions.near.ai/v1` also advertises `z-ai/glm-5.2` and `zai-org/GLM-5.2-FP8`.
+
+For the general refresh workflow, see [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery).
+
+Source status checked on 2026-06-23: OpenCode's model catalog comes from public [models.dev](https://models.dev/). Check the catalog status before assuming a model is built in; if the `nearai` provider does not list `z-ai/glm-5.2`, use a manual `provider.nearai.models` entry until the catalog includes it. Goose can use its NEAR AI Cloud provider, refresh the provider model list, or use a custom model ID.
+
+## Prerequisites
+
+Create an API key from the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations), then keep it in an environment variable:
+
+```bash
+export NEARAI_API_KEY="YOUR_NEAR_AI_API_KEY"
+```
+
+You can use either base URL:
+
+| Base URL | Use when |
+|----------|----------|
+| `https://cloud-api.near.ai/v1` | You want the gateway to route any NEAR AI Cloud model by model ID. |
+| `https://glm-5-2.completions.near.ai/v1` | You want to connect directly to the GLM 5.2 private inference endpoint. |
+
+The gateway is the easiest default. Direct completions use the same API key and API shape, but connect straight to the model's TEE. See [Direct Completions](/cloud/private-inference#direct-completions) for details.
+
+## OpenCode
+
+OpenCode reads its built-in provider and model catalog from [models.dev](https://models.dev/), as described in the public [OpenCode config](https://opencode.ai/docs/config/) and [provider](https://opencode.ai/docs/providers/) docs. If a newly launched NEAR AI model is not listed there yet, add it manually to your OpenCode config.
+
+Create or edit `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "nearai/z-ai/glm-5.2",
+  "provider": {
+    "nearai": {
+      "models": {
+        "z-ai/glm-5.2": {
+          "name": "GLM 5.2"
+        }
+      }
+    }
+  }
+}
+```
+
+Then start OpenCode with the API key in your shell:
+
+```bash
+export NEARAI_API_KEY="YOUR_NEAR_AI_API_KEY"
+opencode
+```
+
+If your OpenCode version does not include the built-in `nearai` provider yet, define the provider explicitly:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "nearai/z-ai/glm-5.2",
+  "provider": {
+    "nearai": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "NEAR AI Cloud",
+      "env": ["NEARAI_API_KEY"],
+      "options": {
+        "baseURL": "https://cloud-api.near.ai/v1",
+        "apiKey": "{env:NEARAI_API_KEY}"
+      },
+      "models": {
+        "z-ai/glm-5.2": {
+          "name": "GLM 5.2"
+        }
+      }
+    }
+  }
+}
+```
+
+To use the direct completions endpoint instead of the gateway, change `baseURL`:
+
+```json
+{
+  "baseURL": "https://glm-5-2.completions.near.ai/v1"
+}
+```
+
+When using the direct completions endpoint, keep the model set to either `z-ai/glm-5.2` or `zai-org/GLM-5.2-FP8`; both IDs are served by that endpoint.
+
+## Goose
+
+Goose includes a NEAR AI Cloud provider with model discovery, as described in the public [Goose provider docs](https://goose-docs.ai/docs/getting-started/providers/). Configure it from Goose Desktop or the CLI.
+
+### Goose Desktop
+
+1. Open Goose.
+2. Go to **Settings**.
+3. Open the **Models** tab.
+4. Click **Configure providers**.
+5. Select **NEAR AI Cloud**.
+6. Enter your NEAR AI API key.
+7. Switch models and select `z-ai/glm-5.2`.
+
+If GLM 5.2 does not appear in the dropdown, choose the custom model option and enter the model ID manually.
+
+### Goose CLI
+
+Run:
+
+```bash
+goose configure
+```
+
+Then select:
+
+1. **Configure Providers**
+2. **NEAR AI Cloud**
+3. Enter your NEAR AI Cloud API key value, or skip the prompt if `NEARAI_API_KEY` is already set in the environment.
+4. Select `z-ai/glm-5.2`
+
+If the CLI does not show GLM 5.2 in the model picker, set the model manually in Goose's config:
+
+```yaml
+# ~/.config/goose/config.yaml
+GOOSE_PROVIDER: nearai
+GOOSE_MODEL: z-ai/glm-5.2
+```
+
+Restart Goose after changing the provider or model.
+
+## When NEAR releases a model
+
+First confirm the new model ID in [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery), then update the client that has the stale picker.
+
+For OpenCode, check `https://models.dev/api.json` before assuming the model is built in. If the `nearai` provider does not list the new model, add it under `provider.nearai.models` in `~/.config/opencode/opencode.json` and set `model` to `nearai/<model-id>`. For GLM 5.2, use:
+
+```json
+{
+  "model": "nearai/z-ai/glm-5.2",
+  "provider": {
+    "nearai": {
+      "models": {
+        "z-ai/glm-5.2": {
+          "name": "GLM 5.2"
+        }
+      }
+    }
+  }
+}
+```
+
+For Goose, refresh or re-save the NEAR AI Cloud provider so it requests the current model list. If the picker still does not show the model, use the custom model field in Goose Desktop or set `GOOSE_MODEL` manually:
+
+```yaml
+# ~/.config/goose/config.yaml
+GOOSE_PROVIDER: nearai
+GOOSE_MODEL: z-ai/glm-5.2
+```
+
+## Quick test
+
+Verify the model works with the same OpenAI-compatible API before debugging an agent client:
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Authorization: Bearer $NEARAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "z-ai/glm-5.2",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with one sentence confirming GLM 5.2 is reachable."
+      }
+    ],
+    "max_tokens": 64
+  }'
+```
+
+For the direct completions endpoint:
+
+```bash
+curl https://glm-5-2.completions.near.ai/v1/chat/completions \
+  -H "Authorization: Bearer $NEARAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "z-ai/glm-5.2",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with one sentence confirming GLM 5.2 is reachable."
+      }
+    ],
+    "max_tokens": 64
+  }'
+```
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| model not listed: GLM 5.2 is not in OpenCode's model picker | Check the public models.dev catalog status, then add it under `provider.nearai.models` in `opencode.json` until the catalog includes the model. |
+| OpenCode says the provider or model is unknown | Use `model: "nearai/z-ai/glm-5.2"` and make sure the provider key is `nearai`. |
+| model not listed: Goose does not show GLM 5.2 in the model picker | Refresh or re-save the NEAR AI Cloud provider, then use Goose Desktop's custom model entry or set `GOOSE_MODEL: z-ai/glm-5.2` in Goose config. |
+| Requests return 401 | Confirm `NEARAI_API_KEY` is set in the same shell or app environment that starts the agent client. |
+| wrong base URL includes `/chat/completions` | Check that the client uses `https://cloud-api.near.ai/v1` or `https://glm-5-2.completions.near.ai/v1` as the base URL, not the full `/chat/completions` path. |
+
+## Related guides
+
+- [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)
+- [OpenAI Compatibility](/cloud/guides/openai-compatibility)
+- [Available Models](/cloud/models)
+- [Private Inference - Direct Completions](/cloud/private-inference#direct-completions)
+- [Continue](/cloud/guides/integrations/continue)
+- [Cline, Roo Code, and Kilo Code](/cloud/guides/integrations/cline-roo-kilo)
+
+## Sources Checked
+
+Sources checked on 2026-06-23:
+
+- [OpenCode config](https://opencode.ai/docs/config/)
+- [OpenCode providers](https://opencode.ai/docs/providers/)
+- [Goose providers](https://goose-docs.ai/docs/getting-started/providers/)
+- [models.dev catalog](https://models.dev/)
