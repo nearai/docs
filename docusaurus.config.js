@@ -5,6 +5,7 @@
 // See: https://docusaurus.io/docs/api/docusaurus-config
 
 import { themes as prismThemes } from 'prism-react-renderer';
+import llmsMarkdownPlugin from './plugins/llmsMarkdownPlugin.js';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -57,6 +58,8 @@ const config = {
       }),
     ],
   ],
+
+  plugins: [llmsMarkdownPlugin],
 
   themes: [
     '@docusaurus/theme-mermaid',
