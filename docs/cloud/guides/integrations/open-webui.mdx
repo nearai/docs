@@ -1,0 +1,118 @@
+---
+id: open-webui
+title: Open WebUI
+sidebar_label: Open WebUI
+slug: /cloud/guides/integrations/open-webui
+description: "Configure Open WebUI to use NEAR AI Cloud as an OpenAI-compatible provider."
+---
+
+# Open WebUI
+
+Open WebUI can use NEAR AI Cloud through its OpenAI-compatible provider connection. Configure the NEAR AI Cloud gateway as the base URL, use a NEAR AI Cloud API key as the bearer token, and select models that Open WebUI discovers from NEAR AI Cloud's `/v1/models` endpoint.
+
+Sources checked: 2026-06-23.
+
+## Prerequisites
+
+- An Open WebUI instance where you can open Admin Settings or Connections.
+- A NEAR AI Cloud API key from the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations).
+- The current NEAR AI Cloud model ID from [Model Discovery](/cloud/guides/integrations/model-discovery) if you are not using `z-ai/glm-5.2`.
+
+Store the API key only in Open WebUI's provider API key field or your deployment secret manager. Do not put real API keys in checked-in configuration files.
+
+## Base URL
+
+Use the NEAR AI Cloud gateway base URL:
+
+```text
+https://cloud-api.near.ai/v1
+```
+
+Do not append `/chat/completions` to the Open WebUI URL field. Open WebUI appends `/models` for model discovery and `/chat/completions` for chat requests.
+
+Do not use Open WebUI's own internal `/api` route as the upstream NEAR AI Cloud URL. The upstream provider must be the NEAR AI Cloud gateway URL above.
+
+## Model ID
+
+Use the NEAR AI Cloud gateway model ID:
+
+```text
+z-ai/glm-5.2
+```
+
+Open WebUI verifies OpenAI-compatible connections by calling the provider's `/models` endpoint with a standard bearer token. With the NEAR AI Cloud base URL above, that verification reaches:
+
+```text
+https://cloud-api.near.ai/v1/models
+```
+
+If verification succeeds, select `z-ai/glm-5.2` from Open WebUI's model picker. If the picker is stale, use the refresh steps below before entering a manual model filter.
+
+## Configure
+
+In Open WebUI:
+
+1. Open **Admin Settings** or **Connections**.
+2. Go to **Connections** and add an **OpenAI-compatible** or **OpenAI** connection.
+3. Set **URL** to `https://cloud-api.near.ai/v1`.
+4. Set **API Key** to your NEAR AI Cloud API key. Open WebUI sends it as `Authorization: Bearer <key>`.
+5. Save or verify the connection.
+6. Select `z-ai/glm-5.2` from the model list.
+
+If your Open WebUI version shows **Model IDs (Filter)**, leave it empty first so Open WebUI can read `/v1/models`. Add `z-ai/glm-5.2` to the filter only if you want to limit the picker or model discovery is not refreshing.
+
+## Refresh models
+
+When NEAR AI Cloud releases a new model:
+
+1. Run `curl https://cloud-api.near.ai/v1/models` and copy the new model's `id`.
+2. Re-open the NEAR AI Cloud connection in Open WebUI.
+3. Save or re-save the connection so Open WebUI verifies the provider and fetches models again.
+4. Refresh the browser tab and check the model picker.
+5. If the model still is not listed, restart Open WebUI, then check the model picker again.
+6. If the model remains missing, test NEAR AI Cloud directly with the curl commands below and add the model ID to **Model IDs (Filter)** only after confirming `/v1/models` returns it.
+
+## Quick test
+
+Before debugging Open WebUI, verify that NEAR AI Cloud lists the model:
+
+```bash
+curl -fsSL https://cloud-api.near.ai/v1/models \
+  | jq -e '.data[] | select(.id == "z-ai/glm-5.2")'
+```
+
+Then test a chat completion with the same key and model:
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Authorization: Bearer $NEARAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "z-ai/glm-5.2",
+    "messages": [
+      {"role": "user", "content": "Reply with only: near-ai-ok"}
+    ],
+    "max_tokens": 20
+  }'
+```
+
+If either curl command fails, fix the NEAR AI Cloud key, model ID, or network path before changing Open WebUI settings.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| `model not listed` | Open WebUI cached an older model list, the connection was not re-saved, or **Model IDs (Filter)** hides the model. | Confirm `curl https://cloud-api.near.ai/v1/models` returns `z-ai/glm-5.2`, re-save the connection, refresh the browser tab, restart Open WebUI if needed, and clear or update the model filter. |
+| `401` | Missing, invalid, or expired NEAR AI Cloud API key. | Paste a valid NEAR AI Cloud API key into Open WebUI's API key field. Open WebUI should send it as a bearer token; do not log or share the key while testing. |
+| Wrong base URL includes `/chat/completions` | A full request URL was pasted into Open WebUI's URL field. | Use `https://cloud-api.near.ai/v1` as the base URL. Keep `/chat/completions` only in curl or HTTP request URLs. |
+| Connection verification fails but curl works | Open WebUI did not refresh the provider's `/models` response or a model filter is blocking the picker. | Re-save the connection, restart Open WebUI, then manually add `z-ai/glm-5.2` to **Model IDs (Filter)** if `/v1/models` works from curl. |
+| Requests reach the wrong service | The URL field points at Open WebUI's internal API route instead of the NEAR AI Cloud gateway. | Replace the upstream URL with `https://cloud-api.near.ai/v1` and save the connection again. |
+
+## Related guides
+
+- [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)
+- [OpenAI Compatibility](/cloud/guides/openai-compatibility)
+- [Available Models](/cloud/models)
+- [Private Inference - Direct Completions](/cloud/private-inference#direct-completions)
+- [LibreChat](/cloud/guides/integrations/librechat)
+- [Dify](/cloud/guides/integrations/dify)

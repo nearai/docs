@@ -1,0 +1,52 @@
+---
+id: integrations
+title: Integrations
+sidebar_label: Overview
+slug: /cloud/guides/integrations
+description: "Use NEAR AI Cloud with third-party software that supports OpenAI-compatible providers."
+---
+
+# Integrations
+
+Use these guides to connect third-party software to NEAR AI Cloud through its OpenAI-compatible API.
+
+Most clients need the same values:
+
+| Setting | Value |
+| --- | --- |
+| Base URL | `https://cloud-api.near.ai/v1` |
+| API key | A NEAR AI Cloud API key |
+| Model ID | A model available from NEAR AI Cloud |
+
+## Software Covered
+
+Use the OpenAI client guide when you are configuring code directly. Use the integration guides when a tool has its own provider settings, model picker, or model refresh behavior.
+
+### Coding agents and IDEs
+
+- [Cursor](/cloud/guides/integrations/cursor)
+- [Continue](/cloud/guides/integrations/continue)
+- [Cline, Roo Code, and Kilo Code](/cloud/guides/integrations/cline-roo-kilo)
+- [Aider and Zed](/cloud/guides/integrations/aider-zed)
+- [OpenCode and Goose](/cloud/guides/opencode-goose)
+
+### Self-hosted and team apps
+
+- [LibreChat](/cloud/guides/integrations/librechat)
+- [Open WebUI](/cloud/guides/integrations/open-webui)
+- [LiteLLM](/cloud/guides/integrations/litellm)
+- [Dify](/cloud/guides/integrations/dify)
+
+## Model Discovery
+
+NEAR AI Cloud can add new models over time. Use the [Model Discovery guide](/cloud/guides/integrations/model-discovery) to check the current model list, choose between gateway and direct completions endpoints, and copy the right model ID into clients that do not refresh automatically.
+
+```bash
+curl https://cloud-api.near.ai/v1/models
+```
+
+## Related guides
+
+- [OpenAI Client](/cloud/guides/openai-compatibility)
+- [Model Discovery](/cloud/guides/integrations/model-discovery)
+- [Available Models](/cloud/models)

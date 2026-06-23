@@ -1,0 +1,127 @@
+---
+id: dify
+title: Dify
+sidebar_label: Dify
+slug: /cloud/guides/integrations/dify
+description: "Configure Dify with NEAR AI Cloud through the OpenAI-API-compatible model provider plugin."
+---
+
+# Dify
+
+Dify can use NEAR AI Cloud through the OpenAI-API-compatible model provider plugin. Configure it as a custom provider, then add each NEAR AI Cloud model you want Dify apps to use.
+
+Sources checked: 2026-06-23.
+
+## Prerequisites
+
+- A Dify workspace where you are an owner or admin.
+- The Dify OpenAI-API-compatible model provider plugin installed or available from the marketplace.
+- A NEAR AI Cloud API key from the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations).
+
+Use these NEAR AI Cloud values unless you are intentionally testing a different model:
+
+| Setting | Value |
+| --- | --- |
+| Base URL | `https://cloud-api.near.ai/v1` |
+| Model ID | `z-ai/glm-5.2` |
+| Context length | `500000` |
+| Output limit | `131072` |
+
+The context and output limits above come from the live NEAR AI Cloud `/v1/models` metadata for `z-ai/glm-5.2`.
+
+## Install or Select the Plugin
+
+In Dify, open **Settings** -> **Model Providers**.
+
+If **OpenAI-API-compatible** is not already listed, install it from the Dify marketplace. After installation, select **OpenAI-API-compatible** from the model provider list.
+
+## Add the NEAR AI Cloud Model
+
+Add a custom model with these values:
+
+| Dify field | Value |
+| --- | --- |
+| Type | `LLM` |
+| Name | `z-ai/glm-5.2` |
+| API Key | Your NEAR AI Cloud API key |
+| URL | `https://cloud-api.near.ai/v1` |
+| Context size | `500000` |
+| Maximum output tokens | `131072` |
+
+Keep the model name exactly as NEAR AI Cloud returns it. Do not rename it to `glm-5.2`, `GLM-5.2-FP8`, or an OpenAI model name unless `/v1/models` lists that exact ID for the gateway.
+
+After entering the fields, use Dify's provider test action. Save the model only after the test succeeds.
+
+## Refresh models
+
+Dify custom providers do not necessarily receive the same automatic model updates that Dify system providers receive. Treat the OpenAI-API-compatible NEAR AI Cloud entry as a manual model list.
+
+When NEAR AI Cloud releases a new model:
+
+1. Fetch the live model metadata:
+
+   ```bash
+   curl -fsSL https://cloud-api.near.ai/v1/models \
+     | jq '.data[] | {id, context_length, max_output_length, top_provider}'
+   ```
+
+2. Copy the new model's exact `id`.
+3. In Dify, open **Settings** -> **Model Providers** -> **OpenAI-API-compatible**.
+4. Add a new custom model with the copied `id`, the same URL, and the context/output limits from the live metadata.
+5. Test and save the new model.
+
+For GLM 5.2, the targeted metadata check is:
+
+```bash
+curl -fsSL https://cloud-api.near.ai/v1/models \
+  | jq '.data[] | select(.id == "z-ai/glm-5.2") | {
+      id,
+      context_length,
+      max_output_length,
+      top_provider
+    }'
+```
+
+## Curl smoke test
+
+Before debugging Dify settings, verify the model appears in NEAR AI Cloud's OpenAI-compatible model list:
+
+```bash
+curl -fsSL https://cloud-api.near.ai/v1/models \
+  | jq -e '.data[] | select(.id == "z-ai/glm-5.2")'
+```
+
+Then test the same base URL, API key, and model with chat completions:
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Authorization: Bearer $NEARAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "z-ai/glm-5.2",
+    "messages": [
+      {"role": "user", "content": "Reply with only: near-ai-ok"}
+    ],
+    "max_tokens": 20
+  }'
+```
+
+If curl fails, fix the NEAR AI Cloud key, model ID, or base URL before changing Dify settings.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| `model not listed` | The model was not added to Dify's OpenAI-API-compatible custom provider, or Dify is showing an older provider configuration. | Check `https://cloud-api.near.ai/v1/models`, copy `z-ai/glm-5.2`, add it as a custom model, then test and save the provider again. |
+| `401` | The NEAR AI Cloud API key is missing, invalid, expired, or pasted into the wrong provider. | Replace the key in the OpenAI-API-compatible provider entry. Do not log or share the key while testing. |
+| Wrong base URL includes `/chat/completions` | The full request endpoint was pasted into Dify's URL field. | Set the Dify URL field to `https://cloud-api.near.ai/v1`. Dify adds `/chat/completions` when it sends chat requests. |
+| Test fails after adding a new model | The model ID or limits were copied from stale notes instead of live NEAR AI Cloud metadata. | Re-run the `/v1/models` command, copy the exact `id`, `context_length`, and `max_output_length`, then update the Dify custom model. |
+
+## Related guides
+
+- [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)
+- [OpenAI Compatibility](/cloud/guides/openai-compatibility)
+- [Available Models](/cloud/models)
+- [Private Inference - Direct Completions](/cloud/private-inference#direct-completions)
+- [Open WebUI](/cloud/guides/integrations/open-webui)
+- [LibreChat](/cloud/guides/integrations/librechat)

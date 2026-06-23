@@ -1,0 +1,127 @@
+---
+id: aider-zed
+title: Aider and Zed
+sidebar_label: Aider and Zed
+slug: /cloud/guides/integrations/aider-zed
+description: "Configure Aider and Zed to use NEAR AI Cloud as an OpenAI-compatible provider."
+---
+
+# Aider and Zed
+
+NEAR AI Cloud exposes an OpenAI-compatible API, so Aider and Zed can use NEAR AI models with a base URL, an API key, and a model ID.
+
+Use the gateway by default:
+
+| Setting | Value |
+| --- | --- |
+| Base URL | `https://cloud-api.near.ai/v1` |
+| Model ID | `z-ai/glm-5.2` |
+| API key | A NEAR AI Cloud API key |
+
+Create an API key from the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations). Do not paste API keys into shared files, docs, issue comments, or screenshots.
+
+## Aider
+
+Aider uses OpenAI-compatible endpoints through the standard OpenAI environment variables. Set them in the shell that starts Aider:
+
+```bash
+export OPENAI_API_BASE=https://cloud-api.near.ai/v1
+export OPENAI_API_KEY="<your NEAR AI API key>"
+```
+
+Then run Aider with the `openai/` model prefix:
+
+```bash
+aider --model openai/z-ai/glm-5.2
+```
+
+To refresh the model, update the command-line model string. For example, after confirming a new model ID from `/v1/models`, replace `openai/z-ai/glm-5.2` with `openai/<new-model-id>`.
+
+If Aider warns that it does not recognize a new model, first confirm the model works with the curl smoke test below. Aider may need a model metadata update before it can infer limits for a newly released model.
+
+## Zed
+
+Zed supports custom OpenAI-compatible providers. Add NEAR AI Cloud to Zed from **Agent Settings** with `agent: open settings`, or add the provider to `settings.json` and keep the API key in Zed's provider settings UI, the system keychain, or an environment variable.
+
+Do not store API keys in `settings.json`. For provider id `nearai`, Zed's generated environment variable is:
+
+```bash
+export NEARAI_API_KEY="<your NEAR AI API key>"
+```
+
+Add this provider config to Zed's `settings.json`:
+
+```json title="settings.json"
+{
+  "language_models": {
+    "openai_compatible": {
+      "nearai": {
+        "api_url": "https://cloud-api.near.ai/v1",
+        "available_models": [
+          {
+            "name": "z-ai/glm-5.2",
+            "display_name": "GLM 5.2",
+            "max_tokens": 500000,
+            "max_output_tokens": 131072
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+To refresh models in Zed, add or update entries in `available_models`, then restart Zed or reselect the provider in the model picker. If you used Agent Settings instead of editing JSON, open the NEAR AI provider entry and update the model ID and context window there.
+
+Use `https://cloud-api.near.ai/v1` as the provider API URL. Do not paste the full chat-completions route into Zed's API URL field.
+
+## Curl smoke test
+
+Verify the model is listed:
+
+```bash
+curl -fsSL https://cloud-api.near.ai/v1/models \
+  | jq -e '.data[] | select(.id == "z-ai/glm-5.2")'
+```
+
+Then verify a chat completion:
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Authorization: Bearer $NEARAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "z-ai/glm-5.2",
+    "messages": [
+      {"role": "user", "content": "Reply with only: near-ai-ok"}
+    ],
+    "max_tokens": 20
+  }'
+```
+
+If you only set `OPENAI_API_KEY` for Aider, either export `NEARAI_API_KEY="$OPENAI_API_KEY"` before running the curl command or replace `$NEARAI_API_KEY` with `$OPENAI_API_KEY` in the `Authorization` header.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| model not listed | The client has a stale model list, or the model was not added to the manual provider config. | Run the `/v1/models` curl check, copy the exact model ID, then update Aider's `--model openai/<model-id>` string or Zed's `available_models` entry. |
+| `401` | Missing, invalid, expired, or unavailable API key in the process that starts the client. | Generate or copy a NEAR AI Cloud API key, set `OPENAI_API_KEY` for Aider or `NEARAI_API_KEY` for the Zed `nearai` provider, then restart the client. |
+| Wrong base URL includes `/chat/completions` | The client expects a base URL, but the full request endpoint was pasted. | Use `https://cloud-api.near.ai/v1` in Aider's `OPENAI_API_BASE` and Zed's `api_url`. The client appends `/chat/completions` itself. |
+
+## Related guides
+
+- [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)
+- [OpenAI Compatibility](/cloud/guides/openai-compatibility)
+- [Available Models](/cloud/models)
+- [Private Inference - Direct Completions](/cloud/private-inference#direct-completions)
+- [Continue](/cloud/guides/integrations/continue)
+- [Cline, Roo Code, and Kilo Code](/cloud/guides/integrations/cline-roo-kilo)
+
+## Sources Checked
+
+Sources checked on 2026-06-23:
+
+- [Aider OpenAI compatible APIs](https://aider.chat/docs/llms/openai-compat.html)
+- [Zed Use API Access](https://zed.dev/docs/ai/use-api-access)
+- [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)

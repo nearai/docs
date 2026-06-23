@@ -81,6 +81,42 @@ const sidebars = {
       },
       items: [
         "cloud/guides/openai-compatibility",
+        {
+          type: "category",
+          label: "Integrations",
+          link: {
+            type: "doc",
+            id: "cloud/guides/integrations/integrations",
+          },
+          collapsed: false,
+          items: [
+            "cloud/guides/integrations/integrations",
+            "cloud/guides/integrations/model-discovery",
+            {
+              type: "category",
+              label: "Coding Agents and IDEs",
+              collapsed: false,
+              items: [
+                "cloud/guides/integrations/cursor",
+                "cloud/guides/integrations/continue",
+                "cloud/guides/integrations/cline-roo-kilo",
+                "cloud/guides/integrations/aider-zed",
+                "cloud/guides/opencode-goose",
+              ],
+            },
+            {
+              type: "category",
+              label: "Self-hosted and Team Apps",
+              collapsed: false,
+              items: [
+                "cloud/guides/integrations/librechat",
+                "cloud/guides/integrations/open-webui",
+                "cloud/guides/integrations/litellm",
+                "cloud/guides/integrations/dify",
+              ],
+            },
+          ],
+        },
         "cloud/guides/prompt-caching",
         "cloud/guides/fusion",
         "cloud/guides/web-search",
