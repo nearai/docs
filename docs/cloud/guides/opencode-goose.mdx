@@ -74,7 +74,8 @@ If your OpenCode version does not include the built-in `nearai` provider yet, de
       "name": "NEAR AI Cloud",
       "env": ["NEARAI_API_KEY"],
       "options": {
-        "baseURL": "https://cloud-api.near.ai/v1"
+        "baseURL": "https://cloud-api.near.ai/v1",
+        "apiKey": "{env:NEARAI_API_KEY}"
       },
       "models": {
         "z-ai/glm-5.2": {
@@ -124,7 +125,7 @@ Then select:
 
 1. **Configure Providers**
 2. **NEAR AI Cloud**
-3. Enter `NEARAI_API_KEY`
+3. Enter your NEAR AI Cloud API key value, or skip the prompt if `NEARAI_API_KEY` is already set in the environment.
 4. Select `z-ai/glm-5.2`
 
 If the CLI does not show GLM 5.2 in the model picker, set the model manually in Goose's config:
