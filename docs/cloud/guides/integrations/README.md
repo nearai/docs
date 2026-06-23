@@ -22,6 +22,7 @@ tool-specific reason makes a small adjustment clearer:
 7. Quick test
 8. Troubleshooting
 9. Related guides
+10. Sources Checked
 
 ## Required Content
 
@@ -112,3 +113,10 @@ Link to canonical NEAR AI Cloud docs instead of repeating long explanations:
 - Model Discovery: `/cloud/guides/integrations/model-discovery`
 - Direct Completions: `/cloud/private-inference#direct-completions`
 - Available Models: `/cloud/models`
+
+### Sources Checked
+
+Place source dates and external references in a trailing `## Sources Checked`
+section. Do not use inline `Sources checked: ...` paragraphs near the top of a
+published guide; the trailing section keeps setup instructions focused while
+preserving source freshness.

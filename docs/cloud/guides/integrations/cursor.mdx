@@ -8,7 +8,9 @@ description: "Configure Cursor with NEAR AI Cloud through Cursor's OpenAI API ke
 
 # Cursor
 
-limited support: Cursor can accept an OpenAI API key and an overridden OpenAI-compatible base URL, but public Cursor reports show limits around custom endpoint routing. Treat this as a chat or plan-style setup, and verify in your Cursor install before relying on it for daily work.
+:::caution Limited support
+Cursor can accept an OpenAI API key and an overridden OpenAI-compatible base URL, but public Cursor reports show limits around custom endpoint routing. Treat this as a chat or plan-style setup, and verify in your Cursor install before relying on it for daily work.
+:::
 
 These steps use public Cursor API key and base URL behavior checked on 2026-06-23. Composer, Agent, autocomplete, and inline edit routing are not documented as verified for NEAR AI Cloud, so do not assume those features use NEAR just because the OpenAI base URL is overridden.
 
@@ -134,3 +136,11 @@ If curl works, test Cursor with a plain text Chat or Plan prompt. If Cursor fail
 - [Available Models](/cloud/models)
 - [Continue](/cloud/guides/integrations/continue)
 - [Cline, Roo Code, and Kilo Code](/cloud/guides/integrations/cline-roo-kilo)
+
+## Sources Checked
+
+Sources checked on 2026-06-23:
+
+- [Cursor API keys](https://cursor.com/help/models-and-usage/api-keys)
+- [LLM Gateway Cursor guide](https://docs.llmgateway.io/guides/cursor)
+- Public Cursor forum reports about custom OpenAI base URL and Composer/custom key behavior

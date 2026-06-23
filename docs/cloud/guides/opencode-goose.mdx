@@ -130,6 +130,7 @@ Then select:
 If the CLI does not show GLM 5.2 in the model picker, set the model manually in Goose's config:
 
 ```yaml
+# ~/.config/goose/config.yaml
 GOOSE_PROVIDER: nearai
 GOOSE_MODEL: z-ai/glm-5.2
 ```
@@ -160,6 +161,7 @@ For OpenCode, check `https://models.dev/api.json` before assuming the model is b
 For Goose, refresh or re-save the NEAR AI Cloud provider so it requests the current model list. If the picker still does not show the model, use the custom model field in Goose Desktop or set `GOOSE_MODEL` manually:
 
 ```yaml
+# ~/.config/goose/config.yaml
 GOOSE_PROVIDER: nearai
 GOOSE_MODEL: z-ai/glm-5.2
 ```
@@ -221,8 +223,11 @@ curl https://glm-5-2.completions.near.ai/v1/chat/completions \
 - [Continue](/cloud/guides/integrations/continue)
 - [Cline, Roo Code, and Kilo Code](/cloud/guides/integrations/cline-roo-kilo)
 
-## Message to Share
+## Sources Checked
 
-If someone asks why GLM 5.2 does not show up in OpenCode yet, you can send:
+Sources checked on 2026-06-23:
 
-> OpenCode uses the public models.dev catalog, so check whether the `nearai` provider lists `z-ai/glm-5.2`. Until the catalog includes it, add NEAR AI Cloud manually as an OpenAI-compatible provider and set the model to `z-ai/glm-5.2`. Goose already has a NEAR AI Cloud provider; if the model picker has not refreshed, enter `z-ai/glm-5.2` as a custom model.
+- [OpenCode config](https://opencode.ai/docs/config/)
+- [OpenCode providers](https://opencode.ai/docs/providers/)
+- [Goose providers](https://goose-docs.ai/docs/getting-started/providers/)
+- [models.dev catalog](https://models.dev/)

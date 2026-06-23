@@ -90,7 +90,6 @@ const sidebars = {
           },
           collapsed: false,
           items: [
-            "cloud/guides/integrations/integrations",
             "cloud/guides/integrations/model-discovery",
             {
               type: "category",
