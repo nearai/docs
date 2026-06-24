@@ -61,13 +61,11 @@ Allow the reasoning options in `.aider.model.settings.yml` and pass it with `--m
 
 ```yaml title=".aider.model.settings.yml"
 - name: openai/z-ai/glm-5.2
-  reasoning_tag: think
   accepts_settings:
     - reasoning_effort
-    - thinking_tokens
 ```
 
-`accepts_settings` only allow-lists the reasoning options for this model; it does not turn reasoning on by itself, and `reasoning_tag: think` only strips the `<think>` tags from the visible output. To actually request reasoning you must also pass `--reasoning-effort` on the launch command (Aider then sends it as `extra_body.reasoning_effort` for an `openai/`-prefixed model):
+`accepts_settings` only allow-lists the reasoning options for this model; it does not turn reasoning on by itself. To actually request reasoning you must also pass `--reasoning-effort` on the launch command, which Aider sends as `extra_body.reasoning_effort` for an `openai/`-prefixed model:
 
 ```bash
 aider --model openai/z-ai/glm-5.2 \
