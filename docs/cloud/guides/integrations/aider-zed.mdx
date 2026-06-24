@@ -57,14 +57,21 @@ Set the limits in `.aider.model.metadata.json` and pass it with `--model-metadat
 }
 ```
 
-Enable reasoning in `.aider.model.settings.yml` and pass it with `--model-settings-file`:
+Allow the reasoning options in `.aider.model.settings.yml` and pass it with `--model-settings-file`:
 
 ```yaml title=".aider.model.settings.yml"
 - name: openai/z-ai/glm-5.2
-  reasoning_tag: think
   accepts_settings:
     - reasoning_effort
-    - thinking_tokens
+```
+
+`accepts_settings` only allow-lists the reasoning options for this model; it does not turn reasoning on by itself. To actually request reasoning you must also pass `--reasoning-effort` on the launch command, which Aider sends as `extra_body.reasoning_effort` for an `openai/`-prefixed model:
+
+```bash
+aider --model openai/z-ai/glm-5.2 \
+  --model-metadata-file .aider.model.metadata.json \
+  --model-settings-file .aider.model.settings.yml \
+  --reasoning-effort high
 ```
 
 The model name in both files must match the `--model` string exactly, or the entries are ignored.

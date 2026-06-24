@@ -69,7 +69,7 @@ models:
 
 `capabilities: [tool_use]` is required for Agent mode. Continue only auto-detects native tool calling for a fixed list of model names (GPT, o-series, and a few others); for a custom model ID like `z-ai/glm-5.2` it defaults to no tool support, so you must set `tool_use` explicitly or Agent mode falls back to a degraded prompt-based tool path instead of native function calling. GLM 5.2 advertises `tools` in `/v1/models`, so this is accurate, not aspirational.
 
-The remaining fields are optional metadata that match the live `/v1/models` record: `defaultCompletionOptions.reasoning: true` surfaces GLM 5.2's thinking output (the model lists `reasoning`), and `contextLength: 500000` / `maxTokens: 131072` set the context and output budgets. Basic chat works without them.
+The remaining fields are optional metadata that match the live `/v1/models` record. `contextLength: 500000` and `maxTokens: 131072` set the context and output budgets. `defaultCompletionOptions.reasoning: true` tells Continue to display and parse the model's thinking output — with `provider: openai` it is not added to the request, so it does not turn reasoning on. GLM 5.2 emits reasoning by default server-side, and this flag surfaces it in Continue's thinking pane. Basic chat works without these fields.
 
 Reload Continue after saving the config. In VS Code, use the command palette and run `Developer: Reload Window` if the model list does not update.
 
