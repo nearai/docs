@@ -59,6 +59,15 @@ In Open WebUI:
 
 If your Open WebUI version shows **Model IDs (Filter)**, leave it empty first so Open WebUI can read `/v1/models`. Add `z-ai/glm-5.2` to the filter only if you want to limit the picker or model discovery is not refreshing.
 
+### Native tool calling
+
+If you use Open WebUI to orchestrate tools (workspace Tools, MCP servers, or built-in tools), set the model's **Function Calling** mode to **Native**. Open WebUI defaults each model to **Default**, which emulates tool use through a prompt template and does **not** forward the OpenAI `tools` array to NEAR AI Cloud. GLM 5.2 supports native tools (`/v1/models` lists `tools` in `supported_features`), so switch to Native to use them:
+
+1. Open **Workspace** -> **Models** -> `z-ai/glm-5.2` -> **Advanced Params** (or the chat **Advanced Params** panel).
+2. Change **Function Calling** from `Default` to `Native` (stored as `params.function_calling = "native"`).
+
+A plain chat with no tools attached behaves the same in either mode, so this only matters when tools are in play.
+
 ## Refresh models
 
 When NEAR AI Cloud releases a new model:
@@ -105,6 +114,7 @@ If either curl command fails, fix the NEAR AI Cloud key, model ID, or network pa
 | Wrong base URL includes `/chat/completions` | A full request URL was pasted into Open WebUI's URL field. | Use `https://cloud-api.near.ai/v1` as the base URL. Keep `/chat/completions` only in curl or HTTP request URLs. |
 | Connection verification fails but curl works | Open WebUI did not refresh the provider's `/models` response or a model filter is blocking the picker. | Re-save the connection, restart Open WebUI, then manually add `z-ai/glm-5.2` to **Model IDs (Filter)** if `/v1/models` works from curl. |
 | Requests reach the wrong service | The URL field points at Open WebUI's internal API route instead of the NEAR AI Cloud gateway. | Replace the upstream URL with `https://cloud-api.near.ai/v1` and save the connection again. |
+| Tools/function calling are ignored or emulated | The model's Function Calling mode is left at `Default`, so Open WebUI uses prompt-based emulation instead of passing the OpenAI `tools` array. | Set Function Calling to `Native` in the model's Advanced Params (Workspace -> Models -> `z-ai/glm-5.2`). |
 
 ## Related guides
 

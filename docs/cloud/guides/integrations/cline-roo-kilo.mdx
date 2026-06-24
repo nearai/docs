@@ -55,6 +55,8 @@ In Cline settings, configure the provider with:
 
 After saving, run a small prompt in Cline. If the model is not listed, enter the model ID manually.
 
+Cline's OpenAI Compatible provider also has a collapsible **Model Configuration** section. It is optional for basic chat, but recommended so Cline budgets context correctly instead of using its generic defaults (context window 128000, max output unset): set **Context Window Size** to `500000` and **Max Output Tokens** to `131072` (from `/v1/models`). To use GLM 5.2's thinking, set the **Reasoning Effort** selector (low/medium/high).
+
 ## Configure Roo Code
 
 In Roo Code settings, configure the provider with:
@@ -66,7 +68,9 @@ In Roo Code settings, configure the provider with:
 | API Key | Your NEAR AI Cloud API key |
 | Model ID | `z-ai/glm-5.2` |
 
-Roo Code requires native OpenAI tool calling. If the selected model or provider path does not support OpenAI-compatible tool calls, Roo Code will fail tool-use workflows even if basic chat requests work. Choose a NEAR AI Cloud model whose `/v1/models` record includes tool support when you need Roo Code's coding-agent tools.
+Roo Code requires native OpenAI tool calling. If the selected model or provider path does not support OpenAI-compatible tool calls, Roo Code will fail tool-use workflows even if basic chat requests work. Choose a NEAR AI Cloud model whose `/v1/models` record includes tool support when you need Roo Code's coding-agent tools. GLM 5.2 lists `tools` in `/v1/models`, and Roo forwards the OpenAI `tools` array to OpenAI-compatible endpoints regardless of any per-model flag, so no extra capability toggle is needed for tool use.
+
+Roo Code's OpenAI Compatible provider also exposes custom-model fields under **Model Configuration**. They are optional, but recommended for correct context budgeting: set **Context Window Size** to `500000` and **Max Output Tokens** to `131072` (from `/v1/models`). To use GLM 5.2's thinking, check **Enable Reasoning Effort** and pick a level (low/medium/high/xhigh).
 
 ## Configure Kilo Code
 

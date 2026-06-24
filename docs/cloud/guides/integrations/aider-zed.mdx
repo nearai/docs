@@ -39,6 +39,36 @@ To refresh the model, update the command-line model string. For example, after c
 
 If Aider warns that it does not recognize a new model, first confirm the model works with the curl smoke test below. Aider may need a model metadata update before it can infer limits for a newly released model.
 
+### Optional: set limits and enable reasoning for Aider
+
+Aider does not auto-detect limits or reasoning for an unknown model ID, so it falls back to generic defaults and may print `Warning ...: Unknown context window size and costs, using sane defaults.` These steps are optional — basic chat and tool calls work without them — but they fix the warning and expose GLM 5.2's thinking. Both files key on the exact `--model` string, so use `openai/z-ai/glm-5.2`.
+
+Set the limits in `.aider.model.metadata.json` and pass it with `--model-metadata-file`:
+
+```json title=".aider.model.metadata.json"
+{
+  "openai/z-ai/glm-5.2": {
+    "max_input_tokens": 500000,
+    "max_output_tokens": 131072,
+    "max_tokens": 131072,
+    "litellm_provider": "openai",
+    "mode": "chat"
+  }
+}
+```
+
+Enable reasoning in `.aider.model.settings.yml` and pass it with `--model-settings-file`:
+
+```yaml title=".aider.model.settings.yml"
+- name: openai/z-ai/glm-5.2
+  reasoning_tag: think
+  accepts_settings:
+    - reasoning_effort
+    - thinking_tokens
+```
+
+The model name in both files must match the `--model` string exactly, or the entries are ignored.
+
 ## Zed
 
 Zed supports custom OpenAI-compatible providers. Add NEAR AI Cloud to Zed from **Agent Settings** with `agent: open settings`, or add the provider to `settings.json` and keep the API key in Zed's provider settings UI, the system keychain, or an environment variable.
@@ -62,7 +92,8 @@ Add this provider config to Zed's `settings.json`:
             "name": "z-ai/glm-5.2",
             "display_name": "GLM 5.2",
             "max_tokens": 500000,
-            "max_output_tokens": 131072
+            "max_output_tokens": 131072,
+            "reasoning_effort": "xhigh"
           }
         ]
       }
@@ -70,6 +101,8 @@ Add this provider config to Zed's `settings.json`:
   }
 }
 ```
+
+`reasoning_effort` is what makes Zed expose GLM 5.2's thinking: if you omit it, Zed treats the model as non-thinking and shows no thinking toggle or effort variants in the agent panel. GLM 5.2 advertises `reasoning` in `/v1/models`, and it is a Z.AI model, for which Zed's docs recommend `xhigh`. Valid values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`. Tool calling does not need a flag here — Zed defaults `openai_compatible` model `capabilities.tools` to `true`.
 
 To refresh models in Zed, add or update entries in `available_models`, then restart Zed or reselect the provider in the model picker. If you used Agent Settings instead of editing JSON, open the NEAR AI provider entry and update the model ID and context window there.
 
@@ -123,5 +156,6 @@ If you only set `OPENAI_API_KEY` for Aider, either export `NEARAI_API_KEY="$OPEN
 Sources checked on 2026-06-23:
 
 - [Aider OpenAI compatible APIs](https://aider.chat/docs/llms/openai-compat.html)
+- [Aider advanced model settings](https://aider.chat/docs/config/adv-model-settings.html)
 - [Zed Use API Access](https://zed.dev/docs/ai/use-api-access)
 - [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)
