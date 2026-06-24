@@ -72,7 +72,7 @@ As checked on 2026-06-23, that endpoint is:
 https://glm-5-2.completions.near.ai/v1
 ```
 
-The endpoint advertises both `z-ai/glm-5.2` and `zai-org/GLM-5.2-FP8`. Use `z-ai/glm-5.2` first. Treat `zai-org/GLM-5.2-FP8` as an alias or direct completions fallback only when the direct completions endpoint lists it and your client needs that served model name.
+The endpoints registry (`GET https://completions.near.ai/endpoints`) lists both `z-ai/glm-5.2` and `zai-org/GLM-5.2-FP8` for this domain, but the endpoint's own `GET https://glm-5-2.completions.near.ai/v1/models` currently returns only `z-ai/glm-5.2`. Use `z-ai/glm-5.2`. The `zai-org/GLM-5.2-FP8` served name still resolves at the direct endpoint, but treat it as a fallback only when your client needs that exact served model name.
 
 ## Gateway vs direct completions
 

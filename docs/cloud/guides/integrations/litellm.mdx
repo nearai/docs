@@ -113,6 +113,27 @@ curl http://127.0.0.1:4000/chat/completions \
   }'
 ```
 
+### Optional: report capabilities and limits
+
+LiteLLM passes tool calls and reasoning through the `openai/` path regardless of metadata, so the config above is enough to use GLM 5.2. If you want LiteLLM's introspection endpoints (`/v1/models`, `/v1/model/info`, `/model_group/info`) to report GLM 5.2's real capabilities — instead of defaulting to `false`/`null` because `z-ai/glm-5.2` is not in LiteLLM's built-in model map — add a sibling `model_info` block:
+
+```yaml
+model_list:
+  - model_name: nearai-glm-5.2
+    litellm_params:
+      model: openai/z-ai/glm-5.2
+      api_base: https://cloud-api.near.ai/v1
+      api_key: os.environ/NEARAI_API_KEY
+    model_info:
+      supports_function_calling: true
+      supports_reasoning: true
+      supports_vision: false
+      max_input_tokens: 500000
+      max_output_tokens: 131072
+```
+
+The values match the live `/v1/models` record for `z-ai/glm-5.2` (tools and reasoning supported, text-only, context 500000, output 131072). This block is reporting metadata only; it does not change request behavior.
+
 ## Refresh models
 
 LiteLLM Proxy uses the entries in `model_list`; it does not automatically add every NEAR AI Cloud model to your config. When NEAR AI Cloud releases a new model:
