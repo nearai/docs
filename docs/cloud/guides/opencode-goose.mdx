@@ -37,6 +37,8 @@ The gateway is the easiest default. Direct completions use the same API key and 
 
 OpenCode reads its built-in provider and model catalog from [models.dev](https://models.dev/), as described in the public [OpenCode config](https://opencode.ai/docs/config/) and [provider](https://opencode.ai/docs/providers/) docs. If a newly launched NEAR AI model is not listed there yet, add it manually to your OpenCode config.
 
+For GLM 5.2, set `reasoning` to `true` in the manual model metadata so OpenCode can expose thinking-effort variants through `/variants`.
+
 Create or edit `~/.config/opencode/opencode.json`:
 
 ```json
@@ -47,7 +49,8 @@ Create or edit `~/.config/opencode/opencode.json`:
     "nearai": {
       "models": {
         "z-ai/glm-5.2": {
-          "name": "GLM 5.2"
+          "name": "GLM 5.2",
+          "reasoning": true
         }
       }
     }
@@ -79,7 +82,8 @@ If your OpenCode version does not include the built-in `nearai` provider yet, de
       },
       "models": {
         "z-ai/glm-5.2": {
-          "name": "GLM 5.2"
+          "name": "GLM 5.2",
+          "reasoning": true
         }
       }
     }
@@ -151,7 +155,8 @@ For OpenCode, check `https://models.dev/api.json` before assuming the model is b
     "nearai": {
       "models": {
         "z-ai/glm-5.2": {
-          "name": "GLM 5.2"
+          "name": "GLM 5.2",
+          "reasoning": true
         }
       }
     }
