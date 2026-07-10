@@ -29,8 +29,8 @@ The create response returns the reporting token once:
   "id": "22222222-2222-4222-8222-222222222222",
   "organization_id": "11111111-1111-4111-8111-111111111111",
   "name": "finance usage export",
-  "token": "rpt-example_reporting_token_do_not_use",
-  "token_prefix": "rpt-example",
+  "token": "rpt-0123456789abcdef0123456789abcdef",
+  "token_prefix": "rpt-01234567",
   "created_by_user_id": "33333333-3333-4333-8333-333333333333",
   "created_at": "2026-07-09T12:00:00Z",
   "expires_at": "2026-12-31T23:59:59Z",
@@ -46,6 +46,8 @@ curl https://cloud-api.near.ai/v1/organizations/11111111-1111-4111-8111-11111111
   -H "Authorization: Bearer $ACCESS_TOKEN"
 ```
 
+`last_used_at` is an approximate audit timestamp. To avoid writing on every report request, Cloud API refreshes it at most once every 15 minutes.
+
 Revoke a token when an integration no longer needs it:
 
 ```bash
@@ -59,7 +61,7 @@ curl https://cloud-api.near.ai/v1/organizations/11111111-1111-4111-8111-11111111
 Use reporting tokens only with the reporting endpoints:
 
 ```bash
-Authorization: Bearer rpt-example_reporting_token_do_not_use
+Authorization: Bearer rpt-0123456789abcdef0123456789abcdef
 ```
 
 Reporting tokens are scoped to exactly one organization and the `usage:read` scope. A token from another organization returns `403 Forbidden`; an invalid, expired, or revoked token returns `401 Unauthorized`.
@@ -70,7 +72,7 @@ Reporting tokens are scoped to exactly one organization and the `usage:read` sco
 
 ```bash
 curl "https://cloud-api.near.ai/v1/organizations/11111111-1111-4111-8111-111111111111/usage/export?start_time=2026-07-01T00:00:00Z&end_time=2026-07-09T00:00:00Z&source=all&limit=2" \
-  -H "Authorization: Bearer rpt-example_reporting_token_do_not_use"
+  -H "Authorization: Bearer rpt-0123456789abcdef0123456789abcdef"
 ```
 
 ```json
@@ -112,11 +114,11 @@ curl "https://cloud-api.near.ai/v1/organizations/11111111-1111-4111-8111-1111111
       }
     }
   ],
-  "next_cursor": "eyJ2IjoxLCJjcmVhdGVkX2F0IjoiMjAyNi0wNy0wOFQxNjoxOTozMFoiLCJzb3VyY2UiOiJzZXJ2aWNlIiwiaWQiOiI5OTk5OTk5OS05OTk5LTQ5OTktODk5OS05OTk5OTk5OTk5OTkifQ"
+  "next_cursor": "opaque_cursor_value"
 }
 ```
 
-Pass `next_cursor` as `cursor` to fetch the next page. Cursors are opaque and URL-safe; do not parse or construct them in your integration.
+Pass `next_cursor` as `cursor` to fetch the next page. Cursors are opaque and URL-safe; do not parse or construct them in your integration. Keep the time range and all other filters unchanged while following a cursor. The effective time window remains stable across pages, including when a time bound is omitted. For repeatable jobs and auditable exports, set explicit `start_time` and `end_time` values and reuse them on every page.
 
 ## Summarize Usage
 
@@ -124,7 +126,7 @@ Pass `next_cursor` as `cursor` to fetch the next page. Cursors are opaque and UR
 
 ```bash
 curl "https://cloud-api.near.ai/v1/organizations/11111111-1111-4111-8111-111111111111/usage/summary?start_time=2026-07-01T00:00:00Z&end_time=2026-07-09T00:00:00Z&source=all" \
-  -H "Authorization: Bearer rpt-example_reporting_token_do_not_use"
+  -H "Authorization: Bearer rpt-0123456789abcdef0123456789abcdef"
 ```
 
 ```json
@@ -151,10 +153,47 @@ curl "https://cloud-api.near.ai/v1/organizations/11111111-1111-4111-8111-1111111
       "total_cost_nano_usd": 75750000
     }
   ],
-  "by_api_key": [],
-  "by_model": [],
-  "by_service": [],
-  "by_day": []
+  "by_api_key": [
+    {
+      "api_key_id": "66666666-6666-4666-8666-666666666666",
+      "request_count": 42,
+      "service_usage_count": 9,
+      "total_cost_nano_usd": 75750000
+    }
+  ],
+  "by_model": [
+    {
+      "model": "zai-org/GLM-5.1-FP8",
+      "request_count": 42,
+      "input_tokens": 81200,
+      "output_tokens": 18400,
+      "cache_read_tokens": 2100,
+      "total_tokens": 101700,
+      "total_cost_nano_usd": 73500000
+    }
+  ],
+  "by_service": [
+    {
+      "service_name": "web_search",
+      "usage_count": 9,
+      "quantity": 9,
+      "total_cost_nano_usd": 2250000
+    }
+  ],
+  "by_day": [
+    {
+      "day": "2026-07-08",
+      "request_count": 42,
+      "service_usage_count": 9,
+      "input_tokens": 81200,
+      "output_tokens": 18400,
+      "cache_read_tokens": 2100,
+      "total_tokens": 101700,
+      "inference_cost_nano_usd": 73500000,
+      "service_cost_nano_usd": 2250000,
+      "total_cost_nano_usd": 75750000
+    }
+  ]
 }
 ```
 
@@ -164,13 +203,13 @@ Both reporting endpoints accept these filters:
 
 | Parameter | Description |
 | --- | --- |
-| `start_time` | Inclusive RFC3339 timestamp. |
-| `end_time` | Inclusive RFC3339 timestamp. Must be greater than or equal to `start_time`. |
+| `start_time` | Inclusive RFC3339 timestamp. If omitted, defaults to 366 days before the effective `end_time`. |
+| `end_time` | Inclusive RFC3339 timestamp. Defaults to the request time and must be greater than or equal to `start_time`. |
 | `source` | `all`, `inference`, or `service`. Defaults to `all`. |
 | `workspace_id` | Limit results to one workspace. |
 | `api_key_id` | Limit results to one API key. |
 | `model` | Limit inference rows or summaries to one model name. |
-| `inference_type` | Limit inference usage to one inference type. |
+| `inference_type` | Limit inference usage to `chat_completion`, `chat_completion_stream`, `image_generation`, `image_edit`, `audio_transcription`, `rerank`, `score`, `embedding`, or `privacy_classify`. |
 | `service_name` | Limit platform service usage, such as `web_search`. |
 
 `/usage/export` also accepts:
@@ -180,11 +219,19 @@ Both reporting endpoints accept these filters:
 | `limit` | Page size. Defaults to `100`; maximum is `1000`. |
 | `cursor` | Opaque cursor from the previous page. |
 
-Invalid timestamps, an end time before the start time, an unsupported `source`, a malformed cursor, or a `limit` above `1000` returns `400 Bad Request`.
+If neither time bound is supplied, the effective window is the 366 days ending at the request time. With only `end_time`, the window is the preceding 366 days. With only `start_time`, the window ends at the request time and returns `400 Bad Request` if it exceeds 366 days.
+
+Invalid timestamps, an end time before the start time, a range above 366 days, an unsupported `source` or `inference_type`, a malformed cursor, or a `limit` outside `1` to `1000` return `400 Bad Request`.
+
+Reporting endpoints can return `429 Too Many Requests` when rate or concurrency limits are reached, and `504 Gateway Timeout` when a report exceeds its execution deadline. Retry these responses with exponential backoff and jitter.
 
 ## Sources and Cost Units
 
 `source=all` includes both inference usage and platform service usage. Use `source=inference` to report only model requests, or `source=service` to report only platform services.
+
+Reporting endpoints return JSON. v1 does not provide native CSV responses; convert the exported rows in your reporting system if you need CSV. Summary attribution is available by workspace and API key, not by individual human user. Usage from people who share an API key cannot be separated by user.
+
+v1 reports billing usage and cost. It does not expose time to first token (TTFT), inter-token latency (ITL), or other inference performance telemetry.
 
 Cost fields ending in `_nano_usd` are integers in nano-USD, where `1,000,000,000` nano-USD equals `$1.00`. Treat these integer fields as the source of truth and format display USD values in your reporting system if needed.
 
