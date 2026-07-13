@@ -81,6 +81,7 @@ const sidebars = {
       },
       items: [
         "cloud/guides/openai-compatibility",
+        "cloud/guides/usage-reporting",
         {
           type: "category",
           label: "Integrations",
