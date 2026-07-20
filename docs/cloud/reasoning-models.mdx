@@ -24,7 +24,7 @@ For most TEE-hosted models you can control whether the model uses reasoning by c
 :::tip Which models support reasoning?
 Check the `supported_features` array in the [`/v1/models`](https://cloud-api.near.ai/v1/models) response — reasoning-capable models list `"reasoning"`.
 
-Known gap: `Qwen/Qwen3.5-122B-A10B` currently reasons by default even though its metadata does not yet list the `"reasoning"` flag ([cloud-api#703](https://github.com/nearai/cloud-api/issues/703)).
+Known gap: `Qwen/Qwen3.5-122B-A10B` ([cloud-api#703](https://github.com/nearai/cloud-api/issues/703)), `moonshotai/kimi-k2.5`, and `moonshotai/kimi-k2.6` currently reason by default even though their metadata does not yet list the `"reasoning"` flag.
 :::
 
 ---
@@ -119,6 +119,34 @@ curl https://cloud-api.near.ai/v1/chat/completions \
 
 ---
 
+## Kimi K2.5 and Kimi K2.6
+
+Kimi K2.5 (`moonshotai/kimi-k2.5`) and Kimi K2.6 (`moonshotai/kimi-k2.6`) have reasoning enabled by default and include `reasoning_content` in responses automatically. To disable reasoning, set `"thinking": false` in the `chat_template_kwargs` (note the parameter name — `thinking`, not `enable_thinking`):
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "model": "moonshotai/kimi-k2.6",
+    "messages": [
+      {"role": "user", "content": "How much is 2+2?"}
+    ],
+    "chat_template_kwargs": {
+      "thinking": false
+    },
+    "stream": true
+  }'
+```
+
+With `"thinking": false` the response contains no reasoning trace and `usage.reasoning_tokens` drops to 0.
+
+:::caution `reasoning_effort` is not supported on Kimi
+The Kimi models ignore `reasoning_effort` (and OpenRouter-style `reasoning` request objects): requests that include them succeed, but the model reasons exactly as it would without them. Reasoning on Kimi K2.5 and K2.6 is on/off only — there are no effort levels or thinking budgets. Use `chat_template_kwargs.thinking` instead.
+:::
+
+---
+
 ## Model-Specific Parameters
 
 Different models use different parameter names for controlling reasoning:
@@ -129,12 +157,14 @@ Different models use different parameter names for controlling reasoning:
 | Qwen3.5-122B | `Qwen/Qwen3.5-122B-A10B` | `chat_template_kwargs.enable_thinking` | `true` |
 | Qwen3.6-35B | `Qwen/Qwen3.6-35B-A3B-FP8` | `chat_template_kwargs.enable_thinking` | `true` |
 | GPT-OSS-120B | `openai/gpt-oss-120b` | `reasoning_effort` (`low`/`medium`/`high`) | `medium`, always on |
+| Kimi K2.5 | `moonshotai/kimi-k2.5` | `chat_template_kwargs.thinking` | `true` |
+| Kimi K2.6 | `moonshotai/kimi-k2.6` | `chat_template_kwargs.thinking` | `true` |
 
 :::tip
 Always check the model documentation or use the model's specific parameter name. Using the wrong parameter name will not enable reasoning.
 :::
 
-Third-party models served through the gateway (OpenAI `o`-series and GPT-5.x, Anthropic Claude, Gemini Pro, Kimi, ...) use their provider's standard reasoning controls, such as `reasoning_effort`.
+Third-party models served through the gateway (OpenAI `o`-series and GPT-5.x, Anthropic Claude, Gemini Pro, ...) use their provider's standard reasoning controls, such as `reasoning_effort`. The Kimi models are the exception: they do not respond to `reasoning_effort` — use `chat_template_kwargs.thinking` as described [above](#kimi-k25-and-kimi-k26).
 
 ---
 
