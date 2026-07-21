@@ -22,8 +22,11 @@ You can verify each chat message with NEAR AI Cloud. For this you will need:
 See an example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo.
 :::
 
-:::info Use Direct Completions for byte-exact verification
-The signature is generated **inside the model TEE** over the exact bytes the TEE received and sent. When you connect through the gateway (`cloud-api.near.ai`), streamed responses are re-serialized in transit, so the response bytes you receive may not hash to the signed value. To verify hashes byte-for-byte, send your request to the model's [direct completions endpoint](/cloud/private-inference#direct-completions) (`{slug}.completions.near.ai`) — the examples below use `qwen35-122b.completions.near.ai`.
+:::info Two signature kinds
+There are two kinds of chat signatures, distinguished by the `signature_kind` field on the gateway's signature response — see [Signature Kinds](#signature-kinds):
+
+- **`provider_tee`** — generated **inside the model TEE** over the exact bytes the TEE received and sent. This is always what you get from a model's [direct completions endpoint](/cloud/private-inference#direct-completions) (`{slug}.completions.near.ai`) — the examples below use `qwen35-122b.completions.near.ai`.
+- **`gateway`** — generated **inside the gateway TEE** (`cloud-api.near.ai`) over the exact bytes the gateway returned to you. Used when the gateway rewrites streamed response bytes (OpenAI-spec usage accounting), so the model TEE's byte-exact signature could no longer match what you received.
 :::
 
 ---
@@ -239,10 +242,11 @@ A model can be served by multiple TEE nodes behind the same domain. The signatur
 
 The above response gives us all of the crucial information we need to verify that the message was executed in our trusted environment:
 
-- `text` - The model ID, the [Chat Message REQUEST Hash](#chat-message-request-hash), and the [Chat Message RESPONSE Hash](#chat-message-response-hash) concatenated with `:` separators (`{model_id}:{request_hash}:{response_hash}`)
+- `text` - The signed payload. Its format depends on the [signature kind](#signature-kinds): `{model_id}:{request_hash}:{response_hash}` for a model-TEE signature (as in this example), `{request_hash}:{response_hash}` for a gateway signature
 - `signature` - This is the cryptographic signature of the `text` field, generated using the TEE's private key 
-- `signing_address` - Public key of the TEE node that served the request
+- `signing_address` - Public key of the TEE that signed (the model TEE for `provider_tee`, the gateway TEE for `gateway`)
 - `signing_algo` - Cryptography curve used to sign
+- `signature_kind` - Which key produced the signature: `"provider_tee"` or `"gateway"` (gateway endpoint only — see [Signature Kinds](#signature-kinds))
 
 You can see that `text` is:
 
@@ -253,6 +257,35 @@ This exactly matches the model we requested and the values we calculated in the 
 - Model: `Qwen/Qwen3.5-122B-A10B`
 - Request hash: `2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad`
 - Response hash: `8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c`
+
+---
+
+## Signature Kinds
+
+Signatures fetched from the gateway (`GET https://cloud-api.near.ai/v1/signature/{chat_id}`) carry a `signature_kind` field that tells you which key signed and what the `text` payload contains:
+
+### `provider_tee`
+
+- **Who signs:** the model TEE that served your request, with the signing key from its [model attestation](/cloud/verification/model). Verify `signing_address` against that attestation.
+- **Payload:** `text = "{model_id}:{request_hash}:{response_hash}"`.
+- **What it covers:** the exact request bytes the model TEE received and the exact response bytes it sent. When you use a [direct completions endpoint](/cloud/private-inference#direct-completions), the bytes you sent and received are those bytes, so both hashes verify byte-for-byte against your own traffic. (Direct completions signature responses come straight from the model TEE and do not carry a `signature_kind` field — they are always model-TEE signatures.)
+
+### `gateway`
+
+- **Who signs:** the gateway TEE (`cloud-api.near.ai`), with the same signing key whose address is returned by the [gateway attestation report](/cloud/verification/gateway) (`GET /v1/attestation/report`). Verify `signing_address` against that report.
+- **Payload:** `text = "{request_hash}:{response_hash}"` — no model-ID prefix.
+- **What it covers:** the exact request body you sent to the gateway and the exact response bytes the gateway returned to you, so both hashes verify byte-for-byte against your own traffic.
+
+The gateway signs a streamed response itself when it has rewritten the stream bytes for OpenAI compatibility, which makes the model TEE's byte-exact signature unable to match what you received:
+
+- **Usage accounting** — with `stream_options: {"include_usage": true}`, the gateway rewrites intermediate chunks to carry `usage: null` and appends a single final usage chunk.
+- **Usage stripping** — on attested models, default streaming (no `stream_options`) and `"include_usage": false` streams have per-chunk usage nulled out and the upstream's trailing usage-only chunk dropped.
+
+In both cases the gateway stores its signature **before** emitting the final `data: [DONE]` line, so the signature is retrievable the moment the stream ends. The gateway signature also covers attested third-party fallback serving (`x-serving-provider: chutes` response header): those backends protect response integrity with an end-to-end encrypted channel rather than a per-response model signature, so a rewritten stream served by them is signed by the gateway alone.
+
+:::note Legacy signatures
+Signatures stored before `signature_kind` was recorded omit the field — their provenance is unknown rather than guessed. You can still distinguish them structurally: a `text` with three `:`-separated fields (`{model_id}:{request_hash}:{response_hash}`) is a model-TEE payload; one with two (`{request_hash}:{response_hash}`) is a gateway payload.
+:::
 
 ---
 
