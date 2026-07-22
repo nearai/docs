@@ -40,6 +40,8 @@ https://{slug}.completions.near.ai/v1/attestation/report?signing_algo=ecdsa&nonc
 
 The `signing_algo` parameter specifies the signing algorithm used (`ecdsa` or `ed25519`). The `nonce` parameter is optional but recommended. It should be a randomly generated 64 character hexadecimal string (32 bytes) that ensures attestation freshness and prevents replay attacks. If not provided, the server will generate one for you.
 
+The gateway endpoint requires an API key (`Authorization: Bearer <api-key>`); report retrieval is free and never counts against your usage. The direct completions endpoint is served by the model TEE itself and needs no API key.
+
 With direct completions, you can also pass `include_tls_fingerprint=true` to bind the TLS certificate fingerprint to the attestation report. This is disabled by default for compatibility with existing clients. Without the flag, `report_data` binds only the signing key and nonce. With the flag, `report_data[0:32]` becomes `SHA256(signing_address || tls_cert_fingerprint)`, which lets you verify that the HTTPS connection terminates inside the model TEE. See [TLS Attestation Verification](/cloud/verification/tls).
 
 <Tabs
@@ -57,7 +59,8 @@ With direct completions, you can also pass `include_tls_fingerprint=true` to bin
 NONCE=$(openssl rand -hex 32)
 
 curl "https://cloud-api.near.ai/v1/attestation/report?model=zai-org/GLM-5.1-FP8&signing_algo=ecdsa&nonce=${NONCE}" \
-  -H 'accept: application/json'
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer <YOUR-NEAR-AI-CLOUD-API-KEY>'
 ```
 
 </TabItem>
@@ -82,12 +85,13 @@ const MODEL_NAME = 'zai-org/GLM-5.1-FP8'
 // Generate a random 64-character hex nonce (optional but recommended)
 const nonce = crypto.randomBytes(32).toString('hex');
 
-// Via gateway:
+// Via gateway (requires an API key):
 const response = await fetch(
   `https://cloud-api.near.ai/v1/attestation/report?model=${MODEL_NAME}&signing_algo=ecdsa&nonce=${nonce}`,
   {
     headers: {
       'accept': 'application/json',
+      'Authorization': `Bearer ${process.env.NEAR_AI_CLOUD_API_KEY}`,
     },
   }
 );
@@ -103,6 +107,7 @@ const response = await fetch(
 <TabItem value="python">
 
 ```python
+import os
 import requests
 import secrets
 
@@ -110,11 +115,12 @@ MODEL_NAME = 'zai-org/GLM-5.1-FP8'
 # Generate a random 64-character hex nonce (optional but recommended)
 nonce = secrets.token_hex(32)
 
-# Via gateway:
+# Via gateway (requires an API key):
 response = requests.get(
     f'https://cloud-api.near.ai/v1/attestation/report?model={MODEL_NAME}&signing_algo=ecdsa&nonce={nonce}',
     headers={
         'accept': 'application/json',
+        'Authorization': f'Bearer {os.environ["NEAR_AI_CLOUD_API_KEY"]}',
     }
 )
 
