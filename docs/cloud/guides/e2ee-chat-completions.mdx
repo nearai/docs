@@ -133,6 +133,7 @@ def v2_decrypt(data: bytes, secret_x25519: bytes) -> bytes:
 
 attestation = requests.get(
     f"{ENDPOINT}/v1/attestation/report",
+    headers={"Authorization": f"Bearer {API_KEY}"},
     params={"model": MODEL, "signing_algo": "ed25519"},
 ).json()
 model_ed25519_pub = bytes.fromhex(attestation["model_attestations"][0]["signing_public_key"])
@@ -185,6 +186,8 @@ if msg.get("content"):
 
 Fetch the model's Ed25519 public key from its TEE attestation report. The public key is generated inside the Model TEE and cryptographically bound to its hardware attestation.
 
+The gateway endpoint requires an API key (`Authorization: Bearer <api-key>`); report retrieval is free and never counts against your usage. The direct completions endpoint is served by the model TEE itself and needs no API key.
+
 <Tabs
   defaultValue="curl"
   values={[
@@ -196,7 +199,8 @@ Fetch the model's Ed25519 public key from its TEE attestation report. The public
 <TabItem value="curl">
 
 ```bash
-curl "https://cloud-api.near.ai/v1/attestation/report?model=zai-org/GLM-5.1-FP8&signing_algo=ed25519"
+curl "https://cloud-api.near.ai/v1/attestation/report?model=zai-org/GLM-5.1-FP8&signing_algo=ed25519" \
+  -H 'Authorization: Bearer <YOUR-NEAR-AI-CLOUD-API-KEY>'
 ```
 
 </TabItem>
@@ -211,10 +215,12 @@ curl "https://qwen35-122b.completions.near.ai/v1/attestation/report?signing_algo
 <TabItem value="python">
 
 ```python
+import os
 import requests
 
 response = requests.get(
     "https://cloud-api.near.ai/v1/attestation/report",
+    headers={"Authorization": f"Bearer {os.environ['NEAR_AI_CLOUD_API_KEY']}"},
     params={
         "model": "zai-org/GLM-5.1-FP8",
         "signing_algo": "ed25519"
@@ -241,7 +247,12 @@ const response = await fetch(
   new URLSearchParams({
     model: 'zai-org/GLM-5.1-FP8',
     signing_algo: 'ed25519'
-  })
+  }),
+  {
+    headers: {
+      'Authorization': `Bearer ${process.env.NEAR_AI_CLOUD_API_KEY}`,
+    },
+  }
 );
 
 const attestation = await response.json();
@@ -727,7 +738,8 @@ You can verify the model's public key is authentic by checking the attestation r
 ### Get the Model's ECDSA Public Key
 
 ```bash
-curl "https://cloud-api.near.ai/v1/attestation/report?model=zai-org/GLM-5.1-FP8&signing_algo=ecdsa"
+curl "https://cloud-api.near.ai/v1/attestation/report?model=zai-org/GLM-5.1-FP8&signing_algo=ecdsa" \
+  -H 'Authorization: Bearer <YOUR-NEAR-AI-CLOUD-API-KEY>'
 ```
 
 ### Generate ECDSA Client Key Pair

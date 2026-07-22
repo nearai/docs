@@ -37,6 +37,8 @@ https://cloud-api.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce={nonce}
 
 The `signing_algo` parameter specifies the signing algorithm used (`ecdsa` or `ed25519`). The `nonce` parameter is optional but recommended. It should be a randomly generated 64 character hexadecimal string (32 bytes) that ensures attestation freshness and prevents replay attacks. If not provided, the server will generate one for you.
 
+The endpoint requires an API key (`Authorization: Bearer <api-key>`); report retrieval is free and never counts against your usage.
+
 If you want to verify that the HTTPS connection to `cloud-api.near.ai` terminates inside the gateway TEE, add `include_tls_fingerprint=true` and follow [TLS Attestation Verification](/cloud/verification/tls). That opt-in flag binds the gateway's TLS certificate fingerprint into `report_data`; it is disabled by default for compatibility with existing clients.
 
 <Tabs
@@ -53,7 +55,8 @@ If you want to verify that the HTTPS connection to `cloud-api.near.ai` terminate
 NONCE=$(openssl rand -hex 32)
 
 curl "https://cloud-api.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce=${NONCE}" \
-  -H 'accept: application/json'
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer <YOUR-NEAR-AI-CLOUD-API-KEY>'
 ```
 
 </TabItem>
@@ -70,6 +73,7 @@ const response = await fetch(
   {
     headers: {
       'accept': 'application/json',
+      'Authorization': `Bearer ${process.env.NEAR_AI_CLOUD_API_KEY}`,
     },
   }
 );
@@ -79,6 +83,7 @@ const response = await fetch(
 <TabItem value="python">
 
 ```python
+import os
 import requests
 import secrets
 
@@ -89,6 +94,7 @@ response = requests.get(
     f'https://cloud-api.near.ai/v1/attestation/report?signing_algo=ecdsa&nonce={nonce}',
     headers={
         'accept': 'application/json',
+        'Authorization': f'Bearer {os.environ["NEAR_AI_CLOUD_API_KEY"]}',
     }
 )
 ```
