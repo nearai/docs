@@ -86,3 +86,24 @@
   background: #ffffff;
   display: block;
 }
+
+/* Sidebar icons: gray by default, brand color only on the active page */
+#sidebar img[src^="/images/icons/"] {
+  filter: grayscale(1) brightness(0.72);
+  transition: filter 150ms ease-out;
+}
+
+#sidebar a:hover img[src^="/images/icons/"],
+#sidebar button:hover img[src^="/images/icons/"] {
+  filter: grayscale(1) brightness(0.95);
+}
+
+#sidebar a[aria-current="page"] img[src^="/images/icons/"] {
+  filter: none;
+}
+
+/* Group headers with a root page (Verification, Integrations) are buttons; Mintlify
+   marks the header itself active with `text-primary` when its root page is current. */
+#sidebar li[data-active="true"] > button.text-primary img[src^="/images/icons/"] {
+  filter: none;
+}
