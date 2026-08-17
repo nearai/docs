@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 32 32" fill="none" stroke="#83D2FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <desc>Plug icon for integrations, NEAR AI style</desc>
+  <path d="M10 3v6M20 3v6" />
+  <path d="M6 9h18v4a9 9 0 0 1-18 0z" />
+  <path d="M15 22v6" />
+</svg>

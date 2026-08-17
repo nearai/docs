@@ -31,12 +31,18 @@
     "groups": [
       {
         "group": "Get Started",
-        "pages": ["index", "cloud/introduction", "cloud/quickstart"]
+        "pages": [
+          "index",
+          "cloud/introduction",
+          "cloud/quickstart"
+        ]
       },
       {
         "group": "Models",
-        "icon": "/images/icons/ai.svg",
-        "pages": ["cloud/models", "cloud/reasoning-models"]
+        "pages": [
+          "cloud/models",
+          "cloud/reasoning-models"
+        ]
       },
       {
         "group": "Private Inference",
@@ -57,7 +63,6 @@
       },
       {
         "group": "Guides",
-        "icon": "/images/icons/docs.svg",
         "pages": [
           "cloud/guides/openai-compatibility",
           "cloud/guides/usage-reporting",
@@ -88,7 +93,8 @@
                   "cloud/guides/integrations/dify"
                 ]
               }
-            ]
+            ],
+            "icon": "/images/icons/integrations.svg"
           },
           "cloud/guides/prompt-caching",
           "cloud/guides/fusion",
@@ -99,7 +105,9 @@
       },
       {
         "group": "Reference",
-        "pages": ["api"]
+        "pages": [
+          "api"
+        ]
       }
     ]
   },
@@ -125,31 +133,63 @@
       {
         "header": "Docs",
         "items": [
-          { "label": "Quickstart", "href": "https://docs.near.ai/cloud/quickstart" },
-          { "label": "Models", "href": "https://docs.near.ai/cloud/models" },
-          { "label": "Private Inference", "href": "https://docs.near.ai/cloud/private-inference" },
-          { "label": "Verification", "href": "https://docs.near.ai/cloud/verification" },
-          { "label": "API Reference", "href": "https://docs.near.ai/api" }
+          {
+            "label": "Quickstart",
+            "href": "https://docs.near.ai/cloud/quickstart"
+          },
+          {
+            "label": "Models",
+            "href": "https://docs.near.ai/cloud/models"
+          },
+          {
+            "label": "Private Inference",
+            "href": "https://docs.near.ai/cloud/private-inference"
+          },
+          {
+            "label": "Verification",
+            "href": "https://docs.near.ai/cloud/verification"
+          },
+          {
+            "label": "API Reference",
+            "href": "https://docs.near.ai/api"
+          }
         ]
       },
       {
         "header": "Community",
         "items": [
-          { "label": "Telegram", "href": "https://t.me/nearaialpha" },
-          { "label": "X", "href": "https://x.com/near_ai" }
+          {
+            "label": "Telegram",
+            "href": "https://t.me/nearaialpha"
+          },
+          {
+            "label": "X",
+            "href": "https://x.com/near_ai"
+          }
         ]
       },
       {
         "header": "More",
         "items": [
-          { "label": "Developer Dashboard", "href": "https://cloud.near.ai" },
-          { "label": "GitHub", "href": "https://github.com/nearai/docs" }
+          {
+            "label": "Developer Dashboard",
+            "href": "https://cloud.near.ai"
+          },
+          {
+            "label": "GitHub",
+            "href": "https://github.com/nearai/docs"
+          }
         ]
       }
     ]
   },
   "contextual": {
-    "options": ["copy", "view", "chatgpt", "claude"]
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude"
+    ]
   },
   "seo": {
     "metatags": {
