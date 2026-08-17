@@ -1,0 +1,88 @@
+/*
+ * NEAR AI Docs — custom styles for Mintlify.
+ * Mintlify includes every .css file in the content directory automatically.
+ * Design tokens follow DESIGN.md.
+ */
+
+:root {
+  --near-black: #000000;
+  --near-white: #f4f0e8;
+  --near-blue: #0b8ff6;
+  --near-blue-light: #83d2fa;
+  --accent-border: rgba(11, 143, 246, 0.15);
+  --accent-border-hover: rgba(11, 143, 246, 0.4);
+  --accent-gradient-top: rgba(11, 143, 246, 0.06);
+  --accent-gradient-bottom: rgba(11, 143, 246, 0.03);
+  --doc-warning: #ffc400;
+}
+
+/* Home page lead copy */
+.home-lead {
+  margin: 0 0 1.5rem;
+  font-size: clamp(1.05rem, 2vw, 1.2rem);
+  line-height: 1.75;
+  letter-spacing: -0.01em;
+}
+
+/* Centered call-to-action panel (Get Started, Browse Model Catalog) */
+.doc-lead {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 1.25rem;
+  margin: 0 0 1.75rem;
+  border-radius: 14px;
+  border: 1px solid var(--accent-border);
+  background: linear-gradient(180deg, var(--accent-gradient-top) 0%, var(--accent-gradient-bottom) 100%);
+}
+
+.doc-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0 1.25rem;
+  border-radius: 8px;
+  background: var(--near-blue);
+  color: #ffffff !important;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none !important;
+  border: none;
+  transition: transform 150ms ease-out, background 150ms ease-out;
+}
+
+.doc-button:hover {
+  background: var(--near-blue-light);
+  color: var(--near-black) !important;
+  transform: translateY(-1px);
+}
+
+.doc-button:active {
+  transform: translateY(0);
+}
+
+/* Inline status badge, e.g. the TEE marker on the Models page */
+.doc-badge {
+  display: inline-block;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(11, 143, 246, 0.18);
+  border: 1px solid var(--accent-border-hover);
+  color: var(--near-blue-light);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+/* Embedded interactive API reference */
+.api-reference-iframe {
+  width: 100%;
+  height: calc(100vh - 12rem);
+  min-height: 640px;
+  border: 1px solid var(--accent-border);
+  border-radius: 12px;
+  background: #ffffff;
+  display: block;
+}

@@ -32,17 +32,17 @@ NEAR AI Docs is a dark, technical reference surface for builders working with pr
 
 | Level | Size | Weight | Line Height | Tracking | Usage |
 |-------|------|--------|-------------|----------|-------|
-| H1 | Docusaurus default | 600 | Docusaurus default | 0 | Page titles |
-| H2-H6 | Docusaurus default | 600 | Docusaurus default | 0 | Section headings |
-| Body | 16px / 1rem | 400 | Docusaurus default | 0 | Documentation prose |
+| H1 | Mintlify default | 600 | Mintlify default | 0 | Page titles |
+| H2-H6 | Mintlify default | 600 | Mintlify default | 0 | Section headings |
+| Body | 16px / 1rem | 400 | Mintlify default | 0 | Documentation prose |
 | Body/sm | 14px / 0.875rem | 500-600 | 1.4-1.5 | 0 | Buttons, secondary labels |
 | Caption | 12px / 0.75rem | 500-700 | 1.4 | 0.02em-0.1em | Badges and compact status text |
-| Code | 95% of body | 400 | Docusaurus default | 0 | Inline and fenced code |
+| Code | 95% of body | 400 | Mintlify default | 0 | Inline and fenced code |
 
 ### Font Stack
 
 - Primary: `system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`
-- Mono: Docusaurus/Infima default mono stack
+- Mono: Mintlify default mono stack
 
 ### Rules
 
@@ -70,9 +70,9 @@ All spacing derives from a base of 4px.
 
 ### Grid
 
-- Max content width: Docusaurus container defaults.
-- Column system: Docusaurus docs layout with sidebar, article column, and right TOC.
-- Breakpoints: Docusaurus/Infima defaults, with local mobile overrides at 768px and below.
+- Max content width: Mintlify container defaults.
+- Column system: Mintlify docs layout with sidebar, article column, and right TOC.
+- Breakpoints: Mintlify defaults, with local mobile overrides at 768px and below.
 
 ### Rules
 
@@ -104,7 +104,7 @@ All spacing derives from a base of 4px.
 
 - Animate transform, color, border-color, background, opacity, or box-shadow only.
 - Every interactive control needs hover, active, focus-visible, and disabled treatment where applicable.
-- Respect Docusaurus accessibility defaults and do not remove focus states.
+- Respect Mintlify accessibility defaults and do not remove focus states.
 
 ## 7. Depth & Surface
 

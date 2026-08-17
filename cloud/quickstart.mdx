@@ -1,0 +1,231 @@
+---
+title: "Quickstart"
+icon: "/images/icons/quickstart.svg"
+---
+
+
+[NEAR AI Cloud](https://cloud.near.ai) offers developers access to secure, private, verifiable AI models through a unified API. This quickstart guide will walk you through creating an account and making your first requests in minutes.
+
+## Setup
+
+  1) **Create your account** - Sign up at [cloud.near.ai](https://cloud.near.ai/) 
+  2) **Add Credits** - Go to the "Credits" section and purchase credits based on your needs
+  3) **Generate API Key** - Go to the "API Keys" section and generate a new key
+
+<Tip>
+  **Keep Your API Key Safe**
+
+  Never share your API key publicly or commit it to version control. If compromised, you can regenerate it anytime from your dashboard.
+</Tip>
+---
+
+## Make Your First API Call
+
+NEAR AI Cloud uses an OpenAI-compatible API, making it easy to integrate with existing tools and libraries. You can connect through the **gateway** (`cloud-api.near.ai`) or **directly** to a model's own endpoint (`{slug}.completions.near.ai`).
+
+<Note>
+  Replace `YOUR_API_KEY` with the API key you generated in the setup steps above.
+</Note>
+<Tip>
+  **Request IDs**
+
+  Gateway and direct completions responses include an `X-Request-Id` response header. Support may ask you for it when debugging a request. The value is opaque support/debugging metadata, not W3C `traceparent` or distributed trace context. If you send your own `X-Request-Id`, use a non-sensitive UUID value; `X-Request-Id` values must not contain secrets or PII. `X-Org-Id` and `X-Workspace-Id` are internal tenant headers; public clients cannot set or override them.
+</Tip>
+<Tabs>
+<Tab title="Gateway">
+
+The gateway routes your request to the appropriate model TEE:
+
+<Tabs>
+<Tab title="curl">
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer YOUR_API_KEY" \
+-d '{
+    "model": "zai-org/GLM-5.1-FP8",
+    "messages": [{
+        "role": "user",
+        "content": "Hello, NEAR AI!"
+    }]
+}'
+```
+
+</Tab>
+<Tab title="Python">
+
+```python
+import openai
+
+client = openai.OpenAI(
+    base_url="https://cloud-api.near.ai/v1",
+    api_key="YOUR_API_KEY"
+)
+
+response = client.chat.completions.create(
+    model="zai-org/GLM-5.1-FP8",
+    messages=[{
+        "role": "user", "content": "Hello, NEAR AI!"
+    }]
+)
+
+print(response.choices[0].message.content)
+```
+
+</Tab>
+<Tab title="JavaScript">
+
+```javascript
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+    baseURL: 'https://cloud-api.near.ai/v1',
+    apiKey: 'YOUR_API_KEY',
+});
+
+const completion = await openai.chat.completions.create({
+    model: 'zai-org/GLM-5.1-FP8',
+    messages: [{
+        role: 'user', content: 'Hello, NEAR AI!'
+    }]
+});
+
+console.log(completion.choices[0].message.content);
+```
+
+</Tab>
+</Tabs>
+
+</Tab>
+<Tab title="Direct Completions">
+
+Direct completions connect you straight to the model's TEE — TLS terminates inside the model enclave with no intermediate gateway hop.
+
+Each model has its own subdomain. For example, Qwen3.5-122B is available at `qwen35-122b.completions.near.ai`:
+
+<Tabs>
+<Tab title="curl">
+
+```bash
+curl https://qwen35-122b.completions.near.ai/v1/chat/completions \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer YOUR_API_KEY" \
+-d '{
+    "model": "Qwen/Qwen3.5-122B-A10B",
+    "messages": [{
+        "role": "user",
+        "content": "Hello, NEAR AI!"
+    }]
+}'
+```
+
+</Tab>
+<Tab title="Python">
+
+```python
+import openai
+
+client = openai.OpenAI(
+    base_url="https://qwen35-122b.completions.near.ai/v1",
+    api_key="YOUR_API_KEY"
+)
+
+response = client.chat.completions.create(
+    model="Qwen/Qwen3.5-122B-A10B",
+    messages=[{
+        "role": "user", "content": "Hello, NEAR AI!"
+    }]
+)
+
+print(response.choices[0].message.content)
+```
+
+</Tab>
+<Tab title="JavaScript">
+
+```javascript
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+    baseURL: 'https://qwen35-122b.completions.near.ai/v1',
+    apiKey: 'YOUR_API_KEY',
+});
+
+const completion = await openai.chat.completions.create({
+    model: 'Qwen/Qwen3.5-122B-A10B',
+    messages: [{
+        role: 'user', content: 'Hello, NEAR AI!'
+    }]
+});
+
+console.log(completion.choices[0].message.content);
+```
+
+</Tab>
+</Tabs>
+
+<Tip>
+  **Available Endpoints**
+
+  See the full list of available direct completions endpoints at [completions.near.ai/endpoints](https://completions.near.ai/endpoints). Examples include `qwen35-122b.completions.near.ai`, `qwen3-30b.completions.near.ai`, `gpt-oss-120b.completions.near.ai`, and more.
+</Tip>
+</Tab>
+</Tabs>
+
+### Expected Response
+
+The API will return a JSON response containing the model's completion:
+
+```json
+{
+  "id": "f47b4647911249f7a94468f6c2b95832",
+  "object": "chat.completion",
+  "created": 1780405025,
+  "model": "zai-org/GLM-5.1-FP8",
+  "choices": [{
+    "index": 0,
+    "message": {
+      "role": "assistant",
+      "content": "Hello there! 👋 Welcome to NEAR AI! I'm here to help you with whatever you need — whether it's answering questions, brainstorming ideas, writing code, or just having a conversation. How can I assist you today?",
+      "reasoning_content": "The user is greeting me. I should respond warmly and introduce myself as a NEAR AI assistant."
+    },
+    "finish_reason": "stop"
+  }],
+  "usage": {
+    "prompt_tokens": 11,
+    "completion_tokens": 70,
+    "reasoning_tokens": 21,
+    "total_tokens": 81
+  }
+}
+```
+
+<Note>
+  `zai-org/GLM-5.1-FP8` is a reasoning model, so the response includes a `reasoning_content` field and `reasoning_tokens` in `usage`. See [Reasoning Models](/cloud/reasoning-models) to control this behavior.
+</Note>
+All inference is performed within Trusted Execution Environments (TEEs), ensuring your data remains private and verifiable.
+
+<Tip>
+  **Using OpenAI SDKs?**
+
+  For advanced features like streaming, async operations, Files API, and Conversations API, see our comprehensive [OpenAI Compatibility Guide](/cloud/guides/openai-compatibility).
+</Tip>
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Explore Models" icon="/images/icons/ai.svg" href="/cloud/models">
+    Browse available AI models including GLM, Qwen, OpenAI, Anthropic, and Gemini
+  </Card>
+  <Card title="Private Inference" icon="/images/icons/private-inference.svg" href="/cloud/private-inference">
+    Learn about the secure architecture and how your data is protected
+  </Card>
+  <Card title="Verification" icon="/images/icons/verification.svg" href="/cloud/verification">
+    Understand how to verify and validate secure interactions with AI models
+  </Card>
+  <Card title="OpenAI Compatibility" icon="/images/icons/unified-api.svg" href="/cloud/guides/openai-compatibility">
+    Use standard OpenAI SDKs with streaming, async, Files API, and more
+  </Card>
+</CardGroup>
