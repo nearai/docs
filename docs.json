@@ -14,6 +14,9 @@
     "href": "/"
   },
   "favicon": "/favicon.svg",
+  "icons": {
+    "library": "lucide"
+  },
   "appearance": {
     "default": "dark",
     "strict": true
@@ -50,7 +53,7 @@
           "cloud/private-inference",
           {
             "group": "Verification",
-            "icon": "/images/icons/verification.svg",
+            "icon": "file-check",
             "root": "cloud/verification/index",
             "pages": [
               "cloud/verification/model",
@@ -94,7 +97,7 @@
                 ]
               }
             ],
-            "icon": "/images/icons/integrations.svg"
+            "icon": "plug"
           },
           "cloud/guides/prompt-caching",
           "cloud/guides/fusion",

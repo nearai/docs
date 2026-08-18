@@ -1,7 +1,7 @@
 ---
 title: "Private Inference"
 description: "Learn how NEAR AI Cloud's private inference leverages TEEs to provide cryptographically verifiable AI computations with complete data privacy and security."
-icon: "/images/icons/private-inference.svg"
+icon: "lock"
 ---
 
 
@@ -22,13 +22,13 @@ Traditional cloud AI services require you to trust that providers won't access y
 NEAR AI Cloud's private inference provides three core guarantees:
 
 <CardGroup cols={3}>
-  <Card title="Complete Privacy" icon="/images/icons/private-inference.svg" horizontal>
+  <Card title="Complete Privacy" icon="lock" horizontal>
     Your prompts, model weights, and outputs are encrypted and isolated in hardware-secured environments. Infrastructure providers, model providers, and NEAR cannot access your data at any point in the process.
   </Card>
-  <Card title="Cryptographic Verification" icon="/images/icons/verification.svg" horizontal>
+  <Card title="Cryptographic Verification" icon="file-check" horizontal>
     Every computation generates cryptographic proof that it occurred inside a genuine, secure TEE. You can independently verify that your AI requests were processed in a protected environment without trusting any third party.
   </Card>
-  <Card title="Production Performance" icon="/images/icons/performance.svg" horizontal>
+  <Card title="Production Performance" icon="gauge" horizontal>
     Hardware-accelerated TEEs with [NVIDIA Confidential Computing](https://www.nvidia.com/en-us/data-center/solutions/confidential-computing/) deliver high-throughput inference with minimal latency overhead, making private inference practical for real-world applications.
   </Card>
 </CardGroup>
@@ -244,13 +244,13 @@ Cryptographic signatures generated inside the TEE ensure that responses cannot b
 ## Next Steps
 
 <CardGroup cols={3}>
-  <Card title="Verification" icon="/images/icons/verification.svg" href="/cloud/verification">
+  <Card title="Verification" icon="file-check" href="/cloud/verification">
     Understand how to verify and validate secure interactions with AI models
   </Card>
-  <Card title="TLS Attestation Verification" icon="/images/icons/docs.svg" href="/cloud/verification/tls">
+  <Card title="TLS Attestation Verification" icon="book-open" href="/cloud/verification/tls">
     Verify that your HTTPS connection terminates inside the TEE using hardware-backed TLS attestation
   </Card>
-  <Card title="E2EE Chat Completions" icon="/images/icons/docs.svg" href="/cloud/guides/e2ee-chat-completions">
+  <Card title="E2EE Chat Completions" icon="book-open" href="/cloud/guides/e2ee-chat-completions">
     Add client-side encryption for defense-in-depth protection of your messages
   </Card>
 </CardGroup>

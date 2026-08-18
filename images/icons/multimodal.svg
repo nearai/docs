@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 32 32" fill="none" stroke="#83D2FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <desc>Image and audio waveform icon for embeddings, images, and audio endpoints, NEAR AI style</desc>
-  <rect x="3" y="4" width="16" height="14" rx="2" />
-  <circle cx="8" cy="9" r="1.5" />
-  <path d="M3 16l5-4 4 3 3-2 4 3" />
-  <path d="M6 24v3M10 22v7M14 20v11M18 23v5M22 21v9M26 24v3" />
-</svg>
