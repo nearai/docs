@@ -42,12 +42,17 @@ The response uses OpenAI-style model objects plus NEAR AI Cloud metadata. Import
 | `id` | The model ID to use with the gateway. For GLM 5.2, use `z-ai/glm-5.2`. |
 | `name` | Human-readable display name. |
 | `context_length` | Maximum input context length reported for the model. |
-| `max_output_length` | Maximum output length reported by NEAR AI Cloud. |
+| `max_output_length` | OpenRouter-compatible advisory hint curated in the NEAR AI Cloud catalog. It is not enforced: the gateway forwards `max_tokens` unchanged and does not clamp it. For a NEAR-hosted model, the binding limit is the model context window (`max_model_len` at its direct completions endpoint), shared between prompt and completion. |
 | `top_provider.context_length` | Provider context length used by clients that read OpenRouter-style metadata. |
-| `top_provider.max_completion_tokens` | Provider maximum completion tokens used by clients that read OpenRouter-style metadata. |
+| `top_provider.max_completion_tokens` | Mirrors `max_output_length` for clients that read OpenRouter-style metadata and carries the same advisory, non-enforced caveat. |
+| `is_ready` | OpenRouter catalog publication flag, exposed verbatim. `false` keeps the model hidden on OpenRouter's side; `true` enables auto-staging there. It does not indicate NEAR AI Cloud availability, may be absent, and should be ignored when deciding whether a model is usable. If a model is listed in `/v1/models`, it is available. |
 | `supported_features` | Feature flags such as `tools`, `structured_outputs`, `reasoning`, and `json_mode`. |
 | `supported_sampling_parameters` | Supported request parameters such as `temperature`, `top_p`, `max_tokens`, and `stop`. |
 | `input_modalities` and `output_modalities` | Supported input and output types. |
+
+### Fields that do not mean what their names suggest
+
+As checked on 2026-08-18, the gateway reports `max_output_length: 8192` for `deepseek-ai/DeepSeek-V4-Flash`, while `https://dsv4-flash.completions.near.ai/v1/models` reports `max_model_len: 1048576`; the gateway field is advisory metadata rather than an enforced output cap. Every `openai/*`, `anthropic/*`, and `google/*` entry reports `is_ready: false` while remaining fully serviceable, because `is_ready` describes OpenRouter publication rather than NEAR AI Cloud availability.
 
 As checked on 2026-06-23, the live GLM 5.2 gateway record reports `top_provider.context_length: 500000`, `top_provider.max_completion_tokens: 131072`, and `max_output_length: 131072`.
 

@@ -193,6 +193,52 @@ NEAR AI Cloud also provides non-OpenAI extensions:
 - **Privacy redaction** (`/v1/privacy/redact`) - Gateway-only endpoint for redacting personally identifiable information
 - **Attestation & Signatures** (`/v1/attestation/report`, `/v1/signature/{chat_id}`) - See [Verification](/cloud/verification)
 
+## Compatibility Matrix
+
+| OpenAI request feature | NEAR AI Cloud support | `/v1/models` advertisement |
+| --- | --- | --- |
+| Tool / function calling (`tools`) | Supported on tool-capable models. | `supported_features: tools` |
+| `tool_choice` | Supported on tool-capable models. | `supported_features: tools` |
+| Structured outputs (`response_format: {"type": "json_schema"}`), including `strict: true` | Accepted and forwarded. Strict schema enforcement is guaranteed only on NEAR-hosted models that advertise structured outputs; proxied third-party passthrough providers may ignore strict mode. | `supported_features: structured_outputs` |
+| JSON mode (`response_format: {"type": "json_object"}`) | Supported on models that advertise JSON mode. | `supported_features: json_mode` |
+| Reasoning | Supported on models that advertise reasoning. | `supported_features: reasoning` |
+| `developer` role messages | Accepted alongside `system`, `user`, `assistant`, and `tool` roles. | No dedicated flag. |
+| `stream_options.include_usage` | Supported. Intermediate chunks carry `usage: null`, followed by one final usage chunk. | No dedicated flag. |
+| Prompt caching | Supported on TEE-hosted models; a cache miss may return `prompt_tokens_details: null`. | No dedicated flag. |
+| `max_tokens` | Forwarded unchanged to the provider; the gateway does not clamp it to `max_output_length`. | `supported_sampling_parameters: max_tokens` |
+
+Client authors can discover per-model capability from `supported_features` and `supported_sampling_parameters` in [`GET /v1/models`](https://cloud-api.near.ai/v1/models). Clients that cannot consume those fields can safely enable usage-in-streaming, the `developer` role, and strict mode for NEAR AI Cloud, subject to the strict-mode caveat for proxied third-party passthrough providers above.
+
+### Known deviations from the OpenAI schema
+
+On a cache miss, TEE-hosted models return `"prompt_tokens_details": null` rather than OpenAI's `{"cached_tokens": 0}` object. The inference engine emits `null`, and the gateway returns the provider's exact response bytes so the model-TEE signature verifies byte-for-byte. Normalizing the field at the gateway would break [Chat Verification](/cloud/verification/chat). Treat a missing details object as zero cached tokens:
+
+<Tabs
+  defaultValue="python"
+  values={[
+    {label: 'Python', value: 'python'},
+    {label: 'JavaScript', value: 'javascript'},
+  ]}>
+<TabItem value="python">
+
+```python
+cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0)
+```
+
+</TabItem>
+<TabItem value="javascript">
+
+```javascript
+const cached = usage.prompt_tokens_details?.cached_tokens ?? 0;
+```
+
+</TabItem>
+</Tabs>
+
+See [Prompt Caching](/cloud/guides/prompt-caching#cache-misses-and-null-details) for the cache-miss behavior.
+
+The `max_output_length` field in `/v1/models` is advisory catalog metadata, not an enforced cap. The `is_ready` field is an OpenRouter catalog publication flag and must not be read as NEAR AI Cloud model availability. See the [Model Discovery field table](/cloud/guides/integrations/model-discovery#discover-gateway-models) for both fields.
+
 ### Files API Example
 
 You can use the Files API to upload documents for use with supported models.

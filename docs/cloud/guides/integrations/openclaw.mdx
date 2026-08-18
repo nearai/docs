@@ -1,0 +1,154 @@
+---
+id: openclaw
+title: OpenClaw
+sidebar_label: OpenClaw
+slug: /cloud/guides/integrations/openclaw
+description: "Configure OpenClaw to use NEAR AI Cloud as an OpenAI-compatible provider."
+---
+
+# OpenClaw
+
+## Overview
+
+OpenClaw talks to NEAR AI Cloud as an OpenAI-compatible provider. NEAR AI also runs OpenClaw as a hosted worker, so this provider configuration is the same one NEAR uses.
+
+## Prerequisites
+
+- A NEAR AI Cloud API key.
+- OpenClaw installed. This configuration was verified with OpenClaw 2026.7.12.
+
+## Base URL
+
+Use the NEAR AI Cloud gateway base URL:
+
+```text
+https://cloud-api.near.ai/v1
+```
+
+Do not append `/chat/completions` to the base URL.
+
+## Model ID
+
+Add each model to the provider's `models` array using its gateway model ID. This guide uses:
+
+```text
+z-ai/glm-5.2
+```
+
+See [Model Discovery](/cloud/guides/integrations/model-discovery) for the current model list.
+
+## Configure
+
+Add the NEAR AI Cloud provider to `~/.openclaw/openclaw.json` and wire it as the default model:
+
+```json
+{
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "nearai": {
+        "baseUrl": "https://cloud-api.near.ai/v1",
+        "apiKey": "${NEARAI_API_KEY}",
+        "auth": "api-key",
+        "api": "openai-completions",
+        "models": [{ "id": "z-ai/glm-5.2", "name": "GLM 5.2" }]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "nearai/z-ai/glm-5.2"
+      }
+    }
+  }
+}
+```
+
+OpenClaw applies conservative defaults to an unrecognized provider. NEAR AI Cloud supports all three compatibility flags, so you can enable them explicitly:
+
+```json
+{
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "nearai": {
+        "baseUrl": "https://cloud-api.near.ai/v1",
+        "apiKey": "${NEARAI_API_KEY}",
+        "auth": "api-key",
+        "api": "openai-completions",
+        "models": [{ "id": "z-ai/glm-5.2", "name": "GLM 5.2" }],
+        "compat": {
+          "supportsUsageInStreaming": true,
+          "supportsStrictMode": true,
+          "supportsDeveloperRole": true
+        }
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "nearai/z-ai/glm-5.2"
+      }
+    }
+  }
+}
+```
+
+| Flag | Why it is safe to enable |
+| --- | --- |
+| `supportsUsageInStreaming` | NEAR AI Cloud handles `stream_options: {"include_usage": true}` by setting intermediate chunks to `usage: null` and appending one final usage chunk. |
+| `supportsDeveloperRole` | NEAR AI Cloud accepts `developer` alongside `system`, `user`, `assistant`, and `tool` roles. |
+| `supportsStrictMode` | NEAR AI Cloud accepts and forwards strict JSON-schema response formats and strict tool definitions. Proxied third-party passthrough providers may ignore strict mode; strict schema enforcement is guaranteed only on NEAR-hosted models whose `supported_features` includes `structured_outputs`. |
+
+## Refresh models
+
+OpenClaw reads the provider's `models` array from `openclaw.json`; it does not auto-fetch `/v1/models`. Add new models to the array by hand. Use [Model Discovery](/cloud/guides/integrations/model-discovery) for the current list.
+
+## Quick test
+
+First, verify the gateway independently of OpenClaw:
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Authorization: Bearer $NEARAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "z-ai/glm-5.2",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with one sentence confirming the model is reachable."
+      }
+    ],
+    "max_tokens": 64
+  }'
+```
+
+Then start an OpenClaw chat and confirm its default model is `nearai/z-ai/glm-5.2`.
+
+## Troubleshooting
+
+| Symptom | Fix |
+| --- | --- |
+| Model not listed | Add the model ID from [Model Discovery](/cloud/guides/integrations/model-discovery) to the provider's `models` array by hand. |
+| `401` | Set `NEARAI_API_KEY` to a NEAR AI Cloud API key and keep `apiKey` as `${NEARAI_API_KEY}`. |
+| Base URL includes `/chat/completions` | Set `baseUrl` to `https://cloud-api.near.ai/v1`. Use `/chat/completions` only in a full request URL. |
+| Streaming usage is missing | Set `supportsUsageInStreaming` to `true` in the `compat` block. |
+| A `developer`-role message is rejected by a non-NEAR provider in the same config | NEAR AI Cloud accepts the `developer` role. Check the compatibility behavior of the non-NEAR provider that handled the message. |
+
+## Related guides
+
+- [OpenAI Compatibility](/cloud/guides/openai-compatibility)
+- [Model Discovery](/cloud/guides/integrations/model-discovery)
+- [Chat Verification](/cloud/verification/chat)
+- [Available Models](/cloud/models)
+
+## Sources Checked
+
+Sources checked on 2026-08-18:
+
+- [`GET https://cloud-api.near.ai/v1/models`](https://cloud-api.near.ai/v1/models)
+- `openclaw-nearai-worker/worker/openclaw.json.template`
+- OpenClaw 2026.7.12

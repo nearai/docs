@@ -101,6 +101,7 @@ const sidebars = {
                 "cloud/guides/integrations/continue",
                 "cloud/guides/integrations/cline-roo-kilo",
                 "cloud/guides/integrations/aider-zed",
+                "cloud/guides/integrations/openclaw",
                 "cloud/guides/opencode-goose",
               ],
             },

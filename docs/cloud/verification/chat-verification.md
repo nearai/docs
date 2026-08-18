@@ -226,7 +226,7 @@ curl -X GET 'https://qwen35-122b.completions.near.ai/v1/signature/afa7975eaf844b
 ```
 
 :::note
-A model can be served by multiple TEE nodes behind the same domain. The signature is cached on the node that served your chat completion, so a lookup may transiently return `Chat id not found or expired` if it lands on a different node — simply retry until you hit the right one.
+For multi-replica models, use [Deterministic Signature Retrieval](#deterministic-signature-retrieval) instead of blind retries.
 :::
 
 ***Example Response:***
@@ -257,6 +257,86 @@ This exactly matches the model we requested and the values we calculated in the 
 - Model: `Qwen/Qwen3.5-122B-A10B`
 - Request hash: `2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad`
 - Response hash: `8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c`
+
+---
+
+## Deterministic Signature Retrieval
+
+The direct signature endpoint can return `404 Chat id not found or expired` because the signature is cached in memory inside the model TEE process that served the completion. The model domain is an L4 SNI load balancer with least-connections selection and no session affinity, so the lookup can land on a replica that never saw the completion. `dsv4-flash.completions.near.ai` had 5 healthy backends on 2026-08-18: blind retrying is a coin flip rather than a deterministic strategy, and a retry succeeds roughly one time in five.
+
+### Option 1 — Gateway (recommended)
+
+Send the completion through `https://cloud-api.near.ai/v1`, then fetch its signature from:
+
+```text
+GET https://cloud-api.near.ai/v1/signature/{chat_id}
+```
+
+The gateway pins the chat ID to the backend that served it and stores the signature durably at completion time, so the lookup is deterministic and needs no retries. The stored signature remains `signature_kind: provider_tee` (signed by the model TEE) unless the gateway rewrote the stream; see [Signature Kinds](#signature-kinds).
+
+### Option 2 — Pin the replica
+
+Address one backend directly with `https://{slug}-i{N}.completions.near.ai`, which routes to backend `N % healthy_count`. Send both the completion and signature lookup to the same hostname for a single deterministic lookup against that model TEE:
+
+```bash
+CHAT_ID=$(curl -fsS https://dsv4-flash-i0.completions.near.ai/v1/chat/completions \
+  -H "Authorization: Bearer $NEARAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "deepseek-ai/DeepSeek-V4-Flash",
+    "messages": [{"role": "user", "content": "Reply with one sentence."}]
+  }' | jq -r '.id')
+
+curl -fsS "https://dsv4-flash-i0.completions.near.ai/v1/signature/${CHAT_ID}" \
+  -H "Authorization: Bearer $NEARAI_API_KEY"
+```
+
+### Option 3 — Bounded sweep
+
+If you already hold a `chat_id` returned through the load-balanced domain, read the public backend count:
+
+```bash
+curl 'https://completions.near.ai/backends/count?domain=dsv4-flash.completions.near.ai'
+```
+
+The response has this shape:
+
+```json
+{
+  "domain": "dsv4-flash.completions.near.ai",
+  "requested_domain": "dsv4-flash.completions.near.ai",
+  "healthy": 5,
+  "total": 5
+}
+```
+
+Iterate from `0` through `healthy - 1`; exactly one replica holds the signature. This loop stops on the first HTTP 200:
+
+```bash
+HEALTHY=$(curl -fsS \
+  'https://completions.near.ai/backends/count?domain=dsv4-flash.completions.near.ai' \
+  | jq -r '.healthy')
+
+for ((i = 0; i < HEALTHY; i++)); do
+  if curl -fsS \
+    "https://dsv4-flash-i${i}.completions.near.ai/v1/signature/${CHAT_ID}" \
+    -H "Authorization: Bearer $NEARAI_API_KEY" \
+    -o signature.json; then
+    cat signature.json
+    break
+  fi
+done
+```
+
+:::caution
+The `-i{N}` index is positional. Its index-to-backend binding is stable only while the healthy backend count is stable, and it can shift when backends are added, removed, or flap health. Re-read `/backends/count` rather than caching an index across a long-running session, and prefer Option 1 for unattended or at-scale verification.
+:::
+
+| Option | Where the completion must be sent | Determinism | When to use |
+| --- | --- | --- | --- |
+| Gateway (recommended) | `https://cloud-api.near.ai/v1` | Deterministic lookup with no retries. | Unattended or at-scale verification. |
+| Pin the replica | The same `https://{slug}-i{N}.completions.near.ai` hostname used for lookup. | Deterministic while the index-to-backend binding remains stable. | Direct model-TEE requests when you control both calls. |
+| Bounded sweep | The load-balanced `https://{slug}.completions.near.ai` domain. | Bounded search across `0..healthy-1`. | A `chat_id` already returned through the load-balanced domain. |
 
 ---
 
