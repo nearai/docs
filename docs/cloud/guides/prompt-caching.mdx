@@ -6,6 +6,9 @@ slug: /cloud/guides/prompt-caching
 description: "How NEAR AI Cloud caches prompt prefixes to reduce latency and cost"
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Prompt Caching
 
 NEAR AI Cloud automatically caches prompt prefixes on TEE-hosted models. When consecutive requests share a common prefix — a long system prompt, conversation history, few-shot examples, or a large document — the cached portion is reused instead of being recomputed, which lowers both latency and cost.
@@ -51,7 +54,37 @@ The number of input tokens served from cache is reported in the `usage` object o
 }
 ```
 
-On the first request with a given prefix, `cached_tokens` is `0` (or `prompt_tokens_details` is `null`). Repeat the request — or send another request sharing the same prefix — and `cached_tokens` reflects the reused portion.
+### Cache misses and null details
+
+On a cache miss, TEE-hosted models return `"prompt_tokens_details": null`, not `{"cached_tokens": 0}` as OpenAI does. The inference engine emits `null`, and the gateway returns the provider's exact response bytes so the model-TEE signature verifies byte-for-byte. Normalizing the field at the gateway would break [Chat Verification](/cloud/verification/chat).
+
+Treat a missing details object as zero cached tokens so client code never indexes into `null`:
+
+<Tabs
+  defaultValue="python"
+  values={[
+    {label: 'Python', value: 'python'},
+    {label: 'JavaScript', value: 'javascript'},
+  ]}>
+<TabItem value="python">
+
+```python
+cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0)
+```
+
+</TabItem>
+<TabItem value="javascript">
+
+```javascript
+const cached = usage.prompt_tokens_details?.cached_tokens ?? 0;
+```
+
+</TabItem>
+</Tabs>
+
+See [Known deviations from the OpenAI schema](/cloud/guides/openai-compatibility#known-deviations-from-the-openai-schema) for the corresponding OpenAI Compatibility guidance.
+
+Repeat the request, or send another request with the same prefix, and `cached_tokens` will reflect the reused portion.
 
 ## Getting the Most Out of the Cache
 
