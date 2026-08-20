@@ -9,10 +9,7 @@
   --near-white: #f4f0e8;
   --near-blue: #0b8ff6;
   --near-blue-light: #83d2fa;
-  --accent-border: rgba(11, 143, 246, 0.15);
   --accent-border-hover: rgba(11, 143, 246, 0.4);
-  --accent-gradient-top: rgba(11, 143, 246, 0.06);
-  --accent-gradient-bottom: rgba(11, 143, 246, 0.03);
   --doc-warning: #ffc400;
 }
 
@@ -24,41 +21,45 @@
   letter-spacing: -0.01em;
 }
 
-/* Centered call-to-action panel (Get Started, Browse Model Catalog) */
+/* Centered call-to-action row (Get Started, Browse Model Catalog) */
 .doc-lead {
   display: flex;
   justify-content: center;
-  padding: 1rem 1.25rem;
   margin: 0 0 1.75rem;
-  border-radius: 14px;
-  border: 1px solid var(--accent-border);
-  background: linear-gradient(180deg, var(--accent-gradient-top) 0%, var(--accent-gradient-bottom) 100%);
 }
 
 .doc-button {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  min-height: 44px;
-  padding: 0 1.25rem;
-  border-radius: 8px;
+  min-height: 48px;
+  padding: 0 1.75rem;
+  border-radius: 10px;
   background: var(--near-blue);
   color: #ffffff !important;
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 600;
   text-decoration: none !important;
   border: none;
-  transition: transform 150ms ease-out, background 150ms ease-out;
+  box-shadow: 0 4px 14px rgba(11, 143, 246, 0.35);
+  transition: transform 150ms ease-out, background 150ms ease-out, box-shadow 150ms ease-out;
 }
 
 .doc-button:hover {
   background: var(--near-blue-light);
   color: var(--near-black) !important;
   transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(11, 143, 246, 0.45);
 }
 
 .doc-button:active {
   transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(11, 143, 246, 0.35);
+}
+
+.doc-button:focus-visible {
+  outline: 2px solid var(--near-blue);
+  outline-offset: 2px;
 }
 
 /* Inline status badge, e.g. the TEE marker on the Models page */
