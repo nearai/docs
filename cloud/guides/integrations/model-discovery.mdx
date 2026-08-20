@@ -1,176 +1,94 @@
 ---
-title: "Model Discovery and Refresh"
+title: "Auto-Discover NEAR AI Models in OpenAI-Compatible Tools"
 sidebarTitle: "Model Discovery"
-description: "Discover current NEAR AI Cloud models and refresh stale client model lists."
+description: "Use the NEAR AI Cloud /v1/models endpoint to automatically populate model lists in IDEs, agents, and AI frameworks that support OpenAI model discovery."
 ---
 
+Most OpenAI-compatible tools — Cursor, Cline, Open WebUI, LiteLLM, and many others — call a provider's `/v1/models` endpoint to build their model picker. NEAR AI Cloud exposes a fully OpenAI-compatible models endpoint, so any tool that supports automatic model discovery can fetch the current catalog without you maintaining a static list.
 
-Use this guide when a client does not show a newly released NEAR AI Cloud model, or when you need to decide between the gateway model ID and a direct completions endpoint.
-
-Most tools should use:
-
-| Setting | Value |
-| --- | --- |
-| Base URL | `https://cloud-api.near.ai/v1` |
-| Model ID | `z-ai/glm-5.2` |
-| API key | A NEAR AI Cloud API key |
-
-Do not copy a full static model catalog into your tool config. Check the live APIs, then copy only the model IDs your client needs.
-
-## Discover gateway models
-
-The gateway model list is available from:
-
-```bash
-curl https://cloud-api.near.ai/v1/models
-```
-
-To find the GLM 5.2 entry:
-
-```bash
-curl -fsSL https://cloud-api.near.ai/v1/models \
-  | jq '.data[] | select(.id == "z-ai/glm-5.2")'
-```
-
-The response uses OpenAI-style model objects plus NEAR AI Cloud metadata. Important field names include:
-
-| Field | Meaning |
-| --- | --- |
-| `id` | The model ID to use with the gateway. For GLM 5.2, use `z-ai/glm-5.2`. |
-| `name` | Human-readable display name. |
-| `context_length` | Maximum input context length reported for the model. |
-| `max_output_length` | Maximum output length reported by NEAR AI Cloud. |
-| `top_provider.context_length` | Provider context length used by clients that read OpenRouter-style metadata. |
-| `top_provider.max_completion_tokens` | Provider maximum completion tokens used by clients that read OpenRouter-style metadata. |
-| `supported_features` | Feature flags such as `tools`, `structured_outputs`, `reasoning`, and `json_mode`. |
-| `supported_sampling_parameters` | Supported request parameters such as `temperature`, `top_p`, `max_tokens`, and `stop`. |
-| `input_modalities` and `output_modalities` | Supported input and output types. |
-
-As checked on 2026-06-23, the live GLM 5.2 gateway record reports `top_provider.context_length: 500000`, `top_provider.max_completion_tokens: 131072`, and `max_output_length: 131072`.
-
-## Discover direct completions endpoints
-
-Direct completions endpoints are listed at:
-
-```bash
-curl https://completions.near.ai/endpoints
-```
-
-To find the GLM 5.2 direct completions endpoint:
-
-```bash
-curl -fsSL https://completions.near.ai/endpoints \
-  | jq '.endpoints[] | select(.domain == "glm-5-2.completions.near.ai")'
-```
-
-As checked on 2026-06-23, that endpoint is:
+## The Endpoint
 
 ```text
-https://glm-5-2.completions.near.ai/v1
+GET https://cloud-api.near.ai/v1/models
 ```
 
-The endpoints registry (`GET https://completions.near.ai/endpoints`) lists both `z-ai/glm-5.2` and `zai-org/GLM-5.2-FP8` for this domain, but the endpoint's own `GET https://glm-5-2.completions.near.ai/v1/models` currently returns only `z-ai/glm-5.2`. Use `z-ai/glm-5.2`. The `zai-org/GLM-5.2-FP8` served name still resolves at the direct endpoint, but treat it as a fallback only when your client needs that exact served model name.
+The endpoint requires your NEAR AI Cloud API key in a standard Bearer header and returns a JSON array of model objects following the OpenAI `Model` schema.
 
-## Gateway vs direct completions
+```bash
+curl https://cloud-api.near.ai/v1/models \
+  -H "Authorization: Bearer $NEARAI_API_KEY"
+```
 
-Use the gateway by default:
+A successful response looks like:
+
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "z-ai/glm-5.2",
+      "object": "model",
+      "created": 1714000000,
+      "owned_by": "z-ai",
+      "context_length": 131072,
+      "supported_features": ["tools", "structured_outputs", "reasoning"],
+      "supported_parameters": ["temperature", "top_p", "max_tokens", "reasoning_effort"]
+    },
+    {
+      "id": "Qwen/Qwen3.5-122B-A10B",
+      "object": "model",
+      "created": 1714000000,
+      "owned_by": "Qwen",
+      "context_length": 131072,
+      "supported_features": ["tools", "structured_outputs", "reasoning"]
+    }
+  ]
+}
+```
+
+Each object includes NEAR AI-specific extensions such as `context_length`, `supported_features`, and `supported_parameters` that tools can use for smarter model configuration. See [Models](/cloud/models) for the full field reference.
+
+## How Tools Use the Endpoint
+
+When you set `https://cloud-api.near.ai/v1` as the base URL and supply your API key, a compatible tool will:
+
+1. Append `/models` to the base URL and send a `GET` request with your `Authorization: Bearer <key>` header.
+2. Parse the returned model IDs into its model picker or dropdown.
+3. Refresh the list whenever you trigger a model reload (or on startup, depending on the tool).
+
+This means your model picker always reflects whatever NEAR AI Cloud currently offers — no manual updates needed when new models are added.
+
+## Configuring Tools to Use Auto-Discovery
+
+The base URL to configure in any tool is:
 
 ```text
 https://cloud-api.near.ai/v1
 ```
 
-The gateway is the best fit for most third-party clients because one base URL can reach the full NEAR AI Cloud model catalog, and clients that auto-fetch models can use `GET /v1/models`.
+Do **not** append `/chat/completions` or `/models` to this value. The tool constructs the full request paths itself. Setting the base URL correctly is the only step required to enable auto-discovery.
 
-Use direct completions only when you intentionally want one model's TEE endpoint:
+Each integration guide in this section walks through the exact UI fields or config keys for that tool:
 
-```text
-https://glm-5-2.completions.near.ai/v1
-```
+- [Cursor](/cloud/guides/integrations/cursor) — **OpenAI Compatible → API Base URL**
+- [Continue](/cloud/guides/integrations/continue) — `apiBase` in `config.yaml`
+- [Cline / Roo / Kilo](/cloud/guides/integrations/cline-roo-kilo) — **Base URL** in the OpenAI Compatible provider settings
+- [Aider / Zed](/cloud/guides/integrations/aider-zed) — `OPENAI_API_BASE` env var (Aider) or `api_url` in `settings.json` (Zed)
+- [Open WebUI](/cloud/guides/integrations/open-webui) — **URL** field in Admin Settings → Connections
+- [LiteLLM](/cloud/guides/integrations/litellm) — `api_base` in `config.yaml`
+- [LibreChat](/cloud/guides/integrations/librechat) — `baseURL` in `librechat.yaml`
+- [Dify](/cloud/guides/integrations/dify) — **API Base URL** in the model provider form
 
-Direct completions can reduce routing hops and exposes the model-specific route set described in [Private Inference - Direct Completions](/cloud/private-inference#direct-completions). It is not a replacement for the gateway model catalog in clients that expect one provider to list every model.
+## Troubleshooting Model Discovery
 
-## Why client model lists go stale
-
-Client model lists can become stale for three common reasons:
-
-1. The client cached `GET /v1/models` and has not refreshed the provider connection.
-2. The client uses a separate catalog, such as models.dev, instead of reading NEAR AI Cloud live.
-3. The client requires a manual model list in a settings file, environment variable, or admin UI.
-
-When NEAR releases a new model, check `https://cloud-api.near.ai/v1/models`, copy the new `id`, and paste that exact value into the client's model field. For GLM 5.2, copy:
-
-```text
-z-ai/glm-5.2
-```
-
-If you are configuring a direct completions endpoint, also check `https://completions.near.ai/endpoints` and confirm the endpoint's `models` array includes the model name you plan to send.
-
-## Tool behavior matrix
-
-| Behavior | Tools | Refresh action |
-| --- | --- | --- |
-| Auto-fetch from an OpenAI-compatible model endpoint | Goose, Open WebUI, Kilo when the configured endpoint exposes `/v1/models` | Re-save or reconnect the provider, then refresh the model picker. If the picker still looks stale, test `GET https://cloud-api.near.ai/v1/models` with curl and restart the client. |
-| Catalog-backed | OpenCode via models.dev | Check whether the catalog has the NEAR AI model. If not, add a manual provider model override when the tool supports it, or use the model only after the catalog updates. |
-| Manual config | Cursor, Continue, Cline, Roo, Aider, Zed, LibreChat, LiteLLM, Dify | Copy the model ID from `/v1/models` into the tool's model field, config file, or provider settings. Restart or reload the tool if it caches settings. |
-
-## Curl smoke test
-
-First verify that the model is listed:
-
-```bash
-curl -fsSL https://cloud-api.near.ai/v1/models \
-  | jq -e '.data[] | select(.id == "z-ai/glm-5.2")'
-```
-
-Then test a chat completion through the gateway:
-
-```bash
-curl https://cloud-api.near.ai/v1/chat/completions \
-  -H "Authorization: Bearer $NEARAI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "z-ai/glm-5.2",
-    "messages": [
-      {"role": "user", "content": "Reply with only: near-ai-ok"}
-    ],
-    "max_tokens": 20
-  }'
-```
-
-Use the direct completions endpoint only after confirming it lists the model:
-
-```bash
-curl -fsS https://glm-5-2.completions.near.ai/v1/chat/completions \
-  -H "Authorization: Bearer $NEARAI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "z-ai/glm-5.2",
-    "messages": [
-      {"role": "user", "content": "Reply with only: near-ai-ok"}
-    ],
-    "max_tokens": 20
-  }'
-```
-
-## Troubleshooting
-
-| Symptom | Likely cause | Fix |
-| --- | --- | --- |
-| model not listed | The client cached an older model list, uses a catalog that has not updated, or requires manual config. | Run the `/v1/models` curl check, copy `z-ai/glm-5.2`, and paste it into the client's custom model field. Re-save, reconnect, or restart the client. |
-| `401` | Missing, invalid, or expired NEAR AI Cloud API key. | Generate or copy a NEAR AI Cloud API key, store it in the client's secret field or environment variable, and retry without logging the key. |
-| Wrong base URL includes `/chat/completions` | The client expects a base URL, but the full request endpoint was pasted. | Use `https://cloud-api.near.ai/v1` for gateway config, or `https://glm-5-2.completions.near.ai/v1` for direct completions config. Do not append `/chat/completions` to a base URL field. |
-
-## Related guides
-
-- [OpenAI Compatibility](/cloud/guides/openai-compatibility)
-- [Available Models](/cloud/models)
-- [Private Inference - Direct Completions](/cloud/private-inference#direct-completions)
-- [Integrations Overview](/cloud/guides/integrations)
+| Symptom | Fix |
+|---|---|
+| Model list is empty after saving credentials | Verify the base URL is exactly `https://cloud-api.near.ai/v1` with no trailing slash and no path suffix. |
+| `401 Unauthorized` when fetching models | Check that the API key is valid and has not expired. Generate a new key at [cloud.near.ai](https://cloud.near.ai). |
+| Tool shows models but requests fail | Confirm the model ID from the picker matches one returned by the `/v1/models` endpoint exactly, including the `owner/model-name` format. |
+| Tool auto-discovery is disabled or unsupported | Enter model IDs manually using the IDs returned by the `/v1/models` endpoint. See the [Models catalog](/cloud/models) for a browsable list. |
 
 ## Sources Checked
 
-Sources checked on 2026-06-23:
-
-- [NEAR AI Cloud models API](https://cloud-api.near.ai/v1/models)
-- [NEAR AI Cloud direct completions endpoints](https://completions.near.ai/endpoints)
-- [models.dev catalog](https://models.dev/)
+- NEAR AI Cloud `/v1/models` API — verified live endpoint, August 2026.
+- OpenAI Models API specification: [platform.openai.com/docs/api-reference/models](https://platform.openai.com/docs/api-reference/models).

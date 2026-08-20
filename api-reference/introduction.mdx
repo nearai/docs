@@ -1,57 +1,162 @@
 ---
-title: "API Reference"
-sidebarTitle: "Overview"
-description: "OpenAI-compatible REST API for private, verifiable AI inference on NEAR AI Cloud"
-icon: "braces"
+title: "NEAR AI Cloud API Reference"
+sidebarTitle: "Introduction"
+description: "Explore the NEAR AI Cloud REST API — OpenAI-compatible endpoints for chat completions, responses, images, audio, embeddings, privacy, attestation, and account management."
 ---
 
-The NEAR AI Cloud API is a REST API served from a single base URL. Inference endpoints
-are OpenAI-compatible, so any OpenAI SDK works by pointing it at NEAR AI.
+NEAR AI Cloud provides a REST API that lets you run AI inference inside Trusted Execution Environments (TEEs) through a fully OpenAI-compatible interface. You can reach the API through two base URLs — the gateway endpoint and the direct completions endpoint — and authenticate every request with a Bearer token.
 
-```text
+## Base URLs
+
+NEAR AI Cloud exposes two connection modes, each suited to a different use case:
+
+| Mode | Base URL | When to use |
+|------|----------|-------------|
+| **Gateway** | `https://cloud-api.near.ai/v1` | Route requests to any model in the catalog without changing your base URL. Also required for organization and workspace management features. |
+| **Direct Completions** | `https://{slug}.completions.near.ai/v1` | Connect directly to a specific model's TEE cluster for the lowest latency and the simplest trust chain — no gateway hop in the path. |
+
+```bash
+# Gateway
 https://cloud-api.near.ai/v1
+
+# Direct completions (example)
+https://qwen35-122b.completions.near.ai/v1
 ```
+
+Replace `{slug}` with the model's URL-safe identifier. You can find each model's slug on the [Models](/cloud/models) page and at [completions.near.ai/endpoints](https://completions.near.ai/endpoints).
+
+<Tip>
+  In both modes, TLS terminates **inside** the TEE — not at an external load balancer. Your prompts remain encrypted until they reach the secure enclave. See [Private Inference](/cloud/private-inference) for a full explanation of the trust model.
+</Tip>
 
 ## Authentication
 
-Every request is authenticated with a bearer token in the `Authorization` header. The API
-accepts four token types; for programmatic access you almost always want an **API key**.
+### Generate an API Key
 
-| Token | Prefix | Use for |
-| --- | --- | --- |
-| **API key** | `sk-` | Programmatic access to inference and most endpoints. Create keys in the [Developer Dashboard](https://cloud.near.ai). |
-| **Access token** (JWT) | — | Short-lived user session token used by the dashboard. Create via `POST /v1/users/me/access-tokens` with a refresh token. |
-| **Refresh token** | `rt_` | Long-lived token from OAuth login. Only valid for `POST /v1/users/me/access-tokens`. |
-| **Reporting token** | `rpt-` | Read-only access to the [usage reporting](/cloud/guides/usage-reporting) endpoints. Create via `POST /v1/organizations/{org_id}/reporting-tokens`. |
+1. Go to [cloud.near.ai](https://cloud.near.ai) and sign in.
+2. Open the **API Keys** section and click **Create API Key**.
+3. Give your key a name, then copy and store it securely — it is shown only once.
+
+<Tip>
+  Store your key in a password manager or CI/CD secrets vault. Never commit it to source control.
+</Tip>
+
+### Pass the Key in Requests
+
+Include your API key in the `Authorization` header of every request:
+
+```
+Authorization: Bearer YOUR_API_KEY
+```
+
+**Example with curl:**
 
 ```bash
 curl https://cloud-api.near.ai/v1/chat/completions \
-  -H "Authorization: Bearer $NEAR_AI_API_KEY" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "model": "zai-org/GLM-5.1-FP8",
-    "messages": [{"role": "user", "content": "Hello!"}]
-  }'
+  -d '{"model": "zai-org/GLM-5.1-FP8", "messages": [{"role": "user", "content": "Hello"}]}'
 ```
 
-Each endpoint page lists which token types it accepts under **Authorizations**.
+<Tip>
+  When using the official OpenAI Python or JavaScript SDKs, you can set the `OPENAI_API_KEY` and `OPENAI_BASE_URL` environment variables instead of passing credentials in code:
 
-Every endpoint page has an interactive playground: paste your key, edit the request, and
-send it directly from the browser.
+  ```bash
+  export OPENAI_API_KEY="YOUR_API_KEY"
+  export OPENAI_BASE_URL="https://cloud-api.near.ai/v1"
+  ```
 
-<CardGroup cols={3}>
-  <Card title="Chat Completions" icon="message-square" href="/api-reference/chat/create-chat-completion">
-    The primary inference endpoint
+  The SDKs pick up these variables automatically, so no code changes are needed beyond the environment configuration.
+</Tip>
+
+## API Categories
+
+<CardGroup cols={2}>
+  <Card title="Inference" icon="brain-circuit">
+    **Chat completions**, **responses**, **text completions**, and **model catalog** endpoints. The core of the API — send messages, stream responses, and manage in-progress generation.
   </Card>
-  <Card title="Models" icon="boxes" href="/api-reference/models/list-models-with-pricing">
-    List models, context windows, and pricing
+  <Card title="Multimodal" icon="image">
+    **Image generation**, **image editing**, and **audio transcription** endpoints. Use text-to-image models like FLUX and speech-to-text models like Whisper.
   </Card>
-  <Card title="Attestation" icon="file-check" href="/api-reference/attestation/get-attestation-report">
-    Verify the TEE running your requests
+  <Card title="Embeddings & Reranking" icon="list-ordered">
+    **Embeddings**, **rerank**, and **score** endpoints for semantic search, retrieval-augmented generation, and document ranking pipelines.
+  </Card>
+  <Card title="Privacy" icon="shield">
+    **Classify** and **redact** endpoints that detect and optionally remove personally identifiable information (PII) from text before it reaches your downstream systems.
+  </Card>
+  <Card title="Conversations & Files" icon="message-square">
+    **Conversation management** and **file upload** endpoints for persisting multi-turn dialogue state and attaching files to inference requests.
+  </Card>
+  <Card title="Attestation & Verification" icon="file-check">
+    **Attestation report**, **ITA token**, and **response signature** endpoints for cryptographically verifying that your requests ran inside genuine TEE hardware.
+  </Card>
+  <Card title="Organizations, Workspaces & API Keys" icon="building-2">
+    **Organization**, **workspace**, and **API key** management endpoints for structuring access, applying spend limits, and managing team membership.
+  </Card>
+  <Card title="Usage & Billing" icon="bar-chart-2">
+    **Balance**, **usage history**, **metrics**, **timeseries**, and **reporting token** endpoints for tracking token consumption, costs, and generating read-only usage reports.
   </Card>
 </CardGroup>
 
+## OpenAI Compatibility
+
+NEAR AI Cloud implements the OpenAI API specification, so you can use the official OpenAI SDKs without modification. Set the `base_url` (Python) or `baseURL` (JavaScript/TypeScript) to the NEAR AI Cloud endpoint and swap in your API key.
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    from openai import OpenAI
+
+    client = OpenAI(
+        base_url="https://cloud-api.near.ai/v1",
+        api_key="YOUR_API_KEY",
+    )
+
+    response = client.chat.completions.create(
+        model="zai-org/GLM-5.1-FP8",
+        messages=[
+            {"role": "user", "content": "What is a Trusted Execution Environment?"}
+        ],
+    )
+
+    print(response.choices[0].message.content)
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    import OpenAI from "openai";
+
+    const client = new OpenAI({
+      baseURL: "https://cloud-api.near.ai/v1",
+      apiKey: "YOUR_API_KEY",
+    });
+
+    const response = await client.chat.completions.create({
+      model: "zai-org/GLM-5.1-FP8",
+      messages: [
+        { role: "user", content: "What is a Trusted Execution Environment?" },
+      ],
+    });
+
+    console.log(response.choices[0].message.content);
+    ```
+  </Tab>
+</Tabs>
+
+See the [OpenAI Compatibility guide](/cloud/guides/openai-compatibility) for the complete list of supported endpoints and parameters, including notes on any NEAR AI Cloud-specific extensions.
+
+## Request IDs
+
+Every API response includes an `X-Request-Id` header containing a unique identifier for that request:
+
+```
+X-Request-Id: 01973b2e-1f4a-7000-b5a9-b35b8cd56a8a
+```
+
+Use this ID when debugging or contacting support — it allows the NEAR AI team to locate the exact request in platform logs.
+
+You may also send your own `X-Request-Id` header with a UUID you generate. This is useful for correlating requests in your own logs with attestation records for a specific inference call. If you send your own value, do **not** include sensitive data such as user identifiers or prompt content in the header — it may appear in plaintext in log systems.
+
 <Note>
-  New to NEAR AI Cloud? Start with the [Quickstart](/cloud/quickstart), then see
-  [OpenAI Compatibility](/cloud/guides/openai-compatibility) for SDK setup details.
+  The NEAR AI Cloud API is currently in **beta**. Endpoint behaviour, request/response schemas, and rate limits may change as the platform evolves. Breaking changes will be announced in advance. If you encounter unexpected behaviour, contact the team at [support@near.ai](mailto:support@near.ai) or through the [Telegram community](https://t.me/nearaialpha).
 </Note>

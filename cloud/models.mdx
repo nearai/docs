@@ -1,22 +1,89 @@
 ---
-title: "Available Models"
-description: "Explore NEAR AI Cloud model catalog"
-icon: "brain-circuit"
+title: "NEAR AI Cloud Model Catalog and Pricing"
+sidebarTitle: "Models"
+description: "Browse TEE-hosted and third-party AI models available on NEAR AI Cloud, including GLM, Qwen, OpenAI, Anthropic, Gemini, and more with transparent pay-per-use pricing."
 ---
 
-NEAR AI Cloud provides access to leading AI models, each optimized for different use cases ranging from advanced reasoning and tool calling to long-context processing, embeddings, reranking, image generation, and audio transcription — all with transparent, pay-per-use pricing.
+NEAR AI Cloud gives you access to a curated catalog of leading AI models — from advanced reasoning and tool-calling models to long-context, multimodal, embedding, reranking, and audio-transcription models — all behind a single OpenAI-compatible API with transparent, pay-per-use pricing.
 
-The catalog contains two kinds of models:
+## Model Types
 
-- **TEE-hosted models** (marked <span className="doc-badge">TEE</span>) run on NEAR AI's own GPU fleet inside [Trusted Execution Environments](/cloud/private-inference). They support [attestation, signatures, and verification](/cloud/verification), are reachable through [direct completions endpoints](/cloud/private-inference#direct-completions), and nobody — not even NEAR — can see your prompts or outputs.
-- **Third-party models** (OpenAI, Anthropic, Gemini, and others) are proxied to their providers through the NEAR AI gateway for convenience. They offer the same unified API and billing, but the TEE privacy and verifiability guarantees do not extend to the upstream provider.
+The catalog contains two categories of models:
 
-<div className="doc-lead">
-  <a className="doc-button" href="https://cloud.near.ai/models" target="_blank" rel="noreferrer">Browse Model Catalog →</a>
-</div>
+### TEE-Hosted Models
+
+TEE-hosted models (marked **TEE** in the catalog) run on NEAR AI's own GPU fleet inside [Trusted Execution Environments (TEEs)](/cloud/private-inference). Because inference happens inside a hardware-sealed enclave:
+
+- Your prompts and outputs are encrypted in memory — neither the host OS, the GPU operator, nor NEAR AI itself can read them.
+- Every request produces a hardware-signed [attestation](/cloud/verification) that you can verify independently.
+- You can reach these models via [direct completions endpoints](/cloud/private-inference#direct-completions) (`https://{slug}.completions.near.ai/v1`), where TLS terminates directly inside the model's TEE for the strongest possible trust model.
+
+Examples: `zai-org/GLM-5.1-FP8`, `Qwen/Qwen3.5-122B-A10B`, `openai/gpt-oss-120b`, `moonshotai/kimi-k2.6`.
+
+### Third-Party Models
+
+Third-party models (OpenAI, Anthropic, Gemini, and others) are proxied to their upstream providers through the NEAR AI gateway. They offer the same unified API and billing as TEE-hosted models — you use the same base URL, API key, and request format — but the TEE privacy and verifiability guarantees **do not extend** to the upstream provider. Your request leaves the NEAR AI infrastructure and is processed under the upstream provider's own privacy policy.
+
+Examples: `openai/gpt-4o`, `anthropic/claude-opus-4-5`, `google/gemini-2.5-pro`.
+
+---
+
+## Browse the Catalog
 
 <Tip>
-  **Model metadata**
+  The live model catalog at [cloud.near.ai/models](https://cloud.near.ai/models) shows all available models with real-time pricing, context lengths, privacy tier, and input modalities. Use the filters to narrow by provider, execution environment, context length, or price.
 
-  The [`/v1/models`](https://cloud-api.near.ai/v1/models) endpoint reports each model's context length, max output length, pricing (including discounted cache-read pricing — see [Prompt Caching](/cloud/guides/prompt-caching)), supported features (`tools`, `structured_outputs`, `reasoning`), supported sampling parameters, and input/output modalities.
+  [Browse Model Catalog →](https://cloud.near.ai/models)
 </Tip>
+
+---
+
+## Querying Model Metadata via API
+
+<Tip>
+  The [`GET /v1/models`](https://cloud-api.near.ai/v1/models) endpoint returns live metadata for every model in the catalog. You can use it to drive dynamic model-selection UIs or to check capabilities before making a request.
+
+  ```bash
+  curl https://cloud-api.near.ai/v1/models \
+    -H "Authorization: Bearer $NEAR_AI_KEY"
+  ```
+</Tip>
+
+---
+
+## Supported Features
+
+Each model object returned by `/v1/models` includes a `supported_features` array that tells you exactly what the model can do. The following feature flags are currently defined:
+
+| Feature flag         | Description                                                                                                      |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `tools`              | The model supports [function / tool calling](https://platform.openai.com/docs/guides/function-calling).         |
+| `structured_outputs` | The model can be constrained to return valid JSON matching a supplied schema.                                    |
+| `reasoning`          | The model supports chain-of-thought reasoning and returns a `reasoning_content` field. See [Reasoning Models](/cloud/reasoning-models). |
+
+The response object also includes:
+
+- **`context_length`** — maximum tokens the model accepts as input.
+- **`max_output_tokens`** — maximum tokens the model can generate per request.
+- **Pricing fields** — per-token input, output, and discounted cache-read prices. Cache-read pricing applies when the [prompt caching](/cloud/guides/prompt-caching) prefix is reused across requests.
+- **`supported_parameters`** — sampling parameters the model recognises (e.g. `temperature`, `top_p`, `reasoning_effort`).
+- **`modalities`** — input and output modalities the model supports (e.g. `text`, `image`, `audio`).
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/cloud/quickstart">
+    Make your first API call in under a minute using any model in the catalog.
+  </Card>
+  <Card title="Reasoning Models" icon="brain" href="/cloud/reasoning-models">
+    Learn how to enable, disable, and tune chain-of-thought reasoning on GLM, Qwen, GPT-OSS, and Kimi models.
+  </Card>
+  <Card title="Private Inference" icon="shield-check" href="/cloud/private-inference">
+    Understand the TEE architecture, direct completions endpoints, and how your data stays private.
+  </Card>
+  <Card title="Prompt Caching" icon="bolt" href="/cloud/guides/prompt-caching">
+    Reduce latency and cost by reusing cached prompt prefixes across requests.
+  </Card>
+</CardGroup>

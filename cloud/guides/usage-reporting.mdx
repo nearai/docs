@@ -1,245 +1,249 @@
 ---
-title: "Usage Reporting API"
-icon: "chart-column"
+title: "Automated Usage and Cost Reporting for NEAR AI Cloud"
+sidebarTitle: "Usage Reporting"
+description: "Create reporting tokens scoped to usage:read and use them to export cursor-paginated usage rows, summarize costs by model and workspace, and automate billing reports."
 ---
 
-
-Use the Usage Reporting API when you need automated, read-only usage and cost reporting for a NEAR AI Cloud organization. Reporting tokens are separate from inference API keys: they can read usage reports for one organization, but they cannot call model inference endpoints or manage organization resources.
+NEAR AI Cloud provides a dedicated reporting token system for automated billing and usage exports. Reporting tokens are separate from your inference API keys — they carry a `usage:read` scope only, are scoped to a single organization, and cannot make inference requests. This separation lets you grant read-only access to a billing system or data pipeline without exposing your inference credentials.
 
 ## Reporting Tokens
 
-Organization owners and admins can create reporting tokens with the management API. Use your user access token for management calls:
+### Create a Reporting Token
+
+`POST /v1/organizations/{org_id}/reporting-tokens` creates a new reporting token for your organization. You can optionally set a human-readable `name` and an `expires_at` timestamp.
 
 ```bash
-curl https://cloud-api.near.ai/v1/organizations/11111111-1111-4111-8111-111111111111/reporting-tokens \
-  -X POST \
-  -H "Authorization: Bearer $ACCESS_TOKEN" \
+curl -X POST https://cloud-api.near.ai/v1/organizations/YOUR_ORG_ID/reporting-tokens \
+  -H "Authorization: Bearer $NEAR_AI_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "finance usage export",
-    "expires_at": "2026-12-31T23:59:59Z"
+    "name": "billing-pipeline",
+    "expires_at": "2026-01-01T00:00:00Z"
   }'
 ```
 
-The create response returns the reporting token once:
+The response includes the full token value in the `token` field:
 
 ```json
 {
-  "id": "22222222-2222-4222-8222-222222222222",
-  "organization_id": "11111111-1111-4111-8111-111111111111",
-  "name": "finance usage export",
-  "token": "rpt-0123456789abcdef0123456789abcdef",
-  "token_prefix": "rpt-01234567",
-  "created_by_user_id": "33333333-3333-4333-8333-333333333333",
-  "created_at": "2026-07-09T12:00:00Z",
-  "expires_at": "2026-12-31T23:59:59Z",
-  "last_used_at": null,
-  "scope": "usage:read"
+  "id": "rt-abc123",
+  "name": "billing-pipeline",
+  "organization_id": "org-xyz",
+  "created_by_user_id": "user-111",
+  "token": "nai_rt_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "token_prefix": "nai_rt_xxxx",
+  "scope": "usage:read",
+  "created_at": "2025-08-01T12:00:00Z",
+  "expires_at": "2026-01-01T00:00:00Z",
+  "last_used_at": null
 }
 ```
 
-Store the token securely after creation. List calls show only non-secret metadata:
+<Note>
+  The `token` field is returned only in this creation response. It is not stored in plaintext and cannot be retrieved again. Copy it to your secrets vault immediately.
+</Note>
+
+### List Reporting Tokens
+
+`GET /v1/organizations/{org_id}/reporting-tokens` returns all active (non-revoked) reporting tokens for your organization. The `token` field is not included in list responses — only the `token_prefix` is shown for identification.
 
 ```bash
-curl https://cloud-api.near.ai/v1/organizations/11111111-1111-4111-8111-111111111111/reporting-tokens \
-  -H "Authorization: Bearer $ACCESS_TOKEN"
+curl https://cloud-api.near.ai/v1/organizations/YOUR_ORG_ID/reporting-tokens \
+  -H "Authorization: Bearer $NEAR_AI_KEY"
 ```
 
-`last_used_at` is an approximate audit timestamp. To avoid writing on every report request, Cloud API refreshes it at most once every 15 minutes.
+### Revoke a Reporting Token
 
-Revoke a token when an integration no longer needs it:
+`DELETE /v1/organizations/{org_id}/reporting-tokens/{token_id}` permanently revokes a token. Revoked tokens are rejected immediately on subsequent API calls.
 
 ```bash
-curl https://cloud-api.near.ai/v1/organizations/11111111-1111-4111-8111-111111111111/reporting-tokens/22222222-2222-4222-8222-222222222222 \
-  -X DELETE \
-  -H "Authorization: Bearer $ACCESS_TOKEN"
+curl -X DELETE \
+  https://cloud-api.near.ai/v1/organizations/YOUR_ORG_ID/reporting-tokens/rt-abc123 \
+  -H "Authorization: Bearer $NEAR_AI_KEY"
 ```
 
 ## Authentication
 
-Use reporting tokens only with the reporting endpoints:
+Use your reporting token in the `Authorization` header of export and summary requests, exactly as you would an inference key:
 
 ```bash
-Authorization: Bearer rpt-0123456789abcdef0123456789abcdef
+Authorization: Bearer nai_rt_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-Reporting tokens are scoped to exactly one organization and the `usage:read` scope. A token from another organization returns `403 Forbidden`; an invalid, expired, or revoked token returns `401 Unauthorized`.
+Reporting tokens are accepted only on the usage export and summary endpoints. Attempting to call inference endpoints (`/v1/chat/completions`, etc.) with a reporting token returns `403 Forbidden`. Calls to any endpoint with an expired or revoked reporting token return `401 Unauthorized`.
 
 ## Export Usage Rows
 
-`GET /v1/organizations/{org_id}/usage/export` returns cursor-paginated usage rows ordered by newest first.
+`GET /v1/organizations/{org_id}/usage/export` returns a cursor-paginated list of individual usage rows for all inference and service events in your organization. Each row is either an **inference row** (a model inference call) or a **service row** (a platform service usage event such as a web search).
 
 ```bash
-curl "https://cloud-api.near.ai/v1/organizations/11111111-1111-4111-8111-111111111111/usage/export?start_time=2026-07-01T00:00:00Z&end_time=2026-07-09T00:00:00Z&source=all&limit=2" \
-  -H "Authorization: Bearer rpt-0123456789abcdef0123456789abcdef"
+curl "https://cloud-api.near.ai/v1/organizations/YOUR_ORG_ID/usage/export\
+?start_time=2025-07-01T00:00:00Z\
+&end_time=2025-07-31T23:59:59Z\
+&limit=100" \
+  -H "Authorization: Bearer $REPORTING_TOKEN"
 ```
+
+A sample response page:
 
 ```json
 {
   "data": [
     {
+      "id": "row-001",
+      "created_at": "2025-07-15T09:23:11Z",
+      "workspace_id": "ws-aaa",
+      "api_key_id": "key-bbb",
+      "total_cost_nano_usd": 12340000,
+      "total_cost_usd": "0.01234",
       "source": "inference",
-      "id": "44444444-4444-4444-8444-444444444444",
-      "created_at": "2026-07-08T16:20:00Z",
-      "workspace_id": "55555555-5555-4555-8555-555555555555",
-      "api_key_id": "66666666-6666-4666-8666-666666666666",
-      "total_cost_nano_usd": 1280000,
       "inference": {
+        "inference_id": "chatcmpl-xyz",
         "model": "zai-org/GLM-5.1-FP8",
-        "inference_type": "chat_completion",
-        "input_tokens": 1200,
-        "output_tokens": 320,
-        "cache_read_tokens": 0,
-        "total_tokens": 1520,
-        "input_cost_nano_usd": 480000,
-        "output_cost_nano_usd": 800000,
-        "total_cost_nano_usd": 1280000,
-        "response_id": "77777777-7777-4777-8777-777777777777",
-        "inference_id": "88888888-8888-4888-8888-888888888888"
+        "inference_type": "chat",
+        "input_tokens": 512,
+        "output_tokens": 256,
+        "cache_read_tokens": 384,
+        "input_cost_nano_usd": 5120000,
+        "output_cost_nano_usd": 7168000,
+        "cache_read_cost_nano_usd": 51200,
+        "total_cost_nano_usd": 12340000
       }
     },
     {
+      "id": "row-002",
+      "created_at": "2025-07-15T09:25:44Z",
+      "workspace_id": "ws-aaa",
+      "api_key_id": "key-bbb",
+      "total_cost_nano_usd": 500000,
       "source": "service",
-      "id": "99999999-9999-4999-8999-999999999999",
-      "created_at": "2026-07-08T16:19:30Z",
-      "workspace_id": "55555555-5555-4555-8555-555555555555",
-      "api_key_id": "66666666-6666-4666-8666-666666666666",
-      "total_cost_nano_usd": 250000,
       "service": {
-        "service_name": "web_search",
+        "service_name": "web_context_search",
         "quantity": 1,
-        "total_cost_nano_usd": 250000,
-        "inference_id": "88888888-8888-4888-8888-888888888888"
+        "total_cost_nano_usd": 500000
       }
     }
   ],
-  "next_cursor": "opaque_cursor_value"
+  "next_cursor": "cursor_opaque_string_abc"
 }
 ```
 
-Pass `next_cursor` as `cursor` to fetch the next page. Cursors are opaque and URL-safe; do not parse or construct them in your integration. Keep the time range and all other filters unchanged while following a cursor. The effective time window remains stable across pages, including when a time bound is omitted. For repeatable jobs and auditable exports, set explicit `start_time` and `end_time` values and reuse them on every page.
+### Cursor Pagination
+
+When `next_cursor` is non-null, there are more pages. Pass the value as the `cursor` query parameter in your next request:
+
+```bash
+curl "https://cloud-api.near.ai/v1/organizations/YOUR_ORG_ID/usage/export\
+?start_time=2025-07-01T00:00:00Z\
+&end_time=2025-07-31T23:59:59Z\
+&limit=100\
+&cursor=cursor_opaque_string_abc" \
+  -H "Authorization: Bearer $REPORTING_TOKEN"
+```
+
+Continue fetching pages until `next_cursor` is `null`.
 
 ## Summarize Usage
 
-`GET /v1/organizations/{org_id}/usage/summary` returns totals and standard breakdowns for the same filters.
+`GET /v1/organizations/{org_id}/usage/summary` returns pre-aggregated totals broken down by workspace, API key, model, and day — useful for dashboards and invoice generation without iterating over every individual row.
 
 ```bash
-curl "https://cloud-api.near.ai/v1/organizations/11111111-1111-4111-8111-111111111111/usage/summary?start_time=2026-07-01T00:00:00Z&end_time=2026-07-09T00:00:00Z&source=all" \
-  -H "Authorization: Bearer rpt-0123456789abcdef0123456789abcdef"
+curl "https://cloud-api.near.ai/v1/organizations/YOUR_ORG_ID/usage/summary\
+?start_time=2025-07-01T00:00:00Z\
+&end_time=2025-07-31T23:59:59Z" \
+  -H "Authorization: Bearer $REPORTING_TOKEN"
 ```
+
+Sample response:
 
 ```json
 {
+  "start_time": "2025-07-01T00:00:00Z",
+  "end_time": "2025-07-31T23:59:59Z",
   "source": "all",
-  "start_time": "2026-07-01T00:00:00Z",
-  "end_time": "2026-07-09T00:00:00Z",
   "totals": {
-    "request_count": 42,
-    "service_usage_count": 9,
-    "input_tokens": 81200,
-    "output_tokens": 18400,
-    "cache_read_tokens": 2100,
-    "total_tokens": 101700,
-    "inference_cost_nano_usd": 73500000,
-    "service_cost_nano_usd": 2250000,
-    "total_cost_nano_usd": 75750000
+    "request_count": 18420,
+    "input_tokens": 92100000,
+    "output_tokens": 31400000,
+    "cache_read_tokens": 44300000,
+    "total_tokens": 167800000,
+    "inference_cost_nano_usd": 8241000000,
+    "service_cost_nano_usd": 230000000,
+    "service_usage_count": 460,
+    "total_cost_nano_usd": 8471000000,
+    "total_cost_usd": "8.471000"
   },
   "by_workspace": [
     {
-      "workspace_id": "55555555-5555-4555-8555-555555555555",
-      "request_count": 42,
-      "service_usage_count": 9,
-      "total_cost_nano_usd": 75750000
+      "workspace_id": "ws-aaa",
+      "request_count": 12000,
+      "service_usage_count": 300,
+      "total_cost_nano_usd": 5500000000
     }
   ],
   "by_api_key": [
     {
-      "api_key_id": "66666666-6666-4666-8666-666666666666",
-      "request_count": 42,
-      "service_usage_count": 9,
-      "total_cost_nano_usd": 75750000
+      "api_key_id": "key-bbb",
+      "request_count": 12000,
+      "service_usage_count": 300,
+      "total_cost_nano_usd": 5500000000
     }
   ],
   "by_model": [
     {
       "model": "zai-org/GLM-5.1-FP8",
-      "request_count": 42,
-      "input_tokens": 81200,
-      "output_tokens": 18400,
-      "cache_read_tokens": 2100,
-      "total_tokens": 101700,
-      "total_cost_nano_usd": 73500000
-    }
-  ],
-  "by_service": [
-    {
-      "service_name": "web_search",
-      "usage_count": 9,
-      "quantity": 9,
-      "total_cost_nano_usd": 2250000
+      "request_count": 10000,
+      "input_tokens": 50000000,
+      "output_tokens": 18000000,
+      "cache_read_tokens": 24000000,
+      "total_tokens": 92000000,
+      "total_cost_nano_usd": 4200000000
     }
   ],
   "by_day": [
     {
-      "day": "2026-07-08",
-      "request_count": 42,
-      "service_usage_count": 9,
-      "input_tokens": 81200,
-      "output_tokens": 18400,
-      "cache_read_tokens": 2100,
-      "total_tokens": 101700,
-      "inference_cost_nano_usd": 73500000,
-      "service_cost_nano_usd": 2250000,
-      "total_cost_nano_usd": 75750000
+      "day": "2025-07-15",
+      "request_count": 620,
+      "input_tokens": 3100000,
+      "output_tokens": 1060000,
+      "cache_read_tokens": 1500000,
+      "total_tokens": 5660000,
+      "inference_cost_nano_usd": 280000000,
+      "service_cost_nano_usd": 8000000,
+      "service_usage_count": 16,
+      "total_cost_nano_usd": 288000000
     }
   ]
 }
 ```
 
-## Filters
+## Filters Reference
 
-Both reporting endpoints accept these filters:
+Both the export and summary endpoints accept the following query parameters:
 
-| Parameter | Description |
-| --- | --- |
-| `start_time` | Inclusive RFC3339 timestamp. If omitted, defaults to 366 days before the effective `end_time`. |
-| `end_time` | Inclusive RFC3339 timestamp. Defaults to the request time and must be greater than or equal to `start_time`. |
-| `source` | `all`, `inference`, or `service`. Defaults to `all`. |
-| `workspace_id` | Limit results to one workspace. |
-| `api_key_id` | Limit results to one API key. |
-| `model` | Limit inference rows or summaries to one model name. |
-| `inference_type` | Limit inference usage to `chat_completion`, `chat_completion_stream`, `image_generation`, `image_edit`, `audio_transcription`, `rerank`, `score`, `embedding`, or `privacy_classify`. |
-| `service_name` | Limit platform service usage, such as `web_search`. |
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `start_time` | RFC3339 string | Inclusive start timestamp. Defaults to 366 days before `end_time`. |
+| `end_time` | RFC3339 string | Inclusive end timestamp. Defaults to the request time. |
+| `source` | `inference` \| `service` \| `all` | Filter by usage source type. Defaults to `all`. |
+| `workspace_id` | UUID | Filter rows to a specific workspace. |
+| `api_key_id` | UUID | Filter rows to a specific API key. |
+| `model` | string | Filter inference rows by model name (exact match). |
+| `inference_type` | string | Filter inference rows by inference type (e.g. `chat`, `completion`). |
+| `service_name` | string | Filter service rows by platform service name (e.g. `web_context_search`). |
+| `limit` | integer | Maximum rows per page (export only). Defaults to 100; maximum 1000. |
+| `cursor` | string | Opaque pagination cursor returned by the previous export page. |
 
-`/usage/export` also accepts:
+## Cost Units
 
-| Parameter | Description |
-| --- | --- |
-| `limit` | Page size. Defaults to `100`; maximum is `1000`. |
-| `cursor` | Opaque cursor from the previous page. |
+All cost fields in the API use **nano-USD** (integer):
 
-If neither time bound is supplied, the effective window is the 366 days ending at the request time. With only `end_time`, the window is the preceding 366 days. With only `start_time`, the window ends at the request time and returns `400 Bad Request` if it exceeds 366 days.
+```
+1,000,000,000 nano-USD = $1.00 USD
+```
 
-Invalid timestamps, an end time before the start time, a range above 366 days, an unsupported `source` or `inference_type`, a malformed cursor, or a `limit` outside `1` to `1000` return `400 Bad Request`.
+For example, a `total_cost_nano_usd` value of `8,471,000,000` equals $8.47. The `total_cost_usd` field, when present, provides the same value as a decimal string for convenience.
 
-Reporting endpoints can return `429 Too Many Requests` when rate or concurrency limits are reached, and `504 Gateway Timeout` when a report exceeds its execution deadline. Retry these responses with exponential backoff and jitter.
-
-## Sources and Cost Units
-
-`source=all` includes both inference usage and platform service usage. Use `source=inference` to report only model requests, or `source=service` to report only platform services.
-
-Reporting endpoints return JSON. v1 does not provide native CSV responses; convert the exported rows in your reporting system if you need CSV. Summary attribution is available by workspace and API key, not by individual human user. Usage from people who share an API key cannot be separated by user.
-
-v1 reports billing usage and cost. It does not expose time to first token (TTFT), inter-token latency (ITL), or other inference performance telemetry.
-
-Cost fields ending in `_nano_usd` are integers in nano-USD, where `1,000,000,000` nano-USD equals `$1.00`. Treat these integer fields as the source of truth and format display USD values in your reporting system if needed.
-
-`cache_read_tokens` reports cached prompt tokens when they are recorded. `cache_read_cost_nano_usd` is optional and is omitted when Cloud API has not persisted a separate cache-read cost split. Do not interpret an omitted cache-read cost as zero cost; use `total_cost_nano_usd` as the authoritative row cost.
-
-For v1 reporting, `inference.inference_id` is the customer-facing request correlation id for inference rows and for service rows tied to an inference request. Reporting responses intentionally exclude upstream `provider_request_id` values and provider-attribution fields.
-
-Cloud API enforces a maximum 366-day query range per request. Reporting returns records retained in Cloud API usage tables for your organization. It is not a payment ledger or archival warehouse, and there is no separate reporting TTL/SLA beyond the records currently retained in those usage tables. If you need durable historical archives, export or sync usage regularly.
-
-## Privacy Exclusions
-
-Usage reporting responses do not include prompt text, model output text, uploaded file contents, OAuth/session material, raw API keys, stored token digests, upstream provider identifiers, or provider-attribution fields. Reporting tokens also cannot be used for chat completions, responses, files, workspace mutation, or reporting-token management.
+<Note>
+  Usage reports contain no sensitive content. The `inference_id` field in inference rows is a correlation identifier — it references a request in the attestation log but does not contain prompt text or model outputs. API key IDs are UUIDs, not key values. Raw API key material never appears in any report.
+</Note>

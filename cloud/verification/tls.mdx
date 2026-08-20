@@ -1,19 +1,22 @@
 ---
-title: "TLS Attestation Verification"
-description: "How to verify that your HTTPS connection to NEAR AI terminates inside a Trusted Execution Environment using TLS attestation."
+title: "Verify TLS Termination Inside the TEE on NEAR AI Cloud"
+sidebarTitle: "TLS Verification"
+description: "Prove your HTTPS connection terminates inside a Trusted Execution Environment by binding the TLS certificate fingerprint to the TEE attestation report."
 ---
 
+NEAR AI Cloud runs inference models inside **Confidential VMs (CVMs)** — virtual machines backed by Intel TDX hardware that provide a Trusted Execution Environment (TEE). A key property of this design: even the cloud operator cannot see or tamper with what runs inside the TEE.
 
-NEAR AI runs inference models inside **Confidential VMs (CVMs)** — virtual machines backed by Intel TDX hardware that provide a Trusted Execution Environment (TEE). The key property: even the cloud operator cannot see or tamper with what runs inside the TEE.
-
-TLS attestation proves that the TLS connection used for your HTTPS requests terminates directly **inside the TEE**, ensuring your messages remain encrypted end-to-end.
+TLS attestation proves that the TLS connection used for your HTTPS requests terminates directly **inside the TEE**, ensuring your messages remain encrypted end-to-end — from your machine all the way into the hardware enclave.
 
 <Note>
-  Check our [example](https://github.com/nearai/nearai-cloud-verifier/tree/main) on how to perform TLS attestation verification.
+Check the [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier/tree/main) for a reference implementation of TLS attestation verification.
 </Note>
+
+---
+
 ## What TLS Attestation Proves
 
-TLS attestation binds the server's **TLS certificate** to the **TEE hardware attestation**:
+TLS attestation cryptographically binds the server's **TLS certificate** to the **TEE hardware attestation**:
 
 1. You request `/v1/attestation/report?include_tls_fingerprint=true`.
 2. The TEE computes the certificate's **SPKI hash** (SHA-256 of the SubjectPublicKeyInfo) and binds it into the attested `report_data`.
@@ -23,13 +26,12 @@ TLS attestation binds the server's **TLS certificate** to the **TEE hardware att
 This proves the TLS private key is held by the TEE. Your HTTPS traffic is end-to-end encrypted all the way to the hardware enclave.
 
 <Note>
-  **Opt-In Behavior**
-
-  `include_tls_fingerprint` is disabled by default so existing attestation clients keep the original `report_data` layout. Without the flag, `report_data[0:32]` contains the signing address bytes (padded or truncated to 32 bytes). With the flag, `report_data[0:32]` becomes `SHA256(signing_address || tls_cert_fingerprint)`.
+**Opt-In Behavior:** `include_tls_fingerprint` is disabled by default so existing attestation clients keep the original `report_data` layout. Without the flag, `report_data[0:32]` contains the signing address bytes (padded or truncated to 32 bytes). With the flag, `report_data[0:32]` becomes `SHA256(signing_address || tls_cert_fingerprint)`.
 </Note>
-## Trust Model
 
-You trust:
+### Trust Model
+
+When you perform TLS attestation verification, you trust:
 - **Intel TDX** hardware (CPU attestation)
 - **NVIDIA GPU** hardware (GPU attestation)
 - **The code** running inside the TEE (verified via compose file hash)
@@ -38,12 +40,12 @@ You do **not** need to trust the cloud operator, network infrastructure, or cert
 
 ```mermaid
 flowchart TD
-    A["Intel TDX Hardware"] --> Q["TDX Quote<br/>(signed by CPU)"]
-    B["NVIDIA GPU Hardware"] --> G["GPU Attestation<br/>(NVIDIA NRAS)"]
-    Q --> C["mr_config_id<br/>↓<br/>Docker Compose file<br/>↓<br/>Container images"]
-    Q --> D["report_data[0:32]<br/>↓<br/>SHA256(signing_address || tls_cert_fingerprint)"]
-    Q --> E["report_data[32:64]<br/>↓<br/>nonce (freshness)"]
-    D --> F["Live TLS cert match<br/>↓<br/>Your HTTPS connection"]
+    A["Intel TDX Hardware"] --> Q["TDX Quote\n(signed by CPU)"]
+    B["NVIDIA GPU Hardware"] --> G["GPU Attestation\n(NVIDIA NRAS)"]
+    Q --> C["mr_config_id\n↓\nDocker Compose file\n↓\nContainer images"]
+    Q --> D["report_data[0:32]\n↓\nSHA256(signing_address || tls_cert_fingerprint)"]
+    Q --> E["report_data[32:64]\n↓\nnonce (freshness)"]
+    D --> F["Live TLS cert match\n↓\nYour HTTPS connection"]
 ```
 
 ---
@@ -57,9 +59,10 @@ pip install dcap-qvl cryptography requests pyyaml
 ```
 
 ---
-## Verifications
 
-### Discover Available Endpoints
+## Verification Steps
+
+### Step 1 — Discover Available Endpoints
 
 The `completions.near.ai/endpoints` API lists all available model endpoints and their domains.
 
@@ -87,15 +90,16 @@ print(f"\nVerifying: {TARGET_DOMAIN}")
 
 ---
 
-### Fetch Attestation + Live SPKI Hash
+### Step 2 — Fetch Attestation and Live SPKI Hash
 
 Multiple backend CVMs may serve the same domain via load balancing. Making two separate connections — one for attestation, one to check the certificate — could hit different backends and produce a false SPKI mismatch.
 
 The solution: extract the live certificate **and** make the attestation request over the **same TLS connection**.
 
 <Note>
-  CA verification is intentionally skipped. The TEE generates its own TLS key pair — it is not CA-signed. Trust comes from the TEE hardware attestation, not from Certificate Authorities.
+CA verification is intentionally skipped. The TEE generates its own TLS key pair — it is not CA-signed. Trust comes from the TEE hardware attestation, not from Certificate Authorities.
 </Note>
+
 ```python
 import ssl
 import secrets
@@ -103,6 +107,7 @@ from hashlib import sha256
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
+
 
 def compute_spki_hash(cert_der: bytes) -> str:
     """Compute SHA-256 of a certificate's SubjectPublicKeyInfo DER encoding.
@@ -116,6 +121,7 @@ def compute_spki_hash(cert_der: bytes) -> str:
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
     return sha256(spki_der).hexdigest()
+
 
 def fetch_attestation_and_spki(hostname, port=443, signing_algo="ecdsa"):
     """Fetch attestation report and live TLS cert SPKI hash over one connection."""
@@ -152,6 +158,7 @@ def fetch_attestation_and_spki(hostname, port=443, signing_algo="ecdsa"):
     attestation = json.loads(body)
     return attestation, live_spki_hash, nonce
 
+
 attestation, live_spki_hash, request_nonce = fetch_attestation_and_spki(TARGET_DOMAIN)
 
 print(f"Request nonce:        {request_nonce}")
@@ -173,7 +180,7 @@ Query parameters used in the attestation request:
 
 ---
 
-### Verify the Intel TDX Quote
+### Step 3 — Verify the Intel TDX Quote
 
 The attestation report contains an Intel TDX quote — a hardware-signed data structure that proves what code is running and what data the TEE attests to. Verify it using `dcap-qvl`, which validates the quote against Intel's DCAP (Data Center Attestation Primitives) collateral.
 
@@ -198,7 +205,7 @@ mr_config_id = td10["mr_config_id"]
 
 | Status | Meaning |
 |--------|---------|
-| `UpToDate` | Quote is valid, TCB firmware is current |
+| `UpToDate` | Quote is valid; TCB firmware is current |
 | `SWHardeningNeeded` | Quote is valid but has advisories — check `advisory_ids` |
 | Any other value | Verification failed |
 
@@ -212,7 +219,7 @@ Key fields extracted from the verified quote:
 
 ---
 
-### Verify Report Data Binds Signing Key + TLS Cert
+### Step 4 — Verify Report Data Binds Signing Key and TLS Cert
 
 Check that the 64-byte `report_data` in the TDX quote contains the expected values. This cryptographically binds the signing key, TLS certificate, and nonce all to the same hardware attestation.
 
@@ -239,7 +246,7 @@ print(f"Nonce matches (fresh attestation):   {embeds_nonce}")
 
 ---
 
-### Verify Live TLS Certificate Matches Attested Fingerprint
+### Step 5 — Verify Live TLS Certificate Matches Attested Fingerprint
 
 Compare the SPKI hash extracted from the live TLS session (Step 2) against the `tls_cert_fingerprint` from the attestation report. A match proves the TLS connection terminates inside the TEE.
 
@@ -259,15 +266,15 @@ else:
 
 ---
 
-### Verify Model Name
+### Step 6 — Verify Model Name
 
-The attestation report's `model_name` field is self-reported by the inference proxy running inside the TEE. Since it originates from within the attested enclave, it tells you which model is actually serving your requests. Compare it against the model listed in `/endpoints` for this domain.
+The attestation report's `model_name` field is self-reported by the inference proxy running inside the TEE. Since it originates from within the attested enclave, it tells you which model is actually serving your requests.
 
 ```python
 attested_model = attestation.get("model_name")
 expected_models = domain_models.get(TARGET_DOMAIN, [])
 
-print(f"Attested model (from TEE):       {attested_model}")
+print(f"Attested model (from TEE):         {attested_model}")
 print(f"Expected models (from /endpoints): {expected_models}")
 
 if attested_model:
@@ -279,7 +286,7 @@ else:
 
 ---
 
-### Verify GPU Attestation
+### Step 7 — Verify GPU Attestation
 
 In addition to CPU-level attestation, the inference GPUs provide hardware attestation via NVIDIA's Remote Attestation Service (NRAS). The GPU evidence is collected inside the TEE and included as `nvidia_payload` in the report. It's bound to the same nonce as the TDX quote, ensuring both attestations are fresh and from the same request.
 
@@ -289,10 +296,12 @@ import requests
 
 GPU_VERIFIER_API = "https://nras.attestation.nvidia.com/v3/attest/gpu"
 
+
 def decode_jwt_payload(jwt_token):
     payload_b64 = jwt_token.split(".")[1]
     padded = payload_b64 + "=" * ((4 - len(payload_b64) % 4) % 4)
     return json.loads(base64.urlsafe_b64decode(padded).decode())
+
 
 nvidia_payload_str = attestation.get("nvidia_payload")
 if nvidia_payload_str:
@@ -318,7 +327,7 @@ else:
 
 ---
 
-### Verify Docker Compose File
+### Step 8 — Verify Docker Compose File
 
 The TDX quote's `mr_config_id` encodes `"01" + SHA256(app_compose_json)`, binding the exact Docker Compose configuration — including pinned container image digests — to the hardware attestation. Verifying this confirms the TEE is running exactly the code defined in that compose file.
 
@@ -360,8 +369,9 @@ else:
 ```
 
 <Note>
-  `mr_config_id` may be all zeros on some endpoints during TEE configuration transitions. In that case, skip this check — the TDX quote verification, report data binding, and TLS fingerprint checks above still provide strong guarantees.
+`mr_config_id` may be all zeros on some endpoints during TEE configuration transitions. In that case, skip this check — the TDX quote verification, report data binding, and TLS fingerprint checks above still provide strong guarantees.
 </Note>
+
 **Cross-reference with GitHub:** The compose files deployed to CVMs come from the public repository [nearai/cvm-compose-files](https://github.com/nearai/cvm-compose-files). You can fetch the file by its tag and compare it byte-for-byte with what the TEE attests to.
 
 **Sigstore provenance:** Container images are pinned by `@sha256:` digest. Check `https://search.sigstore.dev/?hash=sha256:<digest>` for each image to confirm it was built by a traceable GitHub Actions pipeline, not pushed manually.
@@ -372,15 +382,14 @@ else:
 
 Running the full attestation flow is thorough but takes several seconds. For production use, cache the verified SPKI hash and check it on every connection as a lightweight trust anchor.
 
-### The key insight: SPKI hash as trust anchor
-
 Once you've verified a particular SPKI hash is bound to a TEE via hardware attestation, you can reuse it:
-1. Connect to the endpoint via TLS
-2. Extract the live certificate's SPKI hash
-3. Compare against your cached, previously-verified hash
-4. If it matches → you're talking to the same TEE — no full attestation needed
 
-### Build the cache
+1. Connect to the endpoint via TLS.
+2. Extract the live certificate's SPKI hash.
+3. Compare against your cached, previously-verified hash.
+4. If it matches → you're talking to the same TEE — no full attestation needed.
+
+### Build the Cache
 
 ```python
 trusted_certs = {}  # domain -> {"spki_hash": ..., "model_name": ..., "signing_address": ...}
@@ -402,7 +411,7 @@ for domain in domain_models:
         print(f"ERROR {domain}: {e}")
 ```
 
-### Verify on every connection
+### Verify on Every Connection
 
 ```python
 def verified_request(domain, method, path, body=None, headers=None, port=443):
@@ -455,9 +464,9 @@ def verified_request(domain, method, path, body=None, headers=None, port=443):
 
 ---
 
-## Resources
+## See Also
 
-- [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) — Reference client that performs TLS certificate and attestation verification
+- [Verification Overview](/cloud/verification/index) — How all the verification components fit together
+- [Model Verification](/cloud/verification/model) — Verify GPU and CPU attestation for a model TEE
 - [Private Inference](/cloud/private-inference) — How TEE isolation protects your data
 - [E2EE Chat Completions](/cloud/guides/e2ee-chat-completions) — Defense-in-depth encryption on top of TLS
-- [Verification](/cloud/verification) — Verify chat signatures and model attestation

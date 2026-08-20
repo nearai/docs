@@ -1,90 +1,120 @@
 ---
-title: "Web Search"
-description: "Give models access to live web results with the built-in web search tools"
-icon: "globe"
+title: "Add Live Web Search to AI Responses on NEAR AI Cloud"
+sidebarTitle: "Web Search"
+description: "Use NEAR AI Cloud's built-in web_context_search and web_search tools to give any model access to live web data — server-side, no client tool-handling code required."
 ---
 
-
-NEAR AI Cloud provides built-in **server-side web search tools** that let any model answer questions about current events and live data. The model decides when to search, the platform executes the search, and the results are fed back to the model — all in a single API call, with no tool-handling code on your side.
-
-Web search is billed per request as a platform service in addition to model tokens. Current pricing is available from the public [`/v1/services`](https://cloud-api.near.ai/v1/services) endpoint.
+NEAR AI Cloud provides built-in web search tools that run entirely server-side. You declare the tool in your request and the model decides when to invoke it — NEAR AI Cloud fetches the results, injects them into the context, and the model uses them to formulate its final answer. You receive a complete, grounded response without writing any tool-dispatch or result-injection code on your end. Web search is billed per search invocation; current pricing is available from `GET /v1/services`.
 
 ## Tool Types
 
-| Tool type | Behavior |
-|-----------|----------|
-| `web_search` | OpenAI-compatible hosted search tool. Supports optional `search_context_size` and `user_location` parameters. |
-| `web_context_search` | NEAR AI's search tool. The model issues search queries in an agentic loop and receives result snippets as context. |
+NEAR AI Cloud supports two web search tool types with different API compatibility profiles:
+
+| Tool type | Compatible APIs | Description |
+|-----------|----------------|-------------|
+| `web_context_search` | Responses API | NEAR AI native; injects search results directly into the model context server-side |
+| `web_search` | Responses API | OpenAI-compatible web search tool; follows the OpenAI `web_search` specification |
+
+Both tools eliminate client-side tool-handling: unlike standard function calling, you never receive a `finish_reason: "tool_calls"` response that requires a follow-up request. The search loop runs entirely on the server.
 
 ## Responses API
 
-Add the tool to the `tools` array — no other changes needed:
+Pass `{"type": "web_context_search"}` (or `{"type": "web_search"}`) in the `tools` array of a `POST /v1/responses` request:
 
 ```bash
 curl https://cloud-api.near.ai/v1/responses \
+  -H "Authorization: Bearer $NEAR_AI_KEY" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
     "model": "zai-org/GLM-5.1-FP8",
-    "input": "What is the current population of Tokyo? Reply in one short sentence.",
-    "tools": [{"type": "web_context_search"}]
+    "input": "What are the latest developments in confidential computing?",
+    "tools": [
+      { "type": "web_context_search" }
+    ]
   }'
 ```
 
-The response `output` array contains the search activity followed by the final answer:
+The response `output` array contains both the web search call record and the final assistant message:
 
 ```json
 {
+  "id": "resp-abc123",
+  "object": "response",
+  "model": "zai-org/GLM-5.1-FP8",
   "status": "completed",
   "output": [
-    { "type": "web_search_call", "status": "completed" },
-    { "type": "reasoning", "...": "..." },
+    {
+      "type": "web_search_call",
+      "id": "ws-xyz",
+      "status": "completed",
+      "action": {
+        "type": "search",
+        "query": "latest developments confidential computing 2025"
+      }
+    },
     {
       "type": "message",
-      "content": [{
-        "type": "output_text",
-        "text": "As of 2026, the Tokyo metropolitan area has a population of approximately 37 million people, while Tokyo prefecture itself has about 14.2 million residents."
-      }]
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Recent developments in confidential computing include..."
+        }
+      ]
     }
   ],
   "usage": {
-    "input_tokens": 3302,
-    "input_tokens_details": { "cached_tokens": 1216 },
-    "output_tokens": 133,
-    "output_tokens_details": { "reasoning_tokens": 96 },
-    "total_tokens": 3435
+    "input_tokens": 312,
+    "output_tokens": 248,
+    "total_tokens": 560
   }
 }
 ```
 
 ## Chat Completions API
 
-`web_context_search` is also available on `/v1/chat/completions`. It requires `stream: true`:
+Web search is also available through `POST /v1/chat/completions` using `web_context_search` in the `tools` array. This mode **requires `stream: true`** because search results and the final answer are delivered as a sequence of server-sent event chunks.
 
 ```bash
 curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Authorization: Bearer $NEAR_AI_KEY" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
     "model": "zai-org/GLM-5.1-FP8",
-    "messages": [{"role": "user", "content": "What is the current population of Tokyo? One short sentence."}],
-    "tools": [{"type": "web_context_search"}],
+    "messages": [
+      {
+        "role": "user",
+        "content": "What are the latest developments in confidential computing?"
+      }
+    ],
+    "tools": [
+      { "type": "web_context_search" }
+    ],
     "stream": true
   }'
 ```
 
-The stream interleaves the search activity with the answer:
+The streaming response contains three types of delta chunks in sequence:
 
-1. `delta.tool_calls` chunks show the model composing its search query (function name `web_context_search`)
-2. a `delta.nearai_tool_result` chunk carries the search results that were injected back into the model's context
-3. regular `delta.content` (and `delta.reasoning_content`) chunks stream the final answer
+| Delta field | Content |
+|-------------|---------|
+| `delta.tool_calls` | The search query the model composed before calling the tool |
+| `delta.nearai_tool_result` | The search results fetched and injected into the context |
+| `delta.content` | The model's final answer, streamed token by token |
 
-This makes it easy to display "searching the web…" states and surface sources in your UI.
+You read the full stream to completion and render `delta.content` chunks as the model's response. No follow-up request is needed.
 
 <Note>
-  Unlike client-side function calling, you never receive a `finish_reason: "tool_calls"` response that you have to answer — the search loop runs entirely server-side, on infrastructure operated by NEAR AI.
+  Unlike standard OpenAI function calling, the server handles the entire tool-use loop internally. You will never receive a `finish_reason: "tool_calls"` chunk that requires you to call the tool and send a second request. Simply stream the response to completion and use the `delta.content` chunks as the final answer.
 </Note>
-## See Also
 
-- [OpenAI Compatibility](/cloud/guides/openai-compatibility) — Responses API and SDK setup
-- [Prompt Caching](/cloud/guides/prompt-caching) — search context benefits from cache-read pricing on repeated turns
+## Pricing
+
+Each web search invocation is billed as a platform service usage event at a flat per-search rate. Retrieve current service pricing with:
+
+```bash
+curl https://cloud-api.near.ai/v1/services \
+  -H "Authorization: Bearer $NEAR_AI_KEY"
+```
+
+The response lists all available platform services and their per-unit costs. Search invocations appear in your usage export under `source: "service"` rows.

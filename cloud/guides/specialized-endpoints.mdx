@@ -1,146 +1,209 @@
 ---
-title: "Embeddings, Images, Audio & More"
+title: "Embeddings, Images, Audio, and Privacy Classification"
 sidebarTitle: "Beyond Chat"
-description: "Use NEAR AI Cloud for embeddings, reranking, image generation, audio transcription, and PII detection — all inside TEEs"
-icon: "images"
+description: "Use NEAR AI Cloud for text embeddings, document reranking, image generation, audio transcription, and PII detection — all running in Trusted Execution Environments."
 ---
 
-
-NEAR AI Cloud is not limited to chat completions. The same gateway (`cloud-api.near.ai`) and [direct completions endpoints](/cloud/private-inference#direct-completions) serve specialized TEE-hosted models for embeddings, reranking, scoring, image generation, and audio transcription. Privacy classification is available through the gateway and may also be served by a direct completions endpoint when the selected privacy-filter backend supports it; privacy redaction remains gateway-only. Both modes use the same API key, the same OpenAI-compatible conventions, and the same hardware privacy guarantees for TEE-hosted models.
-
-Gateway and direct completions responses include an `X-Request-Id` response header. Support may ask you for that opaque value when debugging a request. It is support/debugging metadata, not W3C `traceparent` or distributed trace context. If you send your own `X-Request-Id`, use a non-sensitive UUID value; `X-Request-Id` values must not contain secrets or PII. `X-Org-Id` and `X-Workspace-Id` are internal tenant headers; public clients cannot set or override them.
+NEAR AI Cloud is more than a chat API. The same gateway, the same API key, and the same TEE privacy guarantees cover a full suite of specialized inference endpoints — including text embeddings, document reranking, image generation, audio transcription, and PII detection. You can also reach any of these capabilities directly via per-model completions endpoints for the lowest possible latency.
 
 ## Embeddings
 
-Generate vector embeddings with `Qwen/Qwen3-Embedding-0.6B`:
+Generate dense vector representations of text using `Qwen/Qwen3-Embedding-0.6B`. The response follows the standard OpenAI embeddings format.
 
 ```bash
 curl https://cloud-api.near.ai/v1/embeddings \
+  -H "Authorization: Bearer $NEAR_AI_KEY" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
     "model": "Qwen/Qwen3-Embedding-0.6B",
-    "input": "NEAR AI Cloud runs models inside TEEs."
+    "input": "NEAR AI Cloud runs inference inside Trusted Execution Environments."
   }'
 ```
 
-The response follows the OpenAI embeddings format (`data[0].embedding` is the vector). `input` also accepts an array of strings for batch embedding.
+The response contains a `data` array where each element has an `embedding` field (a list of floats) and an `index` corresponding to the position in the input. Pass an array of strings to `input` to embed multiple texts in a single request.
 
 ## Reranking
 
-Score documents against a query with `Qwen/Qwen3-Reranker-0.6B`:
+Reorder a set of candidate documents by relevance to a query using `Qwen/Qwen3-Reranker-0.6B`. The `POST /v1/rerank` endpoint accepts a `query`, a list of `documents`, and optional `top_n` and `return_documents` parameters.
 
 ```bash
 curl https://cloud-api.near.ai/v1/rerank \
+  -H "Authorization: Bearer $NEAR_AI_KEY" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
     "model": "Qwen/Qwen3-Reranker-0.6B",
-    "query": "what is the capital of France",
+    "query": "What is a Trusted Execution Environment?",
     "documents": [
-      "Paris is the capital of France",
-      "Berlin is in Germany"
-    ]
+      "A TEE is a secure area of a processor that protects code and data.",
+      "The weather in San Francisco is mild and foggy.",
+      "Hardware attestation allows remote verification of enclave integrity."
+    ],
+    "top_n": 2,
+    "return_documents": true
   }'
 ```
 
+The response contains a `results` array sorted by `relevance_score` (higher is more relevant), each with the document `index` in the original input list:
+
 ```json
 {
-  "id": "rerank-b9390698eab7e1c3",
+  "id": "rerank-abc123",
   "model": "Qwen/Qwen3-Reranker-0.6B",
   "results": [
-    { "index": 0, "relevance_score": 0.914, "document": { "text": "Paris is the capital of France" } },
-    { "index": 1, "relevance_score": 0.828, "document": { "text": "Berlin is in Germany" } }
+    {
+      "index": 0,
+      "relevance_score": 0.9821,
+      "document": "A TEE is a secure area of a processor that protects code and data."
+    },
+    {
+      "index": 2,
+      "relevance_score": 0.8734,
+      "document": "Hardware attestation allows remote verification of enclave integrity."
+    }
   ]
 }
 ```
 
-Results are ordered by `relevance_score`; `index` refers to the position in your input `documents` array.
-
 ## Image Generation
 
-Generate images with `black-forest-labs/FLUX.2-klein-4B` (billed per image — see the [Models page](/cloud/models)):
+Generate images from text prompts using `black-forest-labs/FLUX.2-klein-4B` (or any other image model in the catalog). The endpoint follows the OpenAI images API.
 
 ```bash
 curl https://cloud-api.near.ai/v1/images/generations \
+  -H "Authorization: Bearer $NEAR_AI_KEY" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
     "model": "black-forest-labs/FLUX.2-klein-4B",
-    "prompt": "a red circle on a white background",
-    "n": 1
+    "prompt": "A glowing CPU enclave floating in deep space, digital art",
+    "n": 1,
+    "size": "1024x1024",
+    "response_format": "b64_json"
   }'
 ```
 
-The response returns the generated image as base64 in `data[0].b64_json`. An `/v1/images/edits` endpoint is also available for image-to-image editing.
+The response contains a `data` array of image objects. When `response_format` is `b64_json`, each object includes a `b64_json` field with the base64-encoded PNG. To edit an existing image, use `POST /v1/images/edits` with a multipart form upload.
 
 ## Audio Transcription
 
-Transcribe audio with `openai/whisper-large-v3` (multipart form upload, OpenAI-compatible):
+Transcribe audio files to text using `openai/whisper-large-v3`. Send a multipart form upload with the audio file and the model name.
 
 ```bash
 curl https://cloud-api.near.ai/v1/audio/transcriptions \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -F file=@recording.wav \
-  -F model=openai/whisper-large-v3
+  -H "Authorization: Bearer $NEAR_AI_KEY" \
+  -F "file=@recording.mp3" \
+  -F "model=openai/whisper-large-v3" \
+  -F "response_format=json"
 ```
 
-```json
-{ "text": "Hello, this is a test recording.", "id": "trans-9a1799eb395047e7ad4aef8b" }
-```
-
-## PII Detection & Redaction
-
-The `openai/privacy-filter` model detects personally identifiable information (names, emails, phone numbers, ...) in text. It is **not a chat model** — it exposes dedicated privacy endpoints:
-
-**Classify** returns labeled character spans with confidence scores:
-
-```bash
-curl https://cloud-api.near.ai/v1/privacy/classify \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -d '{
-    "model": "openai/privacy-filter",
-    "input": "My name is John Smith and my email is john@example.com"
-  }'
-```
+The response includes the transcribed `text` along with optional `language`, `duration`, `segments`, and `words` fields depending on the `response_format` and `timestamp_granularities` you request:
 
 ```json
 {
-  "id": "pt-9d83003f2d164dde9edcc0f7",
-  "model": "openai/privacy-filter",
-  "data": [{
-    "index": 0,
-    "spans": [
-      { "category": "private_person", "start": 10, "end": 21, "text": " John Smith", "score": 0.999 },
-      { "category": "private_email", "start": 37, "end": 54, "text": " john@example.com", "score": 0.999 }
-    ]
-  }]
+  "text": "NEAR AI Cloud runs your inference inside a Trusted Execution Environment.",
+  "language": "en",
+  "duration": 4.2
 }
 ```
 
-**Redact** (gateway only) returns the text with PII replaced:
+## PII Detection and Redaction
+
+### Classify — Detect PII Spans
+
+`POST /v1/privacy/classify` identifies personally identifiable information (PII) in one or more input strings, returning a list of detected spans with categories and confidence scores.
 
 ```bash
-curl https://cloud-api.near.ai/v1/privacy/redact \
+curl https://cloud-api.near.ai/v1/privacy/classify \
+  -H "Authorization: Bearer $NEAR_AI_KEY" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
     "model": "openai/privacy-filter",
-    "input": "My name is John Smith and my email is john@example.com"
+    "input": "Contact Alice at alice@example.com or call 555-867-5309.",
+    "threshold": 0.8
   }'
 ```
 
-`input` accepts a string or an array of strings for both endpoints.
+The response includes a `data` array with one entry per input string. Each entry contains a `spans` array identifying detected PII — including character offsets, category labels (e.g. `EMAIL`, `PHONE_NUMBER`, `PERSON`), and confidence scores.
 
-`/v1/privacy/classify` can also be served on `https://{slug}.completions.near.ai/v1` when the selected privacy-filter backend supports it.
+```json
+{
+  "model": "openai/privacy-filter",
+  "data": [
+    {
+      "spans": [
+        { "start": 11, "end": 27, "category": "EMAIL", "score": 0.997 },
+        { "start": 39, "end": 51, "category": "PHONE_NUMBER", "score": 0.993 },
+        { "start": 8,  "end": 13, "category": "PERSON", "score": 0.981 }
+      ]
+    }
+  ]
+}
+```
 
-`/v1/privacy/redact` is gateway-only and is served at `https://cloud-api.near.ai/v1`.
+### Redact — Replace PII with Placeholders
+
+`POST /v1/privacy/redact` (gateway only) replaces detected PII in each input string with category-labeled placeholders.
+
+```bash
+curl https://cloud-api.near.ai/v1/privacy/redact \
+  -H "Authorization: Bearer $NEAR_AI_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/privacy-filter",
+    "input": "Contact Alice at alice@example.com or call 555-867-5309.",
+    "threshold": 0.8
+  }'
+```
+
+The response `data` array contains per-input objects with a `redacted` field holding the sanitized string:
+
+```json
+{
+  "model": "openai/privacy-filter",
+  "data": [
+    {
+      "index": 0,
+      "redacted": "Contact [PERSON] at [EMAIL] or call [PHONE_NUMBER]."
+    }
+  ]
+}
+```
+
+<Note>
+  Both `input` fields accept either a single string or an array of strings. When you pass an array, each element is classified or redacted independently and the results are returned in the same order.
+</Note>
 
 ## Vision (Image Input)
 
-`Qwen/Qwen3-VL-30B-A3B-Instruct` accepts images in standard OpenAI chat format (`image_url` content parts) on `/v1/chat/completions`. Check `input_modalities` in [`/v1/models`](https://cloud-api.near.ai/v1/models) to see which models accept images.
+Models that support image input accept images using the standard OpenAI multi-modal message format — set `content` to an array containing `text` and `image_url` parts. `Qwen/Qwen3-VL-30B-A3B-Instruct` is one example of a vision-capable model on NEAR AI Cloud.
 
----
+To discover which models support image input, call `GET /v1/models` and inspect the `input_modalities` field on each model object. Models with `"image"` listed in `input_modalities` accept image content parts.
 
-Embeddings, reranking, scoring, image generation, image editing, and audio transcription also work on each matching model's own [direct completions endpoint](/cloud/private-inference#direct-completions) (for example, `qwen3-embedding.completions.near.ai`, `qwen3-reranker.completions.near.ai`, or `flux2-klein.completions.near.ai`), where TLS terminates directly inside the model's TEE. See [Private Inference](/cloud/private-inference#direct-completions) for the served direct route list, including `/v1/tokenize`, `/v1/score`, and `/v1/images/edits`.
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Authorization: Bearer $NEAR_AI_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "Qwen/Qwen3-VL-30B-A3B-Instruct",
+    "messages": [
+      {
+        "role": "user",
+        "content": [
+          { "type": "text", "text": "Describe what you see in this image." },
+          { "type": "image_url", "image_url": { "url": "https://example.com/photo.jpg" } }
+        ]
+      }
+    ]
+  }'
+```
+
+## Direct Completions Endpoints
+
+All specialized endpoints are also available through model-specific direct completions URLs, which terminate TLS directly inside the model's TEE:
+
+| Model | Direct Completions Base URL |
+|-------|-----------------------------|
+| `Qwen/Qwen3-Embedding-0.6B` | `https://qwen3-embedding.completions.near.ai/v1` |
+| `Qwen/Qwen3-Reranker-0.6B` | `https://qwen3-reranker.completions.near.ai/v1` |
+| `black-forest-labs/FLUX.2-klein-4B` | `https://flux2-klein.completions.near.ai/v1` |
+
+Use the same API key and request format — just swap the base URL. Find slugs for all models on the [Models](/cloud/models) page.

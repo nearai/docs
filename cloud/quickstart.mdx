@@ -1,231 +1,228 @@
 ---
-title: "Quickstart"
-icon: "rocket"
+title: "Get Started with NEAR AI Cloud in Minutes"
+sidebarTitle: "Quickstart"
+description: "Create an account, add credits, generate an API key, and make your first private AI inference call with NEAR AI Cloud in under 5 minutes."
 ---
 
+NEAR AI Cloud gives you access to leading AI models running inside Trusted Execution Environments (TEEs) through a single OpenAI-compatible API. Your prompts and outputs are hardware-encrypted and never accessible to any operator — including NEAR AI. This guide walks you through account setup and your first API call.
 
-[NEAR AI Cloud](https://cloud.near.ai) offers developers access to secure, private, verifiable AI models through a unified API. This quickstart guide will walk you through creating an account and making your first requests in minutes.
+## Set Up Your Account
 
-## Setup
+<Steps>
+  <Step title="Create your account">
+    Go to [cloud.near.ai](https://cloud.near.ai) and sign up. You can use an email address or a supported social login.
+  </Step>
+  <Step title="Add credits">
+    Open the **Credits** section in the dashboard and add funds to your balance. NEAR AI Cloud bills per token consumed — no subscription required.
+  </Step>
+  <Step title="Generate an API key">
+    Open the **API Keys** section, click **Create API Key**, give it a name, and copy the key value.
 
-  1) **Create your account** - Sign up at [cloud.near.ai](https://cloud.near.ai/) 
-  2) **Add Credits** - Go to the "Credits" section and purchase credits based on your needs
-  3) **Generate API Key** - Go to the "API Keys" section and generate a new key
-
-<Tip>
-  **Keep Your API Key Safe**
-
-  Never share your API key publicly or commit it to version control. If compromised, you can regenerate it anytime from your dashboard.
-</Tip>
----
+    <Tip>
+      Your API key is shown only once. Store it in a password manager or secret store such as a CI/CD secrets vault. Never commit it to source control.
+    </Tip>
+  </Step>
+</Steps>
 
 ## Make Your First API Call
 
-NEAR AI Cloud uses an OpenAI-compatible API, making it easy to integrate with existing tools and libraries. You can connect through the **gateway** (`cloud-api.near.ai`) or **directly** to a model's own endpoint (`{slug}.completions.near.ai`).
-
 <Note>
-  Replace `YOUR_API_KEY` with the API key you generated in the setup steps above.
+  Replace `YOUR_API_KEY` in every example below with the key you generated in the previous step.
 </Note>
-<Tip>
-  **Request IDs**
 
-  Gateway and direct completions responses include an `X-Request-Id` response header. Support may ask you for it when debugging a request. The value is opaque support/debugging metadata, not W3C `traceparent` or distributed trace context. If you send your own `X-Request-Id`, use a non-sensitive UUID value; `X-Request-Id` values must not contain secrets or PII. `X-Org-Id` and `X-Workspace-Id` are internal tenant headers; public clients cannot set or override them.
-</Tip>
-<Tabs>
-<Tab title="Gateway">
+NEAR AI Cloud offers two connection modes depending on your use case:
 
-The gateway routes your request to the appropriate model TEE:
+- **Gateway** — A single, unified endpoint (`https://cloud-api.near.ai/v1`) that routes requests to any model in the catalog. Use this when you want to switch models without changing your base URL.
+- **Direct Completions** — A per-model endpoint (`https://{slug}.completions.near.ai/v1`) that connects you directly to a specific model's TEE cluster. Use this for the lowest possible latency and the strongest isolation guarantees.
 
 <Tabs>
-<Tab title="curl">
+  <Tab title="Gateway">
+    Send requests to `https://cloud-api.near.ai/v1` and specify any supported model in the `model` field.
 
-```bash
-curl https://cloud-api.near.ai/v1/chat/completions \
--H "Content-Type: application/json" \
--H "Authorization: Bearer YOUR_API_KEY" \
--d '{
-    "model": "zai-org/GLM-5.1-FP8",
-    "messages": [{
-        "role": "user",
-        "content": "Hello, NEAR AI!"
-    }]
-}'
-```
+    <Tabs>
+      <Tab title="curl">
+        ```bash
+        curl https://cloud-api.near.ai/v1/chat/completions \
+          -H "Authorization: Bearer YOUR_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "model": "zai-org/GLM-5.1-FP8",
+            "messages": [
+              {
+                "role": "user",
+                "content": "What is a Trusted Execution Environment?"
+              }
+            ]
+          }'
+        ```
+      </Tab>
+      <Tab title="Python">
+        ```python
+        from openai import OpenAI
 
-</Tab>
-<Tab title="Python">
+        client = OpenAI(
+            base_url="https://cloud-api.near.ai/v1",
+            api_key="YOUR_API_KEY",
+        )
 
-```python
-import openai
+        response = client.chat.completions.create(
+            model="zai-org/GLM-5.1-FP8",
+            messages=[
+                {
+                    "role": "user",
+                    "content": "What is a Trusted Execution Environment?",
+                }
+            ],
+        )
 
-client = openai.OpenAI(
-    base_url="https://cloud-api.near.ai/v1",
-    api_key="YOUR_API_KEY"
-)
+        print(response.choices[0].message.content)
+        ```
+      </Tab>
+      <Tab title="JavaScript">
+        ```javascript
+        import OpenAI from "openai";
 
-response = client.chat.completions.create(
-    model="zai-org/GLM-5.1-FP8",
-    messages=[{
-        "role": "user", "content": "Hello, NEAR AI!"
-    }]
-)
+        const client = new OpenAI({
+          baseURL: "https://cloud-api.near.ai/v1",
+          apiKey: "YOUR_API_KEY",
+        });
 
-print(response.choices[0].message.content)
-```
+        const response = await client.chat.completions.create({
+          model: "zai-org/GLM-5.1-FP8",
+          messages: [
+            {
+              role: "user",
+              content: "What is a Trusted Execution Environment?",
+            },
+          ],
+        });
 
-</Tab>
-<Tab title="JavaScript">
+        console.log(response.choices[0].message.content);
+        ```
+      </Tab>
+    </Tabs>
+  </Tab>
+  <Tab title="Direct Completions">
+    Replace `{slug}` in the base URL with the model's slug — for example, `qwen35-122b` for `Qwen/Qwen3.5-122B-A10B`. You can find each model's slug on the [Models](/cloud/models) page.
 
-```javascript
-import OpenAI from 'openai';
+    <Tabs>
+      <Tab title="curl">
+        ```bash
+        curl https://qwen35-122b.completions.near.ai/v1/chat/completions \
+          -H "Authorization: Bearer YOUR_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "model": "Qwen/Qwen3.5-122B-A10B",
+            "messages": [
+              {
+                "role": "user",
+                "content": "What is a Trusted Execution Environment?"
+              }
+            ]
+          }'
+        ```
+      </Tab>
+      <Tab title="Python">
+        ```python
+        from openai import OpenAI
 
-const openai = new OpenAI({
-    baseURL: 'https://cloud-api.near.ai/v1',
-    apiKey: 'YOUR_API_KEY',
-});
+        client = OpenAI(
+            base_url="https://qwen35-122b.completions.near.ai/v1",
+            api_key="YOUR_API_KEY",
+        )
 
-const completion = await openai.chat.completions.create({
-    model: 'zai-org/GLM-5.1-FP8',
-    messages: [{
-        role: 'user', content: 'Hello, NEAR AI!'
-    }]
-});
+        response = client.chat.completions.create(
+            model="Qwen/Qwen3.5-122B-A10B",
+            messages=[
+                {
+                    "role": "user",
+                    "content": "What is a Trusted Execution Environment?",
+                }
+            ],
+        )
 
-console.log(completion.choices[0].message.content);
-```
+        print(response.choices[0].message.content)
+        ```
+      </Tab>
+      <Tab title="JavaScript">
+        ```javascript
+        import OpenAI from "openai";
 
-</Tab>
+        const client = new OpenAI({
+          baseURL: "https://qwen35-122b.completions.near.ai/v1",
+          apiKey: "YOUR_API_KEY",
+        });
+
+        const response = await client.chat.completions.create({
+          model: "Qwen/Qwen3.5-122B-A10B",
+          messages: [
+            {
+              role: "user",
+              content: "What is a Trusted Execution Environment?",
+            },
+          ],
+        });
+
+        console.log(response.choices[0].message.content);
+        ```
+      </Tab>
+    </Tabs>
+
+    <Tip>
+      Include an `X-Request-Id` header with a UUID you generate to correlate requests in your logs with the attestation record for that inference. This makes it straightforward to verify a specific call later.
+    </Tip>
+  </Tab>
 </Tabs>
 
-</Tab>
-<Tab title="Direct Completions">
+## Expected Response
 
-Direct completions connect you straight to the model's TEE — TLS terminates inside the model enclave with no intermediate gateway hop.
-
-Each model has its own subdomain. For example, Qwen3.5-122B is available at `qwen35-122b.completions.near.ai`:
-
-<Tabs>
-<Tab title="curl">
-
-```bash
-curl https://qwen35-122b.completions.near.ai/v1/chat/completions \
--H "Content-Type: application/json" \
--H "Authorization: Bearer YOUR_API_KEY" \
--d '{
-    "model": "Qwen/Qwen3.5-122B-A10B",
-    "messages": [{
-        "role": "user",
-        "content": "Hello, NEAR AI!"
-    }]
-}'
-```
-
-</Tab>
-<Tab title="Python">
-
-```python
-import openai
-
-client = openai.OpenAI(
-    base_url="https://qwen35-122b.completions.near.ai/v1",
-    api_key="YOUR_API_KEY"
-)
-
-response = client.chat.completions.create(
-    model="Qwen/Qwen3.5-122B-A10B",
-    messages=[{
-        "role": "user", "content": "Hello, NEAR AI!"
-    }]
-)
-
-print(response.choices[0].message.content)
-```
-
-</Tab>
-<Tab title="JavaScript">
-
-```javascript
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-    baseURL: 'https://qwen35-122b.completions.near.ai/v1',
-    apiKey: 'YOUR_API_KEY',
-});
-
-const completion = await openai.chat.completions.create({
-    model: 'Qwen/Qwen3.5-122B-A10B',
-    messages: [{
-        role: 'user', content: 'Hello, NEAR AI!'
-    }]
-});
-
-console.log(completion.choices[0].message.content);
-```
-
-</Tab>
-</Tabs>
-
-<Tip>
-  **Available Endpoints**
-
-  See the full list of available direct completions endpoints at [completions.near.ai/endpoints](https://completions.near.ai/endpoints). Examples include `qwen35-122b.completions.near.ai`, `qwen3-30b.completions.near.ai`, `gpt-oss-120b.completions.near.ai`, and more.
-</Tip>
-</Tab>
-</Tabs>
-
-### Expected Response
-
-The API will return a JSON response containing the model's completion:
+A successful call returns a standard OpenAI-compatible JSON response:
 
 ```json
 {
-  "id": "f47b4647911249f7a94468f6c2b95832",
+  "id": "chatcmpl-abc123",
   "object": "chat.completion",
-  "created": 1780405025,
+  "created": 1714000000,
   "model": "zai-org/GLM-5.1-FP8",
-  "choices": [{
-    "index": 0,
-    "message": {
-      "role": "assistant",
-      "content": "Hello there! 👋 Welcome to NEAR AI! I'm here to help you with whatever you need — whether it's answering questions, brainstorming ideas, writing code, or just having a conversation. How can I assist you today?",
-      "reasoning_content": "The user is greeting me. I should respond warmly and introduce myself as a NEAR AI assistant."
-    },
-    "finish_reason": "stop"
-  }],
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "A Trusted Execution Environment (TEE) is a secure area of a processor that guarantees code and data loaded inside it are protected from the rest of the system..."
+      },
+      "finish_reason": "stop"
+    }
+  ],
   "usage": {
-    "prompt_tokens": 11,
-    "completion_tokens": 70,
-    "reasoning_tokens": 21,
-    "total_tokens": 81
+    "prompt_tokens": 14,
+    "completion_tokens": 64,
+    "total_tokens": 78
   }
 }
 ```
 
 <Note>
-  `zai-org/GLM-5.1-FP8` is a reasoning model, so the response includes a `reasoning_content` field and `reasoning_tokens` in `usage`. See [Reasoning Models](/cloud/reasoning-models) to control this behavior.
+  Reasoning models such as DeepSeek-R1 return an additional `reasoning_content` field alongside the standard `content` field in the response message. This field contains the model's internal chain-of-thought. See [Reasoning Models](/cloud/reasoning-models) for details on how to handle this field in your application.
 </Note>
-All inference is performed within Trusted Execution Environments (TEEs), ensuring your data remains private and verifiable.
 
 <Tip>
-  **Using OpenAI SDKs?**
-
-  For advanced features like streaming, async operations, Files API, and Conversations API, see our comprehensive [OpenAI Compatibility Guide](/cloud/guides/openai-compatibility).
+  Because NEAR AI Cloud implements the OpenAI API specification, you can use any existing OpenAI SDK — including the official Python and JavaScript libraries — without modification. Just update `base_url` / `baseURL` to the NEAR AI Cloud endpoint and swap in your API key. See the [OpenAI Compatibility guide](/cloud/guides/openai-compatibility) for the full list of supported endpoints and parameters.
 </Tip>
----
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Explore Models" icon="brain-circuit" href="/cloud/models">
-    Browse available AI models including GLM, Qwen, OpenAI, Anthropic, and Gemini
+  <Card title="Models" icon="brain-circuit" href="/cloud/models">
+    Browse the full model catalog — including model slugs, context lengths, and pricing.
   </Card>
   <Card title="Private Inference" icon="lock" href="/cloud/private-inference">
-    Learn about the secure architecture and how your data is protected
+    Learn how TEEs protect your data end-to-end and what confidentiality guarantees NEAR AI Cloud provides.
   </Card>
-  <Card title="Verification" icon="file-check" href="/cloud/verification">
-    Understand how to verify and validate secure interactions with AI models
+  <Card title="Verify Your Inference" icon="file-check" href="/cloud/verification/index">
+    Independently verify that your requests ran on genuine confidential hardware using attestation reports.
   </Card>
-  <Card title="OpenAI Compatibility" icon="cloud" href="/cloud/guides/openai-compatibility">
-    Use standard OpenAI SDKs with streaming, async, Files API, and more
+  <Card title="OpenAI Compatibility" icon="plug" href="/cloud/guides/openai-compatibility">
+    See which OpenAI endpoints and parameters are supported and how to migrate an existing integration.
   </Card>
 </CardGroup>

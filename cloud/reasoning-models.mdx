@@ -1,37 +1,37 @@
 ---
-title: "Reasoning Models"
-sidebarTitle: "Reasoning Models Config"
-description: "Learn how to enable and disable reasoning capabilities for supported models"
-icon: "brain-cog"
+title: "Configure Reasoning Models on NEAR AI Cloud"
+sidebarTitle: "Reasoning Models"
+description: "Control reasoning (chain-of-thought) behavior for GLM, Qwen, GPT-OSS, and Kimi models on NEAR AI Cloud using chat_template_kwargs or reasoning_effort."
 ---
 
+Several models on NEAR AI Cloud can **think before they answer** — they work through a problem step by step before producing a final response. This chain-of-thought process is returned in a `reasoning_content` field alongside the usual `content` field, giving you full visibility into the model's reasoning trace. Enabling reasoning typically improves accuracy on complex tasks at the cost of higher token usage and latency.
 
-Some models in NEAR AI Cloud support advanced reasoning capabilities that allow them to "think" through problems before providing a final answer. This feature can improve the quality of responses for complex tasks that require step-by-step reasoning.
+---
 
 ## Overview
 
-Reasoning models can process information in two stages:
-1. **Thinking stage**: Internal reasoning process, returned in the `reasoning_content` field of the response message
-2. **Response stage**: The final answer, returned in the `content` field
+Reasoning models operate in two stages:
 
-For most TEE-hosted models you can control whether the model uses reasoning by configuring the `chat_template_kwargs` parameter in your API requests. Reasoning output is billed as completion tokens and reported separately as `reasoning_tokens` in the `usage` object.
+1. **Thinking stage** — The model's internal reasoning process. Returned in the `reasoning_content` field of the response message (streamed as `delta.reasoning_content` chunks when `stream: true`).
+2. **Response stage** — The final answer delivered to the user. Returned in the `content` field as usual.
+
+Reasoning tokens are billed as completion tokens and reported separately in the `usage` object as `reasoning_tokens`, so you can monitor thinking overhead independently of your final answer.
 
 <Tip>
-  **Which models support reasoning?**
+  To check whether a specific model supports reasoning before making a request, call [`GET /v1/models`](https://cloud-api.near.ai/v1/models) and look for `"reasoning"` in the model's `supported_features` array.
 
-  Check the `supported_features` array in the [`/v1/models`](https://cloud-api.near.ai/v1/models) response — reasoning-capable models list `"reasoning"`.
-
-  Known gap: `Qwen/Qwen3.5-122B-A10B` ([cloud-api#703](https://github.com/nearai/cloud-api/issues/703)), `moonshotai/kimi-k2.5`, and `moonshotai/kimi-k2.6` currently reason by default even though their metadata does not yet list the `"reasoning"` flag.
+  **Known gap:** `Qwen/Qwen3.5-122B-A10B`, `moonshotai/kimi-k2.5`, and `moonshotai/kimi-k2.6` currently reason by default even if their `supported_features` metadata does not yet list the `"reasoning"` flag. Refer to the per-model sections below for the authoritative behavior.
 </Tip>
+
 ---
 
 ## GLM-5.1
 
-GLM-5.1 supports reasoning through the `enable_thinking` parameter in `chat_template_kwargs`. **Reasoning is enabled by default** for GLM-5.1.
+GLM-5.1 (`zai-org/GLM-5.1-FP8`) controls reasoning through the `enable_thinking` key inside `chat_template_kwargs`. **Reasoning is enabled by default** — you do not need to pass any extra parameter to get a reasoning trace.
 
-### Default Behavior (Reasoning Enabled)
+### Enable Reasoning (explicit)
 
-GLM-5.1 uses reasoning by default. You can explicitly enable it by setting `"enable_thinking": true`, or simply omit the parameter:
+You can make the intent explicit by setting `"enable_thinking": true`, or simply omit `chat_template_kwargs` entirely:
 
 ```bash
 curl https://cloud-api.near.ai/v1/chat/completions \
@@ -52,7 +52,7 @@ curl https://cloud-api.near.ai/v1/chat/completions \
 
 ### Disable Reasoning
 
-To disable reasoning for GLM-5.1, you must explicitly set `"enable_thinking": false` in the `chat_template_kwargs`:
+To turn off reasoning for GLM-5.1, you **must** explicitly pass `"enable_thinking": false` — omitting the parameter leaves reasoning on:
 
 ```bash
 curl https://cloud-api.near.ai/v1/chat/completions \
@@ -75,7 +75,7 @@ curl https://cloud-api.near.ai/v1/chat/completions \
 
 ## Qwen3.5-122B and Qwen3.6-35B
 
-Qwen3.5-122B (`Qwen/Qwen3.5-122B-A10B`) and Qwen3.6-35B (`Qwen/Qwen3.6-35B-A3B-FP8`) have reasoning enabled by default. The model will include `reasoning_content` in responses automatically. To disable reasoning, set `"enable_thinking": false` in the `chat_template_kwargs`:
+Both `Qwen/Qwen3.5-122B-A10B` and `Qwen/Qwen3.6-35B-A3B-FP8` have reasoning **enabled by default** and automatically include `reasoning_content` in every response. To disable reasoning, set `"enable_thinking": false` in `chat_template_kwargs`:
 
 ```bash
 curl https://cloud-api.near.ai/v1/chat/completions \
@@ -93,11 +93,13 @@ curl https://cloud-api.near.ai/v1/chat/completions \
   }'
 ```
 
+The same `"enable_thinking": false` parameter applies to `Qwen/Qwen3.6-35B-A3B-FP8` — just swap the `model` value.
+
 ---
 
 ## GPT-OSS-120B
 
-GPT-OSS-120B (`openai/gpt-oss-120b`) always reasons before answering — its reasoning cannot be disabled. Instead, you control how much it thinks with the standard OpenAI `reasoning_effort` parameter (`low`, `medium`, or `high`; defaults to `medium`):
+GPT-OSS-120B (`openai/gpt-oss-120b`) **always reasons before answering** — reasoning cannot be disabled. Instead, you control how much thinking budget the model uses via the standard `reasoning_effort` parameter: `"low"`, `"medium"` (default), or `"high"`.
 
 ```bash
 curl https://cloud-api.near.ai/v1/chat/completions \
@@ -113,11 +115,13 @@ curl https://cloud-api.near.ai/v1/chat/completions \
   }'
 ```
 
+Use `"low"` for faster, cheaper responses on simpler tasks; use `"high"` when maximum accuracy is the priority.
+
 ---
 
 ## Kimi K2.5 and Kimi K2.6
 
-Kimi K2.5 (`moonshotai/kimi-k2.5`) and Kimi K2.6 (`moonshotai/kimi-k2.6`) have reasoning enabled by default and include `reasoning_content` in responses automatically. To disable reasoning, set `"thinking": false` in the `chat_template_kwargs` (note the parameter name — `thinking`, not `enable_thinking`):
+Kimi K2.5 (`moonshotai/kimi-k2.5`) and Kimi K2.6 (`moonshotai/kimi-k2.6`) have reasoning **enabled by default** and include `reasoning_content` in responses automatically. To disable reasoning, set `"thinking": false` inside `chat_template_kwargs`:
 
 ```bash
 curl https://cloud-api.near.ai/v1/chat/completions \
@@ -135,21 +139,18 @@ curl https://cloud-api.near.ai/v1/chat/completions \
   }'
 ```
 
-With `"thinking": false` the response contains no reasoning trace and `usage.reasoning_tokens` drops to 0.
+With `"thinking": false` the response contains no reasoning trace and `usage.reasoning_tokens` drops to `0`.
 
 <Warning>
-  **`reasoning_effort` is not supported on Kimi**
-
-  The Kimi models ignore `reasoning_effort` (and OpenRouter-style `reasoning` request objects): requests that include them succeed, but the model reasons exactly as it would without them. Reasoning on Kimi K2.5 and K2.6 is on/off only — there are no effort levels or thinking budgets. Use `chat_template_kwargs.thinking` instead.
+  **`reasoning_effort` is not supported on Kimi models.** Kimi K2.5 and K2.6 silently ignore `reasoning_effort` (and OpenRouter-style `reasoning` request objects) — requests that include them succeed, but the model behaves exactly as if those fields were absent. Reasoning on Kimi is on/off only; there are no effort levels or thinking budgets. Use `chat_template_kwargs.thinking` as shown above.
 </Warning>
+
 ---
 
-## Model-Specific Parameters
-
-Different models use different parameter names for controlling reasoning:
+## Model Parameters Reference
 
 | Model | Model ID | Parameter | Default |
-|-------|----------|-----------|---------|
+| --- | --- | --- | --- |
 | GLM-5.1 | `zai-org/GLM-5.1-FP8` | `chat_template_kwargs.enable_thinking` | `true` |
 | Qwen3.5-122B | `Qwen/Qwen3.5-122B-A10B` | `chat_template_kwargs.enable_thinking` | `true` |
 | Qwen3.6-35B | `Qwen/Qwen3.6-35B-A3B-FP8` | `chat_template_kwargs.enable_thinking` | `true` |
@@ -157,16 +158,11 @@ Different models use different parameter names for controlling reasoning:
 | Kimi K2.5 | `moonshotai/kimi-k2.5` | `chat_template_kwargs.thinking` | `true` |
 | Kimi K2.6 | `moonshotai/kimi-k2.6` | `chat_template_kwargs.thinking` | `true` |
 
-<Tip>
-  Always check the model documentation or use the model's specific parameter name. Using the wrong parameter name will not enable reasoning.
-</Tip>
-Third-party models served through the gateway (OpenAI `o`-series and GPT-5.x, Anthropic Claude, Gemini Pro, ...) use their provider's standard reasoning controls, such as `reasoning_effort`. The Kimi models are the exception: they do not respond to `reasoning_effort` — use `chat_template_kwargs.thinking` as described [above](#kimi-k25-and-kimi-k26).
-
 ---
 
 ## Reading Reasoning Output
 
-When reasoning is active, responses contain the reasoning trace alongside the answer:
+When reasoning is active, the response includes the thinking trace alongside the final answer:
 
 ```json
 {
@@ -174,7 +170,7 @@ When reasoning is active, responses contain the reasoning trace alongside the an
     "message": {
       "role": "assistant",
       "content": "2 + 2 = 4",
-      "reasoning_content": "The user asks a simple arithmetic question..."
+      "reasoning_content": "The user asks a simple arithmetic question. 2 plus 2 equals 4. No ambiguity here."
     }
   }],
   "usage": {
@@ -186,29 +182,22 @@ When reasoning is active, responses contain the reasoning trace alongside the an
 }
 ```
 
-- `reasoning_content` — the model's internal thinking (streamed as `delta.reasoning_content` chunks when `stream: true`)
-- `usage.reasoning_tokens` — how many completion tokens were spent thinking
+- **`reasoning_content`** — the model's full internal thinking trace. When streaming, this arrives as `delta.reasoning_content` chunks before the `delta.content` chunks begin.
+- **`usage.reasoning_tokens`** — the number of completion tokens consumed by the thinking stage. These count toward your total usage and are billed at the model's standard completion-token rate.
 
 ---
 
 ## When to Use Reasoning
 
-Reasoning is particularly useful for:
-- **Complex mathematical problems**: Multi-step calculations and problem-solving
-- **Logical reasoning**: Tasks requiring step-by-step analysis
-- **Code generation**: Complex programming problems that need careful planning
-- **Scientific questions**: Problems requiring structured thinking
+**Reasoning tends to help with:**
 
-Reasoning may not be necessary for:
-- **Simple queries**: Straightforward questions with direct answers
-- **Fast responses**: When latency is critical and the problem is simple
-- **Cost optimization**: Reasoning can increase token usage and costs
+- **Complex mathematical problems** — multi-step calculations, proofs, and numerical reasoning that benefit from careful intermediate steps.
+- **Logical reasoning** — tasks that require step-by-step deduction or inference across multiple conditions.
+- **Code generation** — intricate programming problems where planning the approach before writing code reduces errors.
+- **Scientific questions** — problems that require structured analysis or domain knowledge synthesis.
 
----
+**Reasoning may not be necessary for:**
 
-## Best Practices
-
-1. **Test with and without reasoning**: Compare results to determine if reasoning improves output quality for your use case
-2. **Monitor token usage**: Reasoning can increase the number of tokens used, affecting costs — watch `usage.reasoning_tokens`
-3. **Use appropriate models**: Not all models support reasoning - check model capabilities before enabling
-4. **Stream responses**: When using reasoning, streaming can provide better user experience for longer responses
+- **Simple queries** — straightforward questions with direct, unambiguous answers.
+- **Latency-critical applications** — reasoning adds time to first token; disable it when speed matters more than accuracy.
+- **Cost optimization** — reasoning tokens are billed as completion tokens; disabling thinking on simple tasks meaningfully reduces costs.

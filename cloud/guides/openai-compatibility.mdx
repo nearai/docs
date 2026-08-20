@@ -1,81 +1,72 @@
 ---
-title: "OpenAI Compatibility"
+title: "Use OpenAI SDKs with NEAR AI Cloud"
 sidebarTitle: "OpenAI Client"
-description: "How to use NEAR AI Cloud with standard OpenAI SDKs"
-icon: "cloud"
+description: "Configure the OpenAI Python and JavaScript SDKs to call NEAR AI Cloud by setting base_url to cloud-api.near.ai or a direct completions endpoint, with the same API key."
 ---
 
-
-NEAR AI Cloud provides an API that is fully compatible with the OpenAI API specification. This means you can use the official OpenAI client libraries for Python and JavaScript/TypeScript with minimal configuration changes.
+NEAR AI Cloud is fully OpenAI-compatible. You can use the official OpenAI Python and JavaScript SDKs — or any other OpenAI-compatible client — without modification. The only change required is updating `base_url` / `baseURL` to the NEAR AI Cloud endpoint and supplying your NEAR AI API key. Every OpenAI-compatible method, parameter, and response shape works exactly as documented by OpenAI.
 
 ## Configuration
 
-To use the OpenAI SDKs with NEAR AI Cloud, you simply need to override the `base_url` and provide your NEAR AI `api_key`.
+NEAR AI Cloud exposes two endpoint modes:
 
-### Base URL
+| Mode | Base URL | When to use |
+|------|----------|-------------|
+| **Gateway** | `https://cloud-api.near.ai/v1` | Routing across all catalog models; switch models without changing your base URL |
+| **Direct Completions** | `https://{slug}.completions.near.ai/v1` | Lowest latency; TLS terminates directly inside the model's TEE |
 
-NEAR AI Cloud offers two base URL options:
+Replace `{slug}` with the model-specific slug from the [Models](/cloud/models) page (for example, `qwen35-122b` for `Qwen/Qwen3.5-122B-A10B`).
 
-**Gateway** (routes to any model):
-```
-https://cloud-api.near.ai/v1
-```
+**Generate an API key** in the [Developer Dashboard](https://cloud.near.ai) under **API Keys → Create API Key**. The key is shown only once — store it securely.
 
-**Direct Completions** (connects straight to a model's TEE):
-```
-https://{slug}.completions.near.ai/v1
-```
-
-For example, `https://qwen35-122b.completions.near.ai/v1` connects directly to Qwen3.5-122B. See [completions.near.ai/endpoints](https://completions.near.ai/endpoints) for all available endpoints.
-
-Both URLs use the same API key and the same OpenAI-compatible API. Direct completions offer lower latency and a simpler trust model since TLS terminates directly in the model's TEE. See [Private Inference — Direct Completions](/cloud/private-inference#direct-completions) for details.
-
-### API Key
-You can generate your API key in the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations).
-
-### Request IDs
-
-Gateway responses from `https://cloud-api.near.ai/v1` and direct completions responses from `https://{slug}.completions.near.ai/v1` include an `X-Request-Id` response header. Support may ask you for this value when debugging a request.
-
-`X-Request-Id` is opaque support/debugging metadata; it is not W3C `traceparent` or distributed trace context. If you send your own `X-Request-Id`, use a non-sensitive UUID value. `X-Request-Id` values must not contain secrets or PII. `X-Org-Id` and `X-Workspace-Id` are internal tenant headers; public clients cannot set or override them.
-
-## Usage Examples
+## Basic Setup
 
 <Tabs>
-<Tab title="Python">
+  <Tab title="Python">
+    ```python
+    from openai import OpenAI
 
-### Python SDK
+    client = OpenAI(
+        base_url="https://cloud-api.near.ai/v1",
+        api_key="YOUR_API_KEY",
+    )
 
-First, install the OpenAI Python library:
+    response = client.chat.completions.create(
+        model="zai-org/GLM-5.1-FP8",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "What is a Trusted Execution Environment?"},
+        ],
+    )
 
-```bash
-pip install openai
-```
+    print(response.choices[0].message.content)
+    ```
+  </Tab>
+  <Tab title="JavaScript / TypeScript">
+    ```javascript
+    import OpenAI from "openai";
 
-Then, initialize the client with NEAR AI configuration:
+    const client = new OpenAI({
+      baseURL: "https://cloud-api.near.ai/v1",
+      apiKey: "YOUR_API_KEY",
+    });
 
-```python
-from openai import OpenAI
+    const response = await client.chat.completions.create({
+      model: "zai-org/GLM-5.1-FP8",
+      messages: [
+        { role: "system", content: "You are a helpful assistant." },
+        { role: "user", content: "What is a Trusted Execution Environment?" },
+      ],
+    });
 
-client = OpenAI(
-    base_url="https://cloud-api.near.ai/v1",
-    api_key="YOUR_NEAR_AI_API_KEY",
-)
+    console.log(response.choices[0].message.content);
+    ```
+  </Tab>
+</Tabs>
 
-response = client.chat.completions.create(
-    model="zai-org/GLM-5.1-FP8",
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "Explain quantum computing in simple terms."}
-    ],
-    temperature=0.7,
-    max_tokens=500
-)
+## Async Usage (Python)
 
-print(response.choices[0].message.content)
-```
-
-### Async Usage
+Use `AsyncOpenAI` for non-blocking calls in async Python applications:
 
 ```python
 import asyncio
@@ -83,253 +74,270 @@ from openai import AsyncOpenAI
 
 client = AsyncOpenAI(
     base_url="https://cloud-api.near.ai/v1",
-    api_key="YOUR_NEAR_AI_API_KEY",
+    api_key="YOUR_API_KEY",
 )
 
 async def main():
-    stream = await client.chat.completions.create(
+    response = await client.chat.completions.create(
         model="zai-org/GLM-5.1-FP8",
-        messages=[{"role": "user", "content": "Tell me a story about space."}],
-        stream=True,
+        messages=[
+            {"role": "user", "content": "Explain TEE attestation in one paragraph."},
+        ],
     )
-    
-    async for chunk in stream:
-        if chunk.choices[0].delta.content is not None:
-            print(chunk.choices[0].delta.content, end="")
+    print(response.choices[0].message.content)
 
 asyncio.run(main())
 ```
 
-</Tab>
-<Tab title="JavaScript/TypeScript">
+## Streaming
 
-### Node.js / TypeScript SDK
+Both the Python and JavaScript SDKs support streaming responses using the same OpenAI streaming interface.
 
-First, install the OpenAI Node.js library:
+<Tabs>
+  <Tab title="Python">
+    ```python
+    from openai import OpenAI
 
-```bash
-npm install openai
-```
+    client = OpenAI(
+        base_url="https://cloud-api.near.ai/v1",
+        api_key="YOUR_API_KEY",
+    )
 
-Then, initialize the client with NEAR AI configuration:
+    with client.chat.completions.stream(
+        model="zai-org/GLM-5.1-FP8",
+        messages=[
+            {"role": "user", "content": "Write a short poem about private AI."},
+        ],
+    ) as stream:
+        for text in stream.text_stream:
+            print(text, end="", flush=True)
+    ```
+  </Tab>
+  <Tab title="JavaScript / TypeScript">
+    ```javascript
+    import OpenAI from "openai";
 
-```javascript
-import OpenAI from 'openai';
+    const client = new OpenAI({
+      baseURL: "https://cloud-api.near.ai/v1",
+      apiKey: "YOUR_API_KEY",
+    });
 
-const openai = new OpenAI({
-  baseURL: 'https://cloud-api.near.ai/v1',
-  apiKey: 'YOUR_NEAR_AI_API_KEY',
-});
+    const stream = await client.chat.completions.create({
+      model: "zai-org/GLM-5.1-FP8",
+      messages: [
+        { role: "user", content: "Write a short poem about private AI." },
+      ],
+      stream: true,
+    });
 
-async function main() {
-  const completion = await openai.chat.completions.create({
-    messages: [{ role: 'user', content: 'What is the capital of France?' }],
-    model: 'zai-org/GLM-5.1-FP8',
-  });
-
-  console.log(completion.choices[0].message.content);
-}
-
-main();
-```
-
-### Streaming Example
-
-```javascript
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  baseURL: 'https://cloud-api.near.ai/v1',
-  apiKey: 'YOUR_NEAR_AI_API_KEY',
-});
-
-async function main() {
-  const stream = await openai.chat.completions.create({
-    model: 'zai-org/GLM-5.1-FP8',
-    messages: [{ role: 'user', content: 'Write a haiku about coding.' }],
-    stream: true,
-  });
-
-  for await (const chunk of stream) {
-    process.stdout.write(chunk.choices[0]?.delta?.content || '');
-  }
-}
-
-main();
-```
-
-</Tab>
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content ?? "";
+      process.stdout.write(delta);
+    }
+    ```
+  </Tab>
 </Tabs>
 
 ## Supported Features
 
-NEAR AI Cloud supports the following core OpenAI API features:
+NEAR AI Cloud supports all standard OpenAI-compatible endpoints as well as NEAR AI–specific extensions:
 
-- **Chat Completions** (`/v1/chat/completions`) - Including tool calling, structured outputs, and [reasoning](/cloud/reasoning-models)
-- **Completions** (`/v1/completions`) - Legacy text completions
-- **Models List** (`/v1/models`)
-- **Embeddings** (`/v1/embeddings`) - See [Beyond Chat](/cloud/guides/specialized-endpoints#embeddings)
-- **Images** (`/v1/images/generations`, `/v1/images/edits`) - See [Beyond Chat](/cloud/guides/specialized-endpoints#image-generation)
-- **Audio Transcription** (`/v1/audio/transcriptions`) - See [Beyond Chat](/cloud/guides/specialized-endpoints#audio-transcription)
-- **Files** (`/v1/files`) - Upload, list, retrieve, and delete files
-- **Conversations** (`/v1/conversations`) - Manage multi-turn conversations
-- **Responses** (`/v1/responses`) - Generate responses with advanced tool calling, including built-in [Web Search](/cloud/guides/web-search)
-- **Streaming** (Server-Sent Events)
+| Endpoint / Feature | Notes |
+|--------------------|-------|
+| `POST /v1/chat/completions` | Streaming, tool calling, structured outputs, vision |
+| `POST /v1/completions` | Legacy text completions |
+| `GET /v1/models` | Full model catalog with pricing and capability metadata |
+| `POST /v1/embeddings` | Via gateway; see [Beyond Chat](/cloud/guides/specialized-endpoints) |
+| `POST /v1/images/generations` | Image generation (FLUX.2-klein-4B and others) |
+| `POST /v1/images/edits` | Image editing |
+| `POST /v1/audio/transcriptions` | Whisper-based transcription |
+| `GET/POST /v1/files` | File upload and retrieval |
+| `POST /v1/conversations` | Persistent conversation threads |
+| `POST /v1/responses` | Responses API (stateful, tool-enabled) |
+| Streaming | Server-sent events on all inference endpoints |
+| `POST /v1/rerank` | NEAR AI extension — document reranking |
+| `POST /v1/privacy/classify` | NEAR AI extension — PII span detection |
+| `POST /v1/privacy/redact` | NEAR AI extension — PII redaction |
+| `GET /v1/attestation/report` | NEAR AI extension — hardware attestation |
 
-NEAR AI Cloud also provides non-OpenAI extensions:
+## Files API
 
-- **Reranking** (`/v1/rerank`) - Score documents against a query
-- **Privacy classification** (`/v1/privacy/classify`) - Detect personally identifiable information through the gateway, or through a privacy-filter direct completions backend when that backend is selected and available
-- **Privacy redaction** (`/v1/privacy/redact`) - Gateway-only endpoint for redacting personally identifiable information
-- **Attestation & Signatures** (`/v1/attestation/report`, `/v1/signature/{chat_id}`) - See [Verification](/cloud/verification)
-
-### Files API Example
-
-You can use the Files API to upload documents for use with supported models.
+Use the OpenAI Files API to upload documents for use in subsequent inference requests.
 
 <Tabs>
-<Tab title="Python">
+  <Tab title="Python">
+    ```python
+    from openai import OpenAI
 
-```python
-from openai import OpenAI
+    client = OpenAI(
+        base_url="https://cloud-api.near.ai/v1",
+        api_key="YOUR_API_KEY",
+    )
 
-client = OpenAI(
-    base_url="https://cloud-api.near.ai/v1",
-    api_key="YOUR_NEAR_AI_API_KEY",
-)
+    # Upload a file
+    with open("document.pdf", "rb") as f:
+        file_obj = client.files.create(file=f, purpose="assistants")
 
-# Upload a file
-file = client.files.create(
-  file=open("mydata.jsonl", "rb"),
-  purpose="fine-tune"
-)
-print(f"Uploaded file ID: {file.id}")
+    print(file_obj.id)   # file-abc123
 
-# List files
-files = client.files.list()
-for f in files.data:
-    print(f.filename, f.id)
-```
+    # List uploaded files
+    files = client.files.list()
+    for f in files.data:
+        print(f.id, f.filename, f.bytes)
 
-</Tab>
-<Tab title="JavaScript/TypeScript">
+    # Delete a file
+    client.files.delete(file_obj.id)
+    ```
+  </Tab>
+  <Tab title="JavaScript / TypeScript">
+    ```javascript
+    import OpenAI, { toFile } from "openai";
+    import fs from "fs";
 
-```javascript
-import OpenAI from 'openai';
-import fs from 'fs';
+    const client = new OpenAI({
+      baseURL: "https://cloud-api.near.ai/v1",
+      apiKey: "YOUR_API_KEY",
+    });
 
-const openai = new OpenAI({
-  baseURL: 'https://cloud-api.near.ai/v1',
-  apiKey: 'YOUR_NEAR_AI_API_KEY',
-});
+    // Upload a file
+    const file = await client.files.create({
+      file: await toFile(fs.createReadStream("document.pdf"), "document.pdf"),
+      purpose: "assistants",
+    });
 
-async function main() {
-  // Upload a file
-  const file = await openai.files.create({
-    file: fs.createReadStream('mydata.jsonl'),
-    purpose: 'fine-tune',
-  });
-  console.log(`Uploaded file ID: ${file.id}`);
+    console.log(file.id); // file-abc123
 
-  // List files
-  const files = await openai.files.list();
-  files.data.forEach(f => {
-    console.log(f.filename, f.id);
-  });
-}
+    // List uploaded files
+    const files = await client.files.list();
+    for (const f of files.data) {
+      console.log(f.id, f.filename, f.bytes);
+    }
 
-main();
-```
-
-</Tab>
+    // Delete a file
+    await client.files.del(file.id);
+    ```
+  </Tab>
 </Tabs>
 
-### Conversations and Responses (Beta)
+## Conversations and Responses API
 
-The Conversations and Responses APIs are newer OpenAI features that provide more structured management of multi-turn conversations and advanced tool usage.
+NEAR AI Cloud supports the stateful Conversations and Responses APIs for building multi-turn agents with persistent context.
 
 <Tabs>
-<Tab title="Python">
+  <Tab title="Python">
+    ```python
+    from openai import OpenAI
 
-```python
-from openai import OpenAI
+    client = OpenAI(
+        base_url="https://cloud-api.near.ai/v1",
+        api_key="YOUR_API_KEY",
+    )
 
-client = OpenAI(
-    base_url="https://cloud-api.near.ai/v1",
-    api_key="YOUR_NEAR_AI_API_KEY",
-)
+    # Create a persistent conversation
+    conversation = client.post("/v1/conversations", body={})
+    conversation_id = conversation.json()["id"]
 
-# 1. Create a conversation
-conversation = client.conversations.create(
-    metadata={"topic": "demo"}
-)
-print(f"Conversation ID: {conversation.id}")
+    # Create a response within the conversation
+    response = client.post(
+        "/v1/responses",
+        body={
+            "model": "zai-org/GLM-5.1-FP8",
+            "conversation": {"id": conversation_id},
+            "input": "Hello! What can you help me with?",
+        },
+    )
+    print(response.json()["output"])
 
-# 2. Generate a response
-response = client.responses.create(
-    conversation_id=conversation.id,
-    model="zai-org/GLM-5.1-FP8",
-    input=[
-        {"type": "message", "role": "user", "content": "Tell me a fun fact about it."}
-    ]
-)
+    # Continue the conversation using previous_response_id
+    follow_up = client.post(
+        "/v1/responses",
+        body={
+            "model": "zai-org/GLM-5.1-FP8",
+            "previous_response_id": response.json()["id"],
+            "input": "Tell me more about TEEs.",
+        },
+    )
+    print(follow_up.json()["output"])
+    ```
+  </Tab>
+  <Tab title="JavaScript / TypeScript">
+    ```javascript
+    import OpenAI from "openai";
 
-print(response.output[0].content[0].text)
-```
+    const client = new OpenAI({
+      baseURL: "https://cloud-api.near.ai/v1",
+      apiKey: "YOUR_API_KEY",
+    });
 
-</Tab>
-<Tab title="JavaScript/TypeScript">
+    // Create a persistent conversation
+    const conversationRes = await client.post("/v1/conversations", { body: {} });
+    const conversationId = conversationRes.id;
 
-```javascript
-import OpenAI from 'openai';
+    // Create a response within the conversation
+    const response = await client.post("/v1/responses", {
+      body: {
+        model: "zai-org/GLM-5.1-FP8",
+        conversation: { id: conversationId },
+        input: "Hello! What can you help me with?",
+      },
+    });
+    console.log(response.output);
 
-const openai = new OpenAI({
-  baseURL: 'https://cloud-api.near.ai/v1',
-  apiKey: 'YOUR_NEAR_AI_API_KEY',
-});
-
-async function main() {
-  // 1. Create a conversation
-  const conversation = await openai.conversations.create({
-    metadata: { topic: 'demo' }
-  });
-  console.log(`Conversation ID: ${conversation.id}`);
-
-  // 2. Generate a response
-  const response = await openai.responses.create({
-    conversation_id: conversation.id,
-    model: 'zai-org/GLM-5.1-FP8',
-    input: [
-        { type: 'message', role: 'user', content: 'Tell me a fun fact about it.' }
-    ]
-  });
-
-  console.log(response.output[0].content[0].text);
-}
-
-main();
-```
-
-</Tab>
+    // Continue the conversation using previous_response_id
+    const followUp = await client.post("/v1/responses", {
+      body: {
+        model: "zai-org/GLM-5.1-FP8",
+        previous_response_id: response.id,
+        input: "Tell me more about TEEs.",
+      },
+    });
+    console.log(followUp.output);
+    ```
+  </Tab>
 </Tabs>
 
 ## Environment Variables
 
-Alternatively, you can set the environment variables to avoid hardcoding credentials in your code:
+Both the Python and JavaScript SDKs automatically read `OPENAI_BASE_URL` and `OPENAI_API_KEY` from the environment, so you can configure the client without passing values in code:
 
 ```bash
 export OPENAI_BASE_URL="https://cloud-api.near.ai/v1"
-export OPENAI_API_KEY="your-near-ai-key"
+export OPENAI_API_KEY="YOUR_API_KEY"
 ```
 
-Then you can initialize the client without arguments:
+With these variables set, you can instantiate a client with no arguments:
 
-```python
-# Python
-client = OpenAI()
-```
+<Tabs>
+  <Tab title="Python">
+    ```python
+    from openai import OpenAI
 
-```javascript
-// JavaScript
-const openai = new OpenAI();
-```
+    # Reads OPENAI_BASE_URL and OPENAI_API_KEY automatically
+    client = OpenAI()
+
+    response = client.chat.completions.create(
+        model="zai-org/GLM-5.1-FP8",
+        messages=[{"role": "user", "content": "Hello!"}],
+    )
+    print(response.choices[0].message.content)
+    ```
+  </Tab>
+  <Tab title="JavaScript / TypeScript">
+    ```javascript
+    import OpenAI from "openai";
+
+    // Reads OPENAI_BASE_URL and OPENAI_API_KEY automatically
+    const client = new OpenAI();
+
+    const response = await client.chat.completions.create({
+      model: "zai-org/GLM-5.1-FP8",
+      messages: [{ role: "user", content: "Hello!" }],
+    });
+    console.log(response.choices[0].message.content);
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Store your API key in a `.env` file or your CI/CD secrets vault and load it with a library such as `python-dotenv` or `dotenv`. Never commit keys to source control.
+</Tip>

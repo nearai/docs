@@ -1,117 +1,113 @@
 ---
-title: "LibreChat"
-description: "Configure LibreChat to use NEAR AI Cloud as an OpenAI-compatible custom endpoint."
+title: "Connect NEAR AI Cloud to LibreChat"
+sidebarTitle: "LibreChat"
+description: "Add NEAR AI Cloud as an OpenAI-compatible provider in LibreChat for self-hosted, private AI conversations with TEE-protected models."
 ---
 
-
-LibreChat can use NEAR AI Cloud through a custom OpenAI-compatible endpoint in `librechat.yaml`. Keep the endpoint name unique, store the API key in `.env`, and mount the config file when running LibreChat with Docker.
+[LibreChat](https://librechat.ai) is a self-hosted, multi-user AI chat platform. It supports custom OpenAI-compatible endpoints through the `librechat.yaml` configuration file. You can add NEAR AI Cloud as a custom endpoint so your team can chat with TEE-protected models from the LibreChat UI.
 
 ## Prerequisites
 
-- A running LibreChat installation.
-- A NEAR AI Cloud API key from the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations).
-- Access to the LibreChat project directory that contains `.env` and `docker-compose.yml`.
-
-Do not put a real API key in `librechat.yaml`. Reference an environment variable from `.env` instead.
-
-## Base URL
-
-Use the NEAR AI Cloud gateway base URL:
-
-```text
-https://cloud-api.near.ai/v1
-```
-
-Do not append `/chat/completions` to `baseURL`. LibreChat appends the chat-completions path when it calls the OpenAI-compatible API.
-
-## Model ID
-
-Use the NEAR AI Cloud gateway model ID:
-
-```text
-z-ai/glm-5.2
-```
-
-Check [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery) before adding newer model IDs.
+- LibreChat installed and running ([librechat.ai/docs/quick_start](https://www.librechat.ai/docs/quick_start))
+- A NEAR AI Cloud API key from [cloud.near.ai](https://cloud.near.ai)
+- Access to edit your `librechat.yaml` file and `.env` file
 
 ## Configure
 
-Create or edit `librechat.yaml` in the LibreChat project root:
+LibreChat uses three files to define a custom endpoint:
 
-```yaml librechat.yaml
-version: 1.3.13
-cache: true
+1. **`librechat.yaml`** — defines the endpoint name, base URL, models, and settings
+2. **`.env`** — stores your API key (referenced by `librechat.yaml`)
+3. **`docker-compose.override.yml`** — mounts `librechat.yaml` into the Docker container (Docker installs only)
 
-endpoints:
-  custom:
-    - name: 'nearai'
-      apiKey: '${NEARAI_API_KEY}'
-      baseURL: 'https://cloud-api.near.ai/v1'
-      models:
-        default:
-          - 'z-ai/glm-5.2'
-      titleConvo: true
-      titleModel: 'z-ai/glm-5.2'
-      modelDisplayLabel: 'NEAR AI Cloud'
-```
+<Steps>
+  <Step title="Mount librechat.yaml (Docker only)">
+    If you are running LibreChat in Docker, add a volume mount for `librechat.yaml` in `docker-compose.override.yml`:
 
-The custom endpoint name `nearai` is intentionally not a built-in LibreChat endpoint name. Do not add a `provider` field for NEAR AI Cloud; LibreChat uses the OpenAI-compatible custom endpoint path when that field is omitted.
+    ```yaml title="docker-compose.override.yml"
+    services:
+      api:
+        volumes:
+          - type: bind
+            source: ./librechat.yaml
+            target: /app/librechat.yaml
+    ```
 
-Add the key to `.env` in the same project root:
+    Skip this step if you are running LibreChat locally without Docker.
+  </Step>
+  <Step title="Add your API key to .env">
+    Open your `.env` file and add the NEAR AI Cloud API key:
 
-```bash .env
-NEARAI_API_KEY=your-near-ai-api-key
-```
+    ```ini title=".env"
+    NEARAI_API_KEY=your-near-ai-api-key
+    ```
 
-For Docker deployments, mount `librechat.yaml` into the API container. If you do not already have an override file, copy LibreChat's example:
+    This variable is referenced from `librechat.yaml` using the `${NEARAI_API_KEY}` syntax.
+  </Step>
+  <Step title="Configure the custom endpoint in librechat.yaml">
+    Create or edit `librechat.yaml` in the project root. Add a NEAR AI Cloud entry under `endpoints.custom`:
 
-```bash
-cp docker-compose.override.yml.example docker-compose.override.yml
-```
+    ```yaml title="librechat.yaml"
+    version: 1.3.13
+    cache: true
 
-Then make sure the override includes this mount:
+    endpoints:
+      custom:
+        - name: "NEAR AI Cloud"
+          apiKey: "${NEARAI_API_KEY}"
+          baseURL: "https://cloud-api.near.ai/v1"
+          models:
+            default:
+              - "z-ai/glm-5.2"
+              - "Qwen/Qwen3.5-122B-A10B"
+            fetch: true
+          titleConvo: true
+          titleModel: "z-ai/glm-5.2"
+          modelDisplayLabel: "NEAR AI"
+    ```
 
-```yaml docker-compose.override.yml
-services:
-  api:
-    volumes:
-      - type: bind
-        source: ./librechat.yaml
-        target: /app/librechat.yaml
-```
+    Key fields:
+    - **`baseURL`** — the NEAR AI Cloud gateway endpoint. Do not append `/chat/completions`.
+    - **`models.default`** — a seed list of model IDs shown before the fetch runs.
+    - **`models.fetch: true`** — instructs LibreChat to call `/v1/models` to auto-populate the full model list.
+    - **`titleModel`** — the model used to generate conversation titles.
+  </Step>
+  <Step title="Restart LibreChat">
+    Apply the configuration changes by restarting LibreChat:
 
-Restart LibreChat after changing `librechat.yaml`, `.env`, or the Docker mount:
+    <Tabs>
+      <Tab title="Docker">
+        ```bash
+        docker compose down && docker compose up -d
+        ```
+      </Tab>
+      <Tab title="Local (npm)">
+        Stop the running process (`Ctrl+C`) and restart:
 
-```bash
-docker compose down
-docker compose up -d
-```
+        ```bash
+        npm run backend
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Verify in the UI">
+    Open LibreChat in your browser. Click the endpoint selector in the chat header. **NEAR AI Cloud** should appear in the list. Select it and choose a model to start chatting.
 
-For non-Docker local installs, place `librechat.yaml` in the project root next to `.env`, then restart the LibreChat backend process.
+    If the endpoint does not appear, check the server logs:
 
-## Refresh models
+    ```bash
+    docker compose logs api
+    ```
 
-The primary refresh path is manual because this guide keeps a short, explicit model list:
+    Common issues: YAML indentation errors, missing `.env` variable, or `librechat.yaml` not mounted in Docker.
+  </Step>
+</Steps>
 
-1. Run `curl https://cloud-api.near.ai/v1/models`.
-2. Copy the new model's exact `id`.
-3. Add it under `models.default` in `librechat.yaml`.
-4. Restart LibreChat so the endpoint selector reads the updated config.
+## Refresh Models
 
-LibreChat's custom endpoint reference also documents `models.fetch: true` for OpenAI-compatible custom endpoints. If you want LibreChat to try `GET /v1/models`, add `fetch: true` under `models` after you confirm the curl check works in your environment:
+With `models.fetch: true`, LibreChat calls the NEAR AI Cloud `/v1/models` endpoint on startup and populates the model picker automatically. No manual list maintenance is required — new models appear after a restart.
 
-```yaml
-models:
-  default:
-    - 'z-ai/glm-5.2'
-  fetch: true
-```
-
-Keep `models.default` populated even when using fetch. LibreChat uses the default list as the fallback if fetching is slow or fails.
-
-## Quick test
-
-Before debugging LibreChat, verify the same key, base URL, and model with curl:
+## Quick Test
 
 ```bash
 curl https://cloud-api.near.ai/v1/chat/completions \
@@ -120,39 +116,32 @@ curl https://cloud-api.near.ai/v1/chat/completions \
   -d '{
     "model": "z-ai/glm-5.2",
     "messages": [
-      {"role": "user", "content": "Reply with only: near-ai-ok"}
+      {
+        "role": "user",
+        "content": "Reply with one sentence confirming the model is reachable."
+      }
     ],
-    "max_tokens": 20
+    "max_tokens": 64
   }'
 ```
 
-If curl fails, fix the NEAR AI Cloud key, model ID, or network path before changing LibreChat settings.
-
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-| --- | --- | --- |
-| model not listed | `librechat.yaml` was not mounted, LibreChat was not restarted, or `z-ai/glm-5.2` is missing from `models.default`. | Confirm the Docker mount points to `/app/librechat.yaml`, run `docker compose logs api` for config errors, add the exact model ID under `models.default`, and restart LibreChat. |
-| `401` | `NEARAI_API_KEY` is missing from `.env`, the API container did not reload the environment, or the key is invalid. | Add `NEARAI_API_KEY=...` to `.env`, restart LibreChat, and rerun the curl smoke test without logging the key. |
-| Wrong base URL includes `/chat/completions` | The full curl request URL was pasted into `baseURL`. | Set `baseURL: 'https://cloud-api.near.ai/v1'`. Use `/chat/completions` only in full request URLs such as the curl smoke test. |
-| Endpoint not visible | The custom endpoint name conflicts with a built-in endpoint, YAML parsing failed, or the config file is in the wrong directory. | Keep `name: 'nearai'`, validate the YAML, make sure the file is in the LibreChat project root, and check `docker compose logs api`. |
-| New NEAR AI model does not appear after release | LibreChat is reading the old manual list or cached endpoint config. | Recheck `/v1/models`, add the model ID under `models.default`, and restart LibreChat. If using `fetch: true`, keep the default fallback list and restart after changing fetch settings. |
+| Symptom | Fix |
+|---|---|
+| Endpoint not in selector after restart | Check for YAML syntax errors — a single indentation mistake prevents the file from loading. Validate at [yamllint.com](https://www.yamllint.com). |
+| `401 Unauthorized` | Confirm `NEARAI_API_KEY` is set in `.env` and that `apiKey: "${NEARAI_API_KEY}"` in `librechat.yaml` references the correct variable name. |
+| Model list is empty | Set `models.fetch: true` and include at least one ID in `models.default` as a fallback. Check that the API key has access to the `/v1/models` endpoint. |
+| `baseURL` includes `/chat/completions` | Remove the path — `baseURL` must be `https://cloud-api.near.ai/v1` only. LibreChat appends the chat path itself. |
+| Docker: config changes not applied | Verify the `librechat.yaml` volume mount is in `docker-compose.override.yml` and run `docker compose down && docker compose up -d`. |
 
-## Related guides
+## Related Guides
 
-- [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)
-- [OpenAI Compatibility](/cloud/guides/openai-compatibility)
-- [Available Models](/cloud/models)
-- [Private Inference - Direct Completions](/cloud/private-inference#direct-completions)
-- [Open WebUI](/cloud/guides/integrations/open-webui)
-- [Dify](/cloud/guides/integrations/dify)
-- [LiteLLM Proxy](/cloud/guides/integrations/litellm)
+- [Model Discovery](/cloud/guides/integrations/model-discovery) — how the `/v1/models` endpoint works
+- [Available Models](/cloud/models) — full catalog with context lengths and pricing
+- [Private Inference](/cloud/private-inference) — TEE architecture details
 
 ## Sources Checked
 
-Sources checked on 2026-06-23:
-
-- [LibreChat Custom Endpoints](https://www.librechat.ai/docs/quick_start/custom_endpoints)
-- [LibreChat Custom Config](https://www.librechat.ai/docs/configuration/librechat_yaml)
-- [LibreChat Custom Endpoint Object Structure](https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/custom_endpoint)
-- [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)
+- LibreChat custom endpoints quick start: [librechat.ai/docs/quick_start/custom_endpoints](https://www.librechat.ai/docs/quick_start/custom_endpoints) — August 2026.
+- LibreChat custom endpoint object structure: [librechat.ai/docs/configuration/librechat_yaml/object_structure/custom_endpoint](https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/custom_endpoint) — August 2026.

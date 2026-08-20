@@ -1,88 +1,91 @@
 ---
-title: "Continue"
-description: "Configure Continue to use NEAR AI Cloud through its OpenAI-compatible provider."
+title: "Use NEAR AI Cloud with Continue Dev Extension"
+sidebarTitle: "Continue"
+description: "Set up Continue (VS Code and JetBrains extension) to use NEAR AI Cloud for private AI coding assistance with any OpenAI-compatible model."
 ---
 
-
-Use Continue with NEAR AI Cloud by configuring Continue's OpenAI provider with the NEAR AI Cloud gateway base URL and a NEAR AI model ID.
+[Continue](https://continue.dev) is an open-source coding assistant extension for VS Code and JetBrains. It supports any OpenAI-compatible provider through its `openai` provider type and a custom `apiBase` setting, so you can point it at NEAR AI Cloud without changing anything else in your workflow.
 
 ## Prerequisites
 
-- Continue for VS Code, JetBrains, or the Continue CLI.
-- A NEAR AI Cloud API key from the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations).
-- A local Continue `config.yaml`.
-
-Store the API key as a Continue secret instead of committing it to the config file. Continue supports `apiKey: ${{ secrets.NEARAI_API_KEY }}` in `config.yaml`; it resolves secrets from workspace `.env` files, `.continue/.env`, `~/.continue/.env`, or process environment variables for the CLI.
-
-For IDE extensions, prefer a `.env` file because the extension may not read your shell environment. Do not commit `.env` files.
-
-```bash
-NEARAI_API_KEY=your-near-ai-api-key
-```
-
-## Base URL
-
-Use the NEAR AI Cloud gateway base URL:
-
-```text
-https://cloud-api.near.ai/v1
-```
-
-Do not append `/chat/completions` to `apiBase`. Continue adds the request path when it calls the OpenAI-compatible API.
-
-## Model ID
-
-Use the NEAR AI Cloud gateway model ID:
-
-```text
-z-ai/glm-5.2
-```
-
-Check [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery) when you need the freshest model list.
+- Continue extension installed ([continue.dev](https://continue.dev))
+- A NEAR AI Cloud API key from [cloud.near.ai](https://cloud.near.ai)
 
 ## Configure
 
-Add a model entry like this to Continue's `config.yaml`:
+<Steps>
+  <Step title="Open your Continue config file">
+    In VS Code, press `Cmd+Shift+P` (macOS) or `Ctrl+Shift+P` (Windows/Linux) and search for **Continue: Open config**. This opens `~/.continue/config.yaml` (or `config.json` if you are using the legacy format).
 
-```yaml
-name: NEAR AI Cloud
-version: 0.0.1
-schema: v1
+    In JetBrains, find the Continue plugin settings and click **Open config file**.
+  </Step>
+  <Step title="Add NEAR AI Cloud as a provider">
+    Add a model entry under `models` using `provider: openai` and set `apiBase` to the NEAR AI Cloud gateway URL.
 
-models:
-  - name: NEAR AI GLM 5.2
-    provider: openai
-    model: z-ai/glm-5.2
-    apiBase: https://cloud-api.near.ai/v1
-    apiKey: ${{ secrets.NEARAI_API_KEY }}
-    capabilities:
-      - tool_use
-    contextLength: 500000
-    defaultCompletionOptions:
-      maxTokens: 131072
-      reasoning: true
-```
+    <Tabs>
+      <Tab title="config.yaml (recommended)">
+        ```yaml title="~/.continue/config.yaml"
+        name: My Config
+        version: 0.0.1
+        schema: v1
 
-`capabilities: [tool_use]` is required for Agent mode. Continue only auto-detects native tool calling for a fixed list of model names (GPT, o-series, and a few others); for a custom model ID like `z-ai/glm-5.2` it defaults to no tool support, so you must set `tool_use` explicitly or Agent mode falls back to a degraded prompt-based tool path instead of native function calling. GLM 5.2 advertises `tools` in `/v1/models`, so this is accurate, not aspirational.
+        models:
+          - name: NEAR AI Cloud — GLM 5.2
+            provider: openai
+            model: z-ai/glm-5.2
+            apiBase: https://cloud-api.near.ai/v1
+            apiKey: $NEARAI_API_KEY
+        ```
 
-The remaining fields are optional metadata that match the live `/v1/models` record. `contextLength: 500000` and `maxTokens: 131072` set the context and output budgets. `defaultCompletionOptions.reasoning: true` tells Continue to display and parse the model's thinking output — with `provider: openai` it is not added to the request, so it does not turn reasoning on. GLM 5.2 emits reasoning by default server-side, and this flag surfaces it in Continue's thinking pane. Basic chat works without these fields.
+        Replace `$NEARAI_API_KEY` with your actual key, or use Continue's secrets mechanism to keep it out of the config file.
+      </Tab>
+      <Tab title="config.json (legacy)">
+        ```json title="~/.continue/config.json"
+        {
+          "models": [
+            {
+              "title": "NEAR AI Cloud — GLM 5.2",
+              "provider": "openai",
+              "model": "z-ai/glm-5.2",
+              "apiBase": "https://cloud-api.near.ai/v1",
+              "apiKey": "YOUR_NEARAI_API_KEY"
+            }
+          ]
+        }
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Add more models (optional)">
+    You can add multiple NEAR AI Cloud models to the `models` array. Each entry needs its own `name`, `model` (the model ID), and the shared `apiBase` and `apiKey`.
 
-Reload Continue after saving the config. In VS Code, use the command palette and run `Developer: Reload Window` if the model list does not update.
+    ```yaml title="~/.continue/config.yaml"
+    models:
+      - name: NEAR AI — GLM 5.2
+        provider: openai
+        model: z-ai/glm-5.2
+        apiBase: https://cloud-api.near.ai/v1
+        apiKey: $NEARAI_API_KEY
 
-## Refresh models
+      - name: NEAR AI — Qwen3.5-122B
+        provider: openai
+        model: Qwen/Qwen3.5-122B-A10B
+        apiBase: https://cloud-api.near.ai/v1
+        apiKey: $NEARAI_API_KEY
+    ```
 
-Continue uses the model IDs in your `config.yaml`; it does not need to discover this model from a provider catalog. When NEAR AI Cloud releases a new model:
+    See the [Models catalog](/cloud/models) or the [model discovery endpoint](/cloud/guides/integrations/model-discovery) for the full list of available model IDs.
+  </Step>
+  <Step title="Select the model in Continue">
+    Save the config file. Continue automatically reloads when the file changes. Open the Continue panel in your IDE and click the model selector at the bottom to choose your NEAR AI Cloud model.
+  </Step>
+</Steps>
 
-1. Run `curl https://cloud-api.near.ai/v1/models`.
-2. Copy the new model's `id`.
-3. Replace or add the `model:` value in `config.yaml`.
-4. Reload Continue or restart the IDE if the model picker is stale.
+## Refresh Models
 
-Use the exact model ID from `/v1/models`. Do not invent aliases unless NEAR AI Cloud lists them.
+Continue does not auto-discover models from `/v1/models` in the OpenAI-compatible provider path — each model must be declared as a separate entry in `config.yaml`. Add new entries when NEAR AI Cloud adds new models you want to use.
 
-## Quick test
-
-Before debugging Continue, verify the same key, base URL, and model with curl:
+## Quick Test
 
 ```bash
 curl https://cloud-api.near.ai/v1/chat/completions \
@@ -93,52 +96,29 @@ curl https://cloud-api.near.ai/v1/chat/completions \
     "messages": [
       {
         "role": "user",
-        "content": "Reply with only: near-ai-ok"
+        "content": "Reply with one sentence confirming the model is reachable."
       }
     ],
-    "max_tokens": 20
+    "max_tokens": 64
   }'
 ```
 
-If curl fails, fix the NEAR AI Cloud key, model ID, or network path before changing Continue settings.
-
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-| --- | --- | --- |
-| model not listed | Continue has not loaded the new `config.yaml`, the model picker is stale, or the model entry was not added to `models`. | Confirm the YAML contains `model: z-ai/glm-5.2`, save the file, then reload the IDE or restart Continue. |
-| `401` | The secret is missing, invalid, or not visible to the Continue process. | Put `NEARAI_API_KEY=...` in a workspace `.env`, workspace `.continue/.env`, or `~/.continue/.env`, then restart the IDE. For the CLI, export the variable before running `cn`. |
-| Wrong base URL includes `/chat/completions` | The full curl request URL was pasted into `apiBase`. | Set `apiBase: https://cloud-api.near.ai/v1`. Use `/chat/completions` only in full request URLs such as the curl smoke test. |
-| Continue calls `/responses` and the request fails | Some OpenAI model families can make Continue use the Responses API. NEAR AI Cloud integrations should use chat completions unless a model-specific guide says otherwise. | Add `useResponsesApi: false` to the affected model entry only if logs show Continue is calling `/responses`; keep it out of the default config. |
+| Symptom | Fix |
+|---|---|
+| Model not appearing in Continue's selector | Confirm the config file was saved and Continue reloaded. Check the YAML/JSON for syntax errors — a single indentation mistake prevents the file from loading. |
+| `401 Unauthorized` | Verify the `apiKey` value in your config. Generate a new key at [cloud.near.ai](https://cloud.near.ai) if needed. |
+| `apiBase` field rejects the URL | Ensure the value is exactly `https://cloud-api.near.ai/v1` with no trailing slash. Do not include `/chat/completions`. |
+| Model returns unexpected errors | Some models require a specific `model` ID format (e.g. `z-ai/glm-5.2`, not just `glm-5.2`). Copy the ID directly from [cloud.near.ai/models](https://cloud.near.ai/models). |
 
-Example targeted fallback:
+## Related Guides
 
-```yaml
-models:
-  - name: NEAR AI GLM 5.2
-    provider: openai
-    model: z-ai/glm-5.2
-    apiBase: https://cloud-api.near.ai/v1
-    apiKey: ${{ secrets.NEARAI_API_KEY }}
-    capabilities:
-      - tool_use
-    useResponsesApi: false
-```
-
-## Related guides
-
-- [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)
-- [OpenAI Compatibility](/cloud/guides/openai-compatibility)
-- [Available Models](/cloud/models)
-- [Private Inference - Direct Completions](/cloud/private-inference#direct-completions)
-- [Cline, Roo Code, and Kilo Code](/cloud/guides/integrations/cline-roo-kilo)
-- [Aider and Zed](/cloud/guides/integrations/aider-zed)
+- [Model Discovery](/cloud/guides/integrations/model-discovery) — find all available model IDs
+- [Available Models](/cloud/models) — context lengths, pricing, and supported features
+- [OpenAI Compatibility](/cloud/guides/openai-compatibility) — supported endpoints and parameters
 
 ## Sources Checked
 
-Sources checked on 2026-06-23:
-
-- [Continue OpenAI provider](https://docs.continue.dev/customize/model-providers/top-level/openai)
-- [Continue model capabilities and `tool_use`](https://docs.continue.dev/reference)
-- [Continue FAQ: secrets](https://docs.continue.dev/faqs)
-- [Continue CLI configuration](https://docs.continue.dev/cli/configuration)
+- Continue OpenAI-compatible provider docs: [docs.continue.dev/customize/model-providers/top-level/openai](https://docs.continue.dev/customize/model-providers/top-level/openai) — August 2026.
+- Continue `config.yaml` reference: [docs.continue.dev/reference](https://docs.continue.dev/reference) — August 2026.

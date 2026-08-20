@@ -1,33 +1,41 @@
 ---
-title: "Chat Message Verification"
+title: "Verify Chat Message Signatures from NEAR AI Cloud"
 sidebarTitle: "Chat Verification"
+description: "Verify individual chat completions are authentic and unmodified by validating cryptographic signatures generated inside the TEE for every inference request and response."
 ---
 
+NEAR AI Cloud generates a cryptographic signature inside the TEE for every chat completion — signing both the request you sent and the response you received. By verifying this signature, you get proof that the message was processed in a genuine Trusted Execution Environment and that neither the request nor the response was tampered with in transit.
 
-You can verify each chat message with NEAR AI Cloud. For this you will need:
+To verify a chat message, you need three things:
 
-1. [Chat Message **REQUEST** Hash](#chat-message-request-hash)
-2. [Chat Message **RESPONSE** Hash](#chat-message-response-hash)
+1. [Chat Message **Request** Hash](#chat-message-request-hash)
+2. [Chat Message **Response** Hash](#chat-message-response-hash)
 3. [Chat Message Signature](#chat-message-signature)
 
 <Tip>
-  See an example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo.
+See an example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo.
 </Tip>
+
+### How Chat Signatures Work
+
+When the model TEE processes your request, it signs the concatenation of the model ID, request hash, and response hash using its private key — a key that never leaves the secure hardware. You can then retrieve this signature and verify it against the TEE's public key from the [model attestation report](/cloud/verification/model).
+
+There are two kinds of signatures, distinguished by the `signature_kind` field on the gateway's signature response (see [Signature Kinds](#signature-kinds)):
+
+- **`provider_tee`** — Generated inside the model TEE over the exact bytes the TEE received and sent. This is always what you get from a model's [direct completions endpoint](/cloud/private-inference#direct-completions) (`{slug}.completions.near.ai`).
+- **`gateway`** — Generated inside the gateway TEE (`cloud-api.near.ai`) over the exact bytes the gateway returned to you. Used when the gateway rewrites streamed response bytes for OpenAI-spec usage accounting.
+
 <Info>
-  **Two signature kinds**
-
-  There are two kinds of chat signatures, distinguished by the `signature_kind` field on the gateway's signature response — see [Signature Kinds](#signature-kinds):
-
-  - **`provider_tee`** — generated **inside the model TEE** over the exact bytes the TEE received and sent. This is always what you get from a model's [direct completions endpoint](/cloud/private-inference#direct-completions) (`{slug}.completions.near.ai`) — the examples below use `qwen35-122b.completions.near.ai`.
-  - **`gateway`** — generated **inside the gateway TEE** (`cloud-api.near.ai`) over the exact bytes the gateway returned to you. Used when the gateway rewrites streamed response bytes (OpenAI-spec usage accounting), so the model TEE's byte-exact signature could no longer match what you received.
+**Use Direct Completions for byte-exact verification.** The signature is generated inside the model TEE over the exact bytes the TEE received and sent. When you connect through the gateway (`cloud-api.near.ai`), streamed responses may be re-serialized in transit, so the response bytes you receive may not hash to the signed value. To verify hashes byte-for-byte, send your request to the model's direct completions endpoint — the examples below use `qwen35-122b.completions.near.ai`.
 </Info>
+
 ---
 
 ## Chat Message Request Hash
 
-The value is calculated from the **exact JSON request body string** as it was sent over the wire.
+The request hash is calculated from the **exact JSON request body string** as it was sent over the wire.
 
-**_Example:_**
+**Example request body:**
 
 ```json
 {"messages":[{"content":"Respond with only two words.","role":"user"}],"stream":true,"model":"Qwen/Qwen3.5-122B-A10B","chat_template_kwargs":{"enable_thinking":false}}
@@ -35,16 +43,15 @@ The value is calculated from the **exact JSON request body string** as it was se
 
 Which hashes to:
 
-```bash
+```
 2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad
 ```
 
-Here is an example of how to get the sha256 hash of your message request body:
+Here is an example of how to compute the SHA-256 hash of your request body:
 
-<Tabs>
-<Tab title="JavaScript">
+<CodeGroup>
 
-```js
+```js JavaScript
 import crypto from 'crypto';
 
 const requestBody = JSON.stringify({
@@ -60,13 +67,11 @@ const requestBody = JSON.stringify({
 });
 
 const hash = crypto.createHash('sha256').update(requestBody).digest('hex');
-console.log(hash); //2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad
+console.log(hash);
+// 2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad
 ```
 
-</Tab>
-<Tab title="Python">
-
-```python
+```python Python
 import hashlib
 import json
 
@@ -88,24 +93,25 @@ request_body_str = json.dumps(request_body, separators=(',', ':'))
 # Calculate SHA-256 hash
 hash_obj = hashlib.sha256(request_body_str.encode())
 hash_hex = hash_obj.hexdigest()
-print(hash_hex)  #2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad
+print(hash_hex)
+# 2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad
 ```
 
-</Tab>
-</Tabs>
+</CodeGroup>
 
 ---
 
 ## Chat Message Response Hash
 
-This value is calculated from the **exact response payload string**.
+The response hash is calculated from the **exact response payload string**.
 
 <Info>
-  Please note that the streaming response contains two new lines at the end and should not be omitted when copying the response as the hash value will change.
+The streaming response contains two newlines at the end and these must not be omitted — leaving them out will change the hash value.
 </Info>
-**_Example Response Body:_**
 
-```bash
+**Example response body:**
+
+```
 data: {"choices":[{"delta":{"content":"","reasoning_content":null,"role":"assistant"},"finish_reason":null,"index":0,"logprobs":null,"matched_stop":null}],"created":1780404899,"id":"afa7975eaf844b1888776cf41548e230","model":"Qwen/Qwen3.5-122B-A10B","object":"chat.completion.chunk"}
 
 data: {"choices":[{"delta":{"content":"Under","reasoning_content":null},"finish_reason":null,"index":0,"logprobs":null,"matched_stop":null}],"created":1780404899,"id":"afa7975eaf844b1888776cf41548e230","model":"Qwen/Qwen3.5-122B-A10B","object":"chat.completion.chunk"}
@@ -122,17 +128,15 @@ data: [DONE]
 
 Which hashes to:
 
-```bash
+```
 8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c
 ```
 
-Here is an example of how to get the sha256 hash of your message response payload:
+Here is an example of how to compute the SHA-256 hash of your response payload:
 
-<Tabs>
+<CodeGroup>
 
-<Tab title="JavaScript">
-
-```js
+```js JavaScript
 const response = await fetch('https://qwen35-122b.completions.near.ai/v1/chat/completions', {
   method: 'POST',
   headers: {
@@ -145,13 +149,11 @@ const response = await fetch('https://qwen35-122b.completions.near.ai/v1/chat/co
 
 const responseBody = await response.text();
 const hash = crypto.createHash('sha256').update(responseBody).digest('hex');
-console.log(hash); // 8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c
+console.log(hash);
+// 8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c
 ```
 
-</Tab>
-<Tab title="Python">
-
-```python
+```python Python
 import hashlib
 import requests
 import os
@@ -169,35 +171,29 @@ response = requests.post(
 response_body = response.text
 hash_obj = hashlib.sha256(response_body.encode())
 hash_hex = hash_obj.hexdigest()
-print(hash_hex)  # 8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c
+print(hash_hex)
+# 8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c
 ```
 
-</Tab>
-</Tabs>
+</CodeGroup>
 
 ---
 
 ## Chat Message Signature
 
-From the Chat Message Response you will get a unique chat `id` that is used to fetch the Chat Message Signature from NEAR AI Cloud.
-
-You can query the signature API with the value of `id` from the response after chat completion.
-
-Use one of the following endpoints to get the signature:
+From the chat completion response you will get a unique `id` field. Use this to fetch the signature from NEAR AI Cloud.
 
 **Via Direct Completions:**
-```bash
+```text
 GET https://{slug}.completions.near.ai/v1/signature/{chat_id}?signing_algo=ecdsa
 ```
 
 **Via Gateway:**
-```bash
+```text
 GET https://cloud-api.near.ai/v1/signature/{chat_id}?model={model_id}&signing_algo=ecdsa
 ```
 
-For example, the `id` from the response in the previous section is:
-
- `afa7975eaf844b1888776cf41548e230`
+For example, the `id` from the response in the previous section is `afa7975eaf844b1888776cf41548e230`:
 
 ```bash
 # Via direct completions:
@@ -207,32 +203,29 @@ curl -X GET 'https://qwen35-122b.completions.near.ai/v1/signature/afa7975eaf844b
 ```
 
 <Note>
-  A model can be served by multiple TEE nodes behind the same domain. The signature is cached on the node that served your chat completion, so a lookup may transiently return `Chat id not found or expired` if it lands on a different node — simply retry until you hit the right one.
+A model can be served by multiple TEE nodes behind the same domain. The signature is cached on the node that served your chat completion, so a lookup may transiently return `Chat id not found or expired` if it lands on a different node — simply retry until you hit the right one.
 </Note>
-***Example Response:***
+
+**Example response:**
 
 ```json
 {
-  "text":"Qwen/Qwen3.5-122B-A10B:2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad:8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c",
-  "signature":"0xed381e84d059198d1826e44dbbbac9501caaa8f79f913f27578acafa5be852e6103fe34fabd6446d7fde3f5250c0a16e109fe088a562bae08ac13d081a66d0761b",
-  "signing_address":"0x6525e128afcffebf7eed05d485d7be983cdae934",
-  "signing_algo":"ecdsa"
+  "text": "Qwen/Qwen3.5-122B-A10B:2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad:8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c",
+  "signature": "0xed381e84d059198d1826e44dbbbac9501caaa8f79f913f27578acafa5be852e6103fe34fabd6446d7fde3f5250c0a16e109fe088a562bae08ac13d081a66d0761b",
+  "signing_address": "0x6525e128afcffebf7eed05d485d7be983cdae934",
+  "signing_algo": "ecdsa"
 }
 ```
 
-The above response gives us all of the crucial information we need to verify that the message was executed in our trusted environment:
+The response fields are:
 
-- `text` - The signed payload. Its format depends on the [signature kind](#signature-kinds): `{model_id}:{request_hash}:{response_hash}` for a model-TEE signature (as in this example), `{request_hash}:{response_hash}` for a gateway signature
-- `signature` - This is the cryptographic signature of the `text` field, generated using the TEE's private key 
-- `signing_address` - Public key of the TEE that signed (the model TEE for `provider_tee`, the gateway TEE for `gateway`)
-- `signing_algo` - Cryptography curve used to sign
-- `signature_kind` - Which key produced the signature: `"provider_tee"` or `"gateway"` (gateway endpoint only — see [Signature Kinds](#signature-kinds))
+- **`text`** — The signed payload. For a model TEE signature, the format is `{model_id}:{request_hash}:{response_hash}`. For a gateway signature, the format is `{request_hash}:{response_hash}` (no model-ID prefix). See [Signature Kinds](#signature-kinds).
+- **`signature`** — The cryptographic signature of the `text` field, generated using the TEE's private key.
+- **`signing_address`** — The public key of the TEE that signed (the model TEE for `provider_tee`, the gateway TEE for `gateway`).
+- **`signing_algo`** — The cryptographic curve used to sign.
+- **`signature_kind`** — Which key produced the signature: `"provider_tee"` or `"gateway"` (gateway endpoint only).
 
-You can see that `text` is:
-
-`Qwen/Qwen3.5-122B-A10B:2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad:8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c`
-
-This exactly matches the model we requested and the values we calculated in the previous sections:
+You can confirm the `text` field matches what you computed:
 
 - Model: `Qwen/Qwen3.5-122B-A10B`
 - Request hash: `2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad`
@@ -242,50 +235,41 @@ This exactly matches the model we requested and the values we calculated in the 
 
 ## Signature Kinds
 
-Signatures fetched from the gateway (`GET https://cloud-api.near.ai/v1/signature/{chat_id}`) carry a `signature_kind` field that tells you which key signed and what the `text` payload contains:
+Signatures fetched from the gateway (`GET https://cloud-api.near.ai/v1/signature/{chat_id}`) carry a `signature_kind` field:
 
 ### `provider_tee`
 
-- **Who signs:** the model TEE that served your request, with the signing key from its [model attestation](/cloud/verification/model). Verify `signing_address` against that attestation.
-- **Payload:** `text = "{model_id}:{request_hash}:{response_hash}"`.
-- **What it covers:** the exact request bytes the model TEE received and the exact response bytes it sent. When you use a [direct completions endpoint](/cloud/private-inference#direct-completions), the bytes you sent and received are those bytes, so both hashes verify byte-for-byte against your own traffic. (Direct completions signature responses come straight from the model TEE and do not carry a `signature_kind` field — they are always model-TEE signatures.)
+- **Who signs:** The model TEE that served your request, with the signing key from its [model attestation](/cloud/verification/model). Verify `signing_address` against that attestation.
+- **Payload format:** `text = "{model_id}:{request_hash}:{response_hash}"`
+- **What it covers:** The exact request bytes the model TEE received and the exact response bytes it sent. When you use a direct completions endpoint, the bytes you sent and received are those bytes, so both hashes verify byte-for-byte.
 
 ### `gateway`
 
-- **Who signs:** the gateway TEE (`cloud-api.near.ai`), with the same signing key whose address is returned by the [gateway attestation report](/cloud/verification/gateway) (`GET /v1/attestation/report`). Verify `signing_address` against that report.
-- **Payload:** `text = "{request_hash}:{response_hash}"` — no model-ID prefix.
-- **What it covers:** the exact request body you sent to the gateway and the exact response bytes the gateway returned to you, so both hashes verify byte-for-byte against your own traffic.
+- **Who signs:** The gateway TEE (`cloud-api.near.ai`), with the same signing key whose address is returned by the [gateway attestation report](/cloud/verification/gateway). Verify `signing_address` against that report.
+- **Payload format:** `text = "{request_hash}:{response_hash}"` — no model-ID prefix.
+- **What it covers:** The exact request body you sent to the gateway and the exact response bytes the gateway returned to you.
 
-The gateway signs a streamed response itself when it has rewritten the stream bytes for OpenAI compatibility, which makes the model TEE's byte-exact signature unable to match what you received:
-
-- **Usage accounting** — with `stream_options: {"include_usage": true}`, the gateway rewrites intermediate chunks to carry `usage: null` and appends a single final usage chunk.
-- **Usage stripping** — on attested models, default streaming (no `stream_options`) and `"include_usage": false` streams have per-chunk usage nulled out and the upstream's trailing usage-only chunk dropped.
-
-In both cases the gateway stores its signature **before** emitting the final `data: [DONE]` line, so the signature is retrievable the moment the stream ends. The gateway signature also covers attested third-party fallback serving (`x-serving-provider: chutes` response header): those backends protect response integrity with an end-to-end encrypted channel rather than a per-response model signature, so a rewritten stream served by them is signed by the gateway alone.
+The gateway signs a streamed response when it has rewritten the stream bytes for OpenAI compatibility — for example, when `stream_options: {"include_usage": true}` is set, the gateway rewrites intermediate chunks to carry `usage: null` and appends a single final usage chunk. In these cases, the model TEE's byte-exact signature can no longer match what you received, so the gateway signs instead.
 
 <Note>
-  **Legacy signatures**
-
-  Signatures stored before `signature_kind` was recorded omit the field — their provenance is unknown rather than guessed. You can still distinguish them structurally: a `text` with three `:`-separated fields (`{model_id}:{request_hash}:{response_hash}`) is a model-TEE payload; one with two (`{request_hash}:{response_hash}`) is a gateway payload.
+**Legacy signatures:** Signatures stored before `signature_kind` was recorded omit the field — their provenance is unknown rather than guessed. You can still distinguish them structurally: a `text` with three colon-separated fields (`{model_id}:{request_hash}:{response_hash}`) is a model-TEE payload; one with two (`{request_hash}:{response_hash}`) is a gateway payload.
 </Note>
+
 ---
 
 ## Verify Signature
 
-Signature verification can be easily done with any standard ECDSA verification library such as [ethers](https://www.npmjs.com/package/ethers) or even an online tool such as [etherscan's VerifySignatures](https://etherscan.io/verifiedSignatures).
+You can verify the signature with any standard ECDSA verification library such as [ethers](https://www.npmjs.com/package/ethers), or with an online tool such as [Etherscan's Verified Signatures](https://etherscan.io/verifiedSignatures).
 
-These tools will require:
+You will need:
 
-- `Address`: What the expected address is for the signature. In our case it will be the one retrieved from your [attestation API query](/cloud/verification/model) (see Model Verification page).
-- `Message`: The original message before signing. In our case it will be the `text` field from [Chat Message Signature](#chat-message-signature) (`{model_id}:{request_hash}:{response_hash}`)
-- `Signature`: The signed message from above
+- **Address** — The `signing_address` from the signature response, which should match the address in your [model attestation report](/cloud/verification/model).
+- **Message** — The `text` field from the signature response (`{model_id}:{request_hash}:{response_hash}`).
+- **Signature** — The `signature` field from the signature response.
 
-Here is an example of how to verify the Chat Message signature using `ethers`:
+<CodeGroup>
 
-<Tabs>
-<Tab title="JavaScript">
-
-```js
+```js JavaScript
 import { ethers } from 'ethers';
 
 const text = "Qwen/Qwen3.5-122B-A10B:2974f24b2a687856d2a0cf08d813902965c25e6552ba7062e4fa303432b6d2ad:8cb30eef9d133bdc6bfe812772dc4a62336d2827caea843546cbeff3f004c42c";
@@ -304,10 +288,7 @@ console.log("Recovered address:", recoveredAddress);
 console.log("Signature valid:", isValid);
 ```
 
-</Tab>
-<Tab title="Python">
-
-```python
+```python Python
 from eth_account import Account
 from eth_account.messages import encode_defunct
 
@@ -330,5 +311,13 @@ print("Recovered address:", recovered_address)
 print("Signature valid:", is_valid)
 ```
 
-</Tab>
-</Tabs>
+</CodeGroup>
+
+---
+
+## See Also
+
+- [Verification Overview](/cloud/verification/index) — How all the verification components fit together
+- [Model Verification](/cloud/verification/model) — Fetch the attestation report to obtain the expected `signing_address`
+- [Gateway Verification](/cloud/verification/gateway) — Verify the gateway TEE when using `gateway`-kind signatures
+- [Private Inference](/cloud/private-inference) — How TEE isolation protects your data

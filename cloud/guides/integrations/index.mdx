@@ -1,49 +1,48 @@
 ---
-title: "Integrations"
+title: "Integrate NEAR AI Cloud with Your Favorite Tools"
 sidebarTitle: "Overview"
-description: "Use NEAR AI Cloud with third-party software that supports OpenAI-compatible providers."
+description: "Connect NEAR AI Cloud to coding agents, IDEs, self-hosted chat apps, and AI frameworks using the OpenAI-compatible API and your existing API key."
 ---
 
+NEAR AI Cloud works with any OpenAI-compatible tool. Set the base URL to `https://cloud-api.near.ai/v1`, paste your API key from [cloud.near.ai](https://cloud.near.ai), and the tool will route requests through NEAR AI's gateway — giving you private, TEE-protected inference without changing how you work.
 
-Use these guides to connect third-party software to NEAR AI Cloud through its OpenAI-compatible API.
+## Coding Agents & IDEs
 
-Most clients need the same values:
+<CardGroup cols={2}>
+  <Card title="Cursor" icon="arrow-pointer" href="/cloud/guides/integrations/cursor">
+    Add NEAR AI Cloud as an OpenAI-compatible provider in Cursor's model settings for AI code assistance with TEE-protected models.
+  </Card>
+  <Card title="Continue" icon="plug" href="/cloud/guides/integrations/continue">
+    Configure the Continue VS Code and JetBrains extension with NEAR AI Cloud using a YAML or JSON provider block.
+  </Card>
+  <Card title="Cline / Roo / Kilo" icon="code" href="/cloud/guides/integrations/cline-roo-kilo">
+    Connect Cline, Roo Code, and Kilo Code to NEAR AI Cloud through their shared OpenAI-compatible provider settings.
+  </Card>
+  <Card title="Aider / Zed" icon="terminal" href="/cloud/guides/integrations/aider-zed">
+    Use NEAR AI Cloud with Aider via environment variables and with Zed via its OpenAI-compatible provider settings.
+  </Card>
+  <Card title="OpenCode / Goose" icon="robot" href="/cloud/guides/opencode-goose">
+    Route OpenCode and Block's Goose agent through NEAR AI Cloud using their custom provider configuration.
+  </Card>
+</CardGroup>
 
-| Setting | Value |
-| --- | --- |
-| Base URL | `https://cloud-api.near.ai/v1` |
-| API key | A NEAR AI Cloud API key |
-| Model ID | A model available from NEAR AI Cloud |
+## Self-Hosted & Team Apps
 
-## Software Covered
+<CardGroup cols={2}>
+  <Card title="LibreChat" icon="comments" href="/cloud/guides/integrations/librechat">
+    Add NEAR AI Cloud as a custom endpoint in `librechat.yaml` for self-hosted, private AI conversations.
+  </Card>
+  <Card title="Open WebUI" icon="browser" href="/cloud/guides/integrations/open-webui">
+    Connect NEAR AI Cloud to Open WebUI through the Admin Settings → Connections panel.
+  </Card>
+  <Card title="LiteLLM" icon="shuffle" href="/cloud/guides/integrations/litellm">
+    Configure LiteLLM's proxy to route any downstream application to NEAR AI Cloud.
+  </Card>
+  <Card title="Dify" icon="diagram-project" href="/cloud/guides/integrations/dify">
+    Add NEAR AI Cloud as an OpenAI-compatible model provider in Dify workflows and chatbots.
+  </Card>
+</CardGroup>
 
-Use the OpenAI client guide when you are configuring code directly. Use the integration guides when a tool has its own provider settings, model picker, or model refresh behavior.
+## Discovering Available Models
 
-### Coding agents and IDEs
-
-- [Cursor](/cloud/guides/integrations/cursor)
-- [Continue](/cloud/guides/integrations/continue)
-- [Cline, Roo Code, and Kilo Code](/cloud/guides/integrations/cline-roo-kilo)
-- [Aider and Zed](/cloud/guides/integrations/aider-zed)
-- [OpenCode and Goose](/cloud/guides/opencode-goose)
-
-### Self-hosted and team apps
-
-- [LibreChat](/cloud/guides/integrations/librechat)
-- [Open WebUI](/cloud/guides/integrations/open-webui)
-- [LiteLLM](/cloud/guides/integrations/litellm)
-- [Dify](/cloud/guides/integrations/dify)
-
-## Model Discovery
-
-NEAR AI Cloud can add new models over time. Use the [Model Discovery guide](/cloud/guides/integrations/model-discovery) to check the current model list, choose between gateway and direct completions endpoints, and copy the right model ID into clients that do not refresh automatically.
-
-```bash
-curl https://cloud-api.near.ai/v1/models
-```
-
-## Related guides
-
-- [OpenAI Client](/cloud/guides/openai-compatibility)
-- [Model Discovery](/cloud/guides/integrations/model-discovery)
-- [Available Models](/cloud/models)
+Every tool listed above can automatically populate its model list from the NEAR AI Cloud `/v1/models` endpoint. See the [Model Discovery guide](/cloud/guides/integrations/model-discovery) to learn how the endpoint works and how to point tools at it for automatic model detection.

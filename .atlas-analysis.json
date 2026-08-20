@@ -1,39 +1,15 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
+  "projectType": "saas",
+  "projectName": "NEAR AI Cloud",
+  "projectDescription": "Private, verifiable AI inference platform that runs leading AI models inside Trusted Execution Environments (TEEs) through an OpenAI-compatible API, ensuring complete data privacy and cryptographic verifiability.",
   "theme": "luma",
-  "name": "NEAR AI",
-  "description": "Private, verifiable AI inference in Trusted Execution Environments through an OpenAI-compatible API.",
-  "colors": {
-    "primary": "#83d2fa",
-    "light": "#0b8bf2",
-    "dark": "#04447c"
-  },
-  "logo": {
-    "light": "https://media.brand.dev/9a018373-e3bf-4b89-a5a2-2df6d91f38b1.svg",
-    "dark": "https://media.brand.dev/9a018373-e3bf-4b89-a5a2-2df6d91f38b1.svg"
-  },
-  "favicon": "https://media.brand.dev/d4e5fa26-5d70-4c18-a874-8ca062a09778.svg",
-  "icons": {
-    "library": "lucide"
-  },
-  "appearance": {
-    "default": "dark",
-    "strict": true
-  },
-  "background": {
-    "color": {
-      "light": "#000000",
-      "dark": "#000000"
-    }
-  },
-  "styling": {
-    "codeblocks": "dark"
-  },
+  "primaryColor": "#83d2fa",
+  "lightColor": "#0b8bf2",
+  "darkColor": "#04447c",
   "navigation": {
     "tabs": [
       {
         "tab": "Documentation",
-        "icon": "book-open",
         "groups": [
           {
             "group": "Get Started",
@@ -92,8 +68,6 @@
       },
       {
         "tab": "API Reference",
-        "icon": "braces",
-        "openapi": "api-reference/openapi.json",
         "groups": [
           {
             "group": "Overview",
@@ -234,98 +208,55 @@
       }
     ]
   },
-  "navbar": {
-    "links": [
-      {
-        "label": "Developer Dashboard",
-        "href": "https://cloud.near.ai"
-      }
-    ],
-    "primary": {
-      "type": "github",
-      "href": "https://github.com/nearai/docs"
-    }
-  },
-  "footer": {
-    "socials": {
-      "telegram": "https://t.me/nearaialpha",
-      "x": "https://x.com/near_ai",
-      "github": "https://github.com/nearai/docs"
-    },
-    "links": [
-      {
-        "header": "Docs",
-        "items": [
-          {
-            "label": "Quickstart",
-            "href": "/cloud/quickstart"
-          },
-          {
-            "label": "Models",
-            "href": "/cloud/models"
-          },
-          {
-            "label": "Private Inference",
-            "href": "/cloud/private-inference"
-          },
-          {
-            "label": "API Reference",
-            "href": "/api-reference/introduction"
-          }
-        ]
-      },
-      {
-        "header": "Community",
-        "items": [
-          {
-            "label": "Telegram",
-            "href": "https://t.me/nearaialpha"
-          },
-          {
-            "label": "X / Twitter",
-            "href": "https://x.com/near_ai"
-          }
-        ]
-      },
-      {
-        "header": "More",
-        "items": [
-          {
-            "label": "Developer Dashboard",
-            "href": "https://cloud.near.ai"
-          },
-          {
-            "label": "GitHub",
-            "href": "https://github.com/nearai/docs"
-          }
-        ]
-      }
-    ]
-  },
-  "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude"
-    ]
-  },
-  "seo": {
-    "metatags": {
-      "og:site_name": "NEAR AI Docs",
-      "og:image": "https://docs.near.ai/images/icons/social-card.png",
-      "twitter:card": "summary_large_image",
-      "twitter:image": "https://docs.near.ai/images/icons/social-card.png"
-    }
-  },
-  "redirects": [
-    {
-      "source": "/cloud/introduction",
-      "destination": "/"
-    },
-    {
-      "source": "/api",
-      "destination": "/api-reference/introduction"
-    }
+  "keyFeatures": [
+    "Private AI inference inside Trusted Execution Environments (TEEs) — no data visible to cloud or model providers",
+    "OpenAI-compatible API — drop-in replacement with `base_url` override",
+    "Cryptographic attestation and chat signing for end-to-end verifiability",
+    "Direct completions endpoints per model (`{slug}.completions.near.ai`) for lower latency and simpler trust model",
+    "Reasoning models (GLM, Qwen, GPT-OSS, Kimi) with configurable thinking",
+    "Fusion: server-side multi-model deliberation in a single API call",
+    "Built-in web search tools (`web_context_search`, `web_search`) with no client-side tool handling",
+    "End-to-end encrypted (E2EE) chat completions using Ed25519 / XChaCha20-Poly1305",
+    "Multimodal support: text, image input/generation, audio transcription, embeddings, reranking",
+    "PII detection and redaction via privacy-filter model",
+    "Prompt caching (automatic, TEE-isolated KV cache) for cost and latency savings",
+    "Organization, workspace, and API key management with per-key spend limits",
+    "Usage reporting API with cursor-paginated export and filtering by model, workspace, and date range"
+  ],
+  "publicApiSurface": [
+    "POST /v1/chat/completions",
+    "POST /v1/completions",
+    "GET /v1/models",
+    "POST /v1/responses",
+    "GET /v1/responses/{response_id}",
+    "POST /v1/conversations",
+    "GET /v1/conversations/{conversation_id}",
+    "POST /v1/images/generations",
+    "POST /v1/images/edits",
+    "POST /v1/audio/transcriptions",
+    "POST /v1/rerank",
+    "POST /v1/score",
+    "POST /v1/privacy/classify",
+    "POST /v1/privacy/redact",
+    "GET /v1/files",
+    "POST /v1/files",
+    "GET /v1/attestation/report",
+    "GET /v1/attestation/ita-token",
+    "GET /v1/signature/{chat_id}",
+    "GET /v1/users/me",
+    "POST /v1/users/me/access-tokens",
+    "GET /v1/organizations",
+    "POST /v1/organizations",
+    "GET /v1/organizations/{org_id}/workspaces",
+    "POST /v1/workspaces/{workspace_id}/api-keys",
+    "GET /v1/organizations/{org_id}/usage/balance",
+    "GET /v1/organizations/{org_id}/usage/export",
+    "GET /v1/organizations/{org_id}/usage/summary",
+    "POST /v1/organizations/{org_id}/reporting-tokens",
+    "GET /v1/services",
+    "POST /v1/billing/costs",
+    "GET /v1/model/list",
+    "GET /v1/model/{model_name}",
+    "GET /v1/health"
   ]
 }

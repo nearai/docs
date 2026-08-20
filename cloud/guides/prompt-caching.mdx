@@ -1,64 +1,79 @@
 ---
-title: "Prompt Caching"
-description: "How NEAR AI Cloud caches prompt prefixes to reduce latency and cost"
-icon: "zap"
+title: "Reduce Cost and Latency with Prompt Caching"
+sidebarTitle: "Prompt Caching"
+description: "NEAR AI Cloud automatically caches prompt prefixes inside TEEs. Repeated system prompts, conversation history, and documents are billed at discounted cache-read rates."
 ---
 
-
-NEAR AI Cloud automatically caches prompt prefixes on TEE-hosted models. When consecutive requests share a common prefix — a long system prompt, conversation history, few-shot examples, or a large document — the cached portion is reused instead of being recomputed, which lowers both latency and cost.
+NEAR AI Cloud automatically caches prompt prefixes for every supported model — no API changes or opt-in flags required. When a request shares a prefix with a previous request to the same model, the cached portion is reused from the in-TEE KV cache and billed at a discounted cache-read rate rather than the full input rate.
 
 ## How It Works
 
-Prompt caching is **automatic** — there is nothing to enable and no API changes are required:
-
-1. The inference engine (vLLM / SGLang) keeps the KV-cache of recently processed prompt prefixes inside the TEE.
-2. When a new request arrives whose prompt starts with a cached prefix, only the new suffix is computed.
-3. Cached input tokens are billed at the model's discounted **cache-read** rate instead of the regular input rate.
-
-Per-model cache-read pricing is listed on the [Models page](/cloud/models) and in the [`/v1/models`](https://cloud-api.near.ai/v1/models) response (`pricing.input_cache_read`).
+<Steps>
+  <Step title="KV cache stored inside the TEE">
+    After the first request, the key–value activations for the prompt prefix are stored in the model's TEE-isolated KV cache. The cache is scoped to the model deployment and never shared across organizations.
+  </Step>
+  <Step title="Cached prefix reused on subsequent requests">
+    When a new request arrives with a matching prefix, the model skips recomputation for the cached portion and continues from the cached state. The longer the shared prefix, the greater the savings.
+  </Step>
+  <Step title="Billed at the cache-read rate">
+    Tokens served from the cache are billed at the discounted cache-read price rather than the full input token price. You can find per-model cache-read pricing on the [Models](/cloud/models) page or by calling `GET /v1/models`.
+  </Step>
+</Steps>
 
 ## Tracking Cache Hits
 
-The number of input tokens served from cache is reported in the `usage` object of every response:
+Both the Chat Completions API and the Responses API return token-level detail that shows how many tokens were served from cache.
 
-**Chat Completions** (`/v1/chat/completions`):
+**Chat Completions** — check `usage.prompt_tokens_details.cached_tokens`:
 
 ```json
 {
+  "id": "chatcmpl-abc123",
+  "object": "chat.completion",
+  "model": "zai-org/GLM-5.1-FP8",
+  "choices": [...],
   "usage": {
-    "prompt_tokens": 614,
-    "prompt_tokens_details": { "cached_tokens": 576 },
-    "completion_tokens": 5,
-    "total_tokens": 619
+    "prompt_tokens": 1024,
+    "completion_tokens": 128,
+    "total_tokens": 1152,
+    "prompt_tokens_details": {
+      "cached_tokens": 896
+    }
   }
 }
 ```
 
-**Responses API** (`/v1/responses`):
+**Responses API** — check `usage.input_tokens_details.cached_tokens`:
 
 ```json
 {
+  "id": "resp-xyz789",
+  "object": "response",
+  "model": "zai-org/GLM-5.1-FP8",
+  "output": [...],
   "usage": {
-    "input_tokens": 3302,
-    "input_tokens_details": { "cached_tokens": 1216 },
-    "output_tokens": 133,
-    "output_tokens_details": { "reasoning_tokens": 96 },
-    "total_tokens": 3435
+    "input_tokens": 1024,
+    "output_tokens": 128,
+    "total_tokens": 1152,
+    "input_tokens_details": {
+      "cached_tokens": 896
+    }
   }
 }
 ```
 
-On the first request with a given prefix, `cached_tokens` is `0` (or `prompt_tokens_details` is `null`). Repeat the request — or send another request sharing the same prefix — and `cached_tokens` reflects the reused portion.
+A `cached_tokens` value of `0` means the request was a cache miss (the first request for that prefix, or the prefix changed).
 
 ## Getting the Most Out of the Cache
 
-- **Put stable content first.** The cache matches *prefixes*: keep your system prompt, instructions, and reference documents at the start of the message list, and the parts that change (the user's latest question) at the end.
-- **Keep prefixes byte-identical.** Any change at position *N* invalidates the cache from that point on — even reordered JSON keys or a timestamp in the system prompt.
-- **Short prompts may not be cached.** There is a minimum prefix length (one engine-internal cache block) before caching kicks in; very short prompts are always computed in full.
-- **The cache is per model deployment.** Cache state lives inside each model's TEE and is evicted over time as capacity is needed. Frequent traffic against the same prefix keeps it warm.
+1. **Put stable content first.** Place system prompts, static instructions, and reference documents at the beginning of the prompt, before any per-request variable content such as the user's message. Caching works on prefixes, so only the leading portion of the prompt can be reused.
+
+2. **Keep prefixes byte-identical.** Even a single character difference — including whitespace, capitalization, or punctuation — will break the prefix match and result in a cache miss. Render system prompts from a template and avoid any dynamic injection into the stable prefix.
+
+3. **Short prompts may not be cached.** Very short prompts (typically under a few hundred tokens) may not benefit from caching, as the overhead of cache lookup is not warranted. Caching provides the most benefit on large, repeated prefixes such as long system prompts, few-shot examples, or document chunks.
+
+4. **Cache is per model deployment.** The KV cache is maintained per model. Switching the `model` field to a different model identifier — even a different quantization of the same base model — results in a cache miss on the first request.
 
 <Note>
-  **Privacy**
-
-  The cache never leaves the TEE — cached prefixes are part of the same hardware-isolated inference state as the rest of your request and are inaccessible to NEAR or the infrastructure provider.
+  The KV cache is fully isolated inside the TEE. Cached prompt activations never leave the secure enclave and are not accessible to any operator, including NEAR AI. Cache data from one organization is never reused for another organization's requests.
 </Note>
