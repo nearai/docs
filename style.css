@@ -75,14 +75,3 @@
   text-transform: uppercase;
   vertical-align: middle;
 }
-
-/* Embedded interactive API reference */
-.api-reference-iframe {
-  width: 100%;
-  height: calc(100vh - 12rem);
-  min-height: 640px;
-  border: 1px solid var(--accent-border);
-  border-radius: 12px;
-  background: #ffffff;
-  display: block;
-}
