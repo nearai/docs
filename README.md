@@ -3,7 +3,7 @@
   # NEAR AI Documentation
   <br />
   <br />
-  <img src="static/img/nearAI-logo.svg" alt="NEAR AI Logo" width="200"/>
+  <img src="logo/nearAI-logo.svg" alt="NEAR AI Logo" width="200"/>
 
   **Private. Intelligent. Yours.**
 
