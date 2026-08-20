@@ -1,7 +1,7 @@
 ---
 title: "Automated Usage and Cost Reporting for NEAR AI Cloud"
 sidebarTitle: "Usage Reporting"
-description: "Create reporting tokens scoped to usage:read and use them to export cursor-paginated usage rows, summarize costs by model and workspace, and automate billing reports."
+description: "Create scoped reporting tokens and use them to export paginated usage rows, summarize costs by model and workspace, and automate billing reports."
 ---
 
 NEAR AI Cloud provides a dedicated reporting token system for automated billing and usage exports. Reporting tokens are separate from your inference API keys — they carry a `usage:read` scope only, are scoped to a single organization, and cannot make inference requests. This separation lets you grant read-only access to a billing system or data pipeline without exposing your inference credentials.

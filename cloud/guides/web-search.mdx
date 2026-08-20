@@ -1,7 +1,7 @@
 ---
 title: "Add Live Web Search to AI Responses on NEAR AI Cloud"
 sidebarTitle: "Web Search"
-description: "Use NEAR AI Cloud's built-in web_context_search and web_search tools to give any model access to live web data — server-side, no client tool-handling code required."
+description: "Give any model live web access using built-in web_context_search and web_search tools — search runs server-side with no client tool-handling code needed."
 ---
 
 NEAR AI Cloud provides built-in web search tools that run entirely server-side. You declare the tool in your request and the model decides when to invoke it — NEAR AI Cloud fetches the results, injects them into the context, and the model uses them to formulate its final answer. You receive a complete, grounded response without writing any tool-dispatch or result-injection code on your end. Web search is billed per search invocation; current pricing is available from `GET /v1/services`.

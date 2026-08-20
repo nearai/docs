@@ -1,8 +1,10 @@
 ---
-title: "Verify NEAR AI Gateway TEE Attestation"
+title: "Verify the NEAR AI Cloud Inference Gateway TEE Attestation"
 sidebarTitle: "Gateway Verification"
 description: "Verify that the NEAR AI Cloud inference gateway is running inside a genuine Intel TDX TEE using hardware attestation and cryptographic proof."
 ---
+
+When you route requests through `cloud-api.near.ai`, that gateway itself runs inside a Trusted Execution Environment (TEE) backed by Intel TDX hardware. Gateway attestation proves the first hop — before your request reaches any model — is genuinely secure. Verifying it gives you an unbroken chain of trust across both the gateway and model TEEs.
 
 <Tip>
 **Direct Completions — No Gateway Verification Needed**

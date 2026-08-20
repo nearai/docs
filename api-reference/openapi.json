@@ -3074,7 +3074,7 @@
           "Attestation"
         ],
         "summary": "Get Intel Trust Authority attestation token",
-        "description": "Get Intel Trust Authority signed attestation JWTs for the gateway and, when\nrequested, compatible model provider evidence. Public endpoint — this is an\nexplicit, documented decision (nearai/infra#193): the response carries only\nITA-signed TEE evidence (no customer or key-scoped data), public access lets\nthird parties verify the platform without an account, and upstream ITA rate\nlimits bound abuse (propagated as 429). See\n`build_public_attestation_routes` in `routes/attestation.rs`.",
+        "description": "Get Intel Trust Authority signed attestation JWTs for the gateway and, when requested, compatible model provider evidence. This is a public endpoint — no API key required. The response carries only ITA-signed TEE evidence (no customer or key-scoped data), so public access lets third parties verify the platform without an account. Upstream ITA rate limits are propagated as HTTP 429 responses.",
         "operationId": "get_ita_token",
         "parameters": [
           {
@@ -3239,7 +3239,7 @@
           "Attestation"
         ],
         "summary": "Get attestation report",
-        "description": "Get hardware attestation report for TEE verification. Requires an API key\n(nearai/infra#193); report retrieval is non-billable — no usage or billing\nrecords are created.",
+        "description": "Get hardware attestation report for TEE verification. Requires an API key; report retrieval is non-billable — no usage or billing records are created.",
         "operationId": "get_attestation_report",
         "parameters": [
           {

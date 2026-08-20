@@ -1,7 +1,7 @@
 ---
-title: "Use OpenAI SDKs with NEAR AI Cloud"
+title: "Connect the OpenAI SDKs to NEAR AI Cloud Endpoints"
 sidebarTitle: "OpenAI Client"
-description: "Configure the OpenAI Python and JavaScript SDKs to call NEAR AI Cloud by setting base_url to cloud-api.near.ai or a direct completions endpoint, with the same API key."
+description: "Point the OpenAI Python or JavaScript SDK at NEAR AI Cloud by setting base_url and your API key. All standard endpoints and streaming work unchanged."
 ---
 
 NEAR AI Cloud is fully OpenAI-compatible. You can use the official OpenAI Python and JavaScript SDKs — or any other OpenAI-compatible client — without modification. The only change required is updating `base_url` / `baseURL` to the NEAR AI Cloud endpoint and supplying your NEAR AI API key. Every OpenAI-compatible method, parameter, and response shape works exactly as documented by OpenAI.
@@ -339,5 +339,5 @@ With these variables set, you can instantiate a client with no arguments:
 </Tabs>
 
 <Tip>
-  Store your API key in a `.env` file or your CI/CD secrets vault and load it with a library such as `python-dotenv` or `dotenv`. Never commit keys to source control.
+  Store your API key in a `.env` file or a secrets manager and load it with a library such as `python-dotenv` or `dotenv`. Never commit keys to source control.
 </Tip>

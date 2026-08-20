@@ -1,7 +1,7 @@
 ---
 title: "End-to-End Encrypted Chat Completions on NEAR AI Cloud"
 sidebarTitle: "E2EE Chat"
-description: "Add client-side encryption to NEAR AI Cloud chat completions using Ed25519 keys and XChaCha20-Poly1305. Messages are encrypted before leaving your machine and decrypted only inside the TEE."
+description: "Encrypt chat completions client-side with Ed25519 and XChaCha20-Poly1305. Messages leave your machine as ciphertext and are decrypted only inside the TEE."
 ---
 
 NEAR AI Cloud already protects your inference inside a TEE — your prompts and outputs are encrypted in hardware memory and inaccessible to any operator. End-to-end encryption (E2EE) adds a second cryptographic layer on top of TLS for defense-in-depth: your messages are encrypted on your machine before they leave, and decrypted only inside the specific model's enclave. Even if TLS were compromised at the network boundary, an attacker would only see ciphertext.
@@ -67,10 +67,6 @@ client_priv = X25519PrivateKey.generate()
 client_pub  = client_priv.public_key()
 
 # 4. ECDH + HKDF to derive encryption key
-model_x25519_pub = X25519PrivateKey.from_private_bytes(
-    b"\x00" * 32  # placeholder — real key from model_pub_key_bytes
-)
-# Actual ECDH:
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey
 model_pub_obj   = X25519PublicKey.from_public_bytes(model_pub_key_bytes)
 shared_secret   = client_priv.exchange(model_pub_obj)

@@ -1,7 +1,7 @@
 ---
-title: "Verify Chat Message Signatures from NEAR AI Cloud"
+title: "Verify Chat Completion Signatures from NEAR AI Cloud"
 sidebarTitle: "Chat Verification"
-description: "Verify individual chat completions are authentic and unmodified by validating cryptographic signatures generated inside the TEE for every inference request and response."
+description: "Verify individual chat completions are authentic by validating cryptographic signatures generated inside the TEE for every inference request and response."
 ---
 
 NEAR AI Cloud generates a cryptographic signature inside the TEE for every chat completion — signing both the request you sent and the response you received. By verifying this signature, you get proof that the message was processed in a genuine Trusted Execution Environment and that neither the request nor the response was tampered with in transit.

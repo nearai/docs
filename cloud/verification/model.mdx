@@ -1,7 +1,7 @@
 ---
-title: "Verify AI Model TEE Attestation on NEAR AI Cloud"
+title: "Verify NEAR AI Cloud Model TEE Attestation Reports"
 sidebarTitle: "Model Verification"
-description: "Step-by-step guide to verify that NEAR AI Cloud models are running inside genuine NVIDIA and Intel TEEs using hardware attestation reports and public key validation."
+description: "Verify that NEAR AI Cloud models run inside genuine NVIDIA and Intel TEEs using hardware attestation reports, TDX quotes, and public key validation."
 ---
 
 To verify a NEAR AI model is operating in a secure trusted environment, there are two main steps:
@@ -127,9 +127,28 @@ response = requests.get(
 - **`signing_address`** — The account address generated inside the TEE that will be used to sign chat responses. Use the `signing_address` from `model_attestations` to select the appropriate TEE node when verifying its integrity.
 - **`nvidia_payload`** and **`intel_quote`** — Attestation reports formatted for NVIDIA TEE and Intel TEE respectively, used to verify the integrity of the TEE. See [Verifying Model Attestation](#verifying-model-attestation) for details.
 
-<Note>
-**Implementation:** This endpoint is defined in the [NEAR AI Private ML SDK](https://github.com/nearai/private-ml-sdk/blob/a23fa797dfd7e676fba08cba68471b51ac9a13d9/vllm-proxy/src/app/api/v1/openai.py#L170).
-</Note>
+### Alternative: ITA Token Endpoint
+
+As an alternative to the raw attestation report, you can request an Intel Trust Authority (ITA) signed attestation JWT for the gateway and compatible model provider evidence:
+
+```text
+GET https://cloud-api.near.ai/v1/attestation/ita-token?model={model_name}&nonce={nonce}&signing_algo=ecdsa
+```
+
+This is a **public endpoint** — no API key is required. It returns ITA-signed TEE evidence as JSON Web Tokens (JWTs), which can be verified directly against Intel Trust Authority's JWKS endpoint (returned as `jwks_url` in the response). Use this endpoint when you prefer a standards-based JWT-based attestation flow rather than raw TDX quotes.
+
+```bash
+NONCE=$(openssl rand -hex 32)
+curl "https://cloud-api.near.ai/v1/attestation/ita-token?model=zai-org/GLM-5.1-FP8&nonce=${NONCE}&signing_algo=ecdsa" \
+  -H 'accept: application/json'
+```
+
+The response contains:
+- **`gateway`** — ITA token for the gateway TEE
+- **`models`** — ITA tokens for the model GPU TEE nodes
+- **`jwks_url`** — URL to fetch the public keys for verifying the JWT signatures
+- **`nonce`** — The nonce included in the attestation
+- **`policy_ids`** — ITA policy identifiers applied to the attestation
 
 ---
 

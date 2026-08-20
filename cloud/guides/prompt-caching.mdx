@@ -1,7 +1,7 @@
 ---
-title: "Reduce Cost and Latency with Prompt Caching"
+title: "Reduce Costs and Latency with Automatic Prompt Caching"
 sidebarTitle: "Prompt Caching"
-description: "NEAR AI Cloud automatically caches prompt prefixes inside TEEs. Repeated system prompts, conversation history, and documents are billed at discounted cache-read rates."
+description: "NEAR AI Cloud automatically caches prompt prefixes inside TEEs. Repeated system prompts and documents are billed at discounted cache-read rates."
 ---
 
 NEAR AI Cloud automatically caches prompt prefixes for every supported model — no API changes or opt-in flags required. When a request shares a prefix with a previous request to the same model, the cached portion is reused from the in-TEE KV cache and billed at a discounted cache-read rate rather than the full input rate.
