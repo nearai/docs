@@ -1,0 +1,473 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "NEAR AI",
+  "description": "Documentation for NEAR AI Cloud: private, verifiable AI inference in Trusted Execution Environments through an OpenAI-compatible API.",
+  "colors": {
+    "primary": "#0B8FF6",
+    "light": "#83D2FA",
+    "dark": "#0B8FF6"
+  },
+  "logo": {
+    "light": "/logo/nearAI-logo.svg",
+    "dark": "/logo/nearAI-logo.svg",
+    "href": "/"
+  },
+  "favicon": "/favicon.svg",
+  "icons": {
+    "library": "lucide"
+  },
+  "appearance": {
+    "default": "dark",
+    "strict": true
+  },
+  "background": {
+    "color": {
+      "light": "#000000",
+      "dark": "#000000"
+    }
+  },
+  "styling": {
+    "codeblocks": "dark"
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "icon": "book-open",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "index",
+              "cloud/quickstart"
+            ]
+          },
+          {
+            "group": "Models",
+            "pages": [
+              "cloud/models",
+              "cloud/reasoning-models"
+            ]
+          },
+          {
+            "group": "Private Inference",
+            "pages": [
+              "cloud/private-inference",
+              {
+                "group": "Verification",
+                "icon": "file-check",
+                "root": "cloud/verification/index",
+                "pages": [
+                  "cloud/verification/model",
+                  "cloud/verification/gateway",
+                  "cloud/verification/tls",
+                  "cloud/verification/chat"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "cloud/guides/openai-compatibility",
+              "cloud/guides/usage-reporting",
+              {
+                "group": "Integrations",
+                "root": "cloud/guides/integrations/index",
+                "pages": [
+                  "cloud/guides/integrations/model-discovery",
+                  {
+                    "group": "Coding Agents and IDEs",
+                    "pages": [
+                      "cloud/guides/integrations/cursor",
+                      "cloud/guides/integrations/continue",
+                      "cloud/guides/integrations/cline-roo-kilo",
+                      "cloud/guides/integrations/aider-zed",
+                      "cloud/guides/opencode-goose"
+                    ]
+                  },
+                  {
+                    "group": "Self-hosted and Team Apps",
+                    "pages": [
+                      "cloud/guides/integrations/librechat",
+                      "cloud/guides/integrations/open-webui",
+                      "cloud/guides/integrations/litellm",
+                      "cloud/guides/integrations/dify"
+                    ]
+                  }
+                ],
+                "icon": "plug"
+              },
+              "cloud/guides/prompt-caching",
+              "cloud/guides/fusion",
+              "cloud/guides/web-search",
+              "cloud/guides/specialized-endpoints",
+              "cloud/guides/e2ee-chat-completions"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "icon": "braces",
+        "openapi": "api-reference/openapi.json",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Chat",
+            "pages": [
+              "POST /v1/chat/completions",
+              "POST /v1/completions",
+              "GET /v1/models"
+            ]
+          },
+          {
+            "group": "Responses",
+            "pages": [
+              "POST /v1/responses",
+              "GET /v1/responses/{response_id}",
+              "DELETE /v1/responses/{response_id}",
+              "POST /v1/responses/{response_id}/cancel",
+              "GET /v1/responses/{response_id}/input_items"
+            ]
+          },
+          {
+            "group": "Conversations",
+            "pages": [
+              "POST /v1/conversations",
+              "GET /v1/conversations/{conversation_id}",
+              "POST /v1/conversations/{conversation_id}",
+              "DELETE /v1/conversations/{conversation_id}",
+              "POST /v1/conversations/{conversation_id}/archive",
+              "DELETE /v1/conversations/{conversation_id}/archive",
+              "POST /v1/conversations/{conversation_id}/clone",
+              "GET /v1/conversations/{conversation_id}/items",
+              "POST /v1/conversations/{conversation_id}/items",
+              "POST /v1/conversations/{conversation_id}/pin",
+              "DELETE /v1/conversations/{conversation_id}/pin"
+            ]
+          },
+          {
+            "group": "Models",
+            "pages": [
+              "GET /v1/model/list",
+              "GET /v1/model/{model_name}"
+            ]
+          },
+          {
+            "group": "Images",
+            "pages": [
+              "POST /v1/images/edits",
+              "POST /v1/images/generations"
+            ]
+          },
+          {
+            "group": "Audio",
+            "pages": [
+              "POST /v1/audio/transcriptions"
+            ]
+          },
+          {
+            "group": "Rerank",
+            "pages": [
+              "POST /v1/rerank"
+            ]
+          },
+          {
+            "group": "Score",
+            "pages": [
+              "POST /v1/score"
+            ]
+          },
+          {
+            "group": "Privacy",
+            "pages": [
+              "POST /v1/privacy/classify",
+              "POST /v1/privacy/redact"
+            ]
+          },
+          {
+            "group": "Files",
+            "pages": [
+              "GET /v1/files",
+              "POST /v1/files",
+              "GET /v1/files/{file_id}",
+              "DELETE /v1/files/{file_id}",
+              "GET /v1/files/{file_id}/content"
+            ]
+          },
+          {
+            "group": "Attestation",
+            "pages": [
+              "GET /v1/attestation/ita-token",
+              "GET /v1/attestation/report",
+              "GET /v1/signature/{chat_id}"
+            ]
+          },
+          {
+            "group": "Users",
+            "pages": [
+              "GET /v1/users/me",
+              "PATCH /v1/users/me",
+              "POST /v1/users/me/access-tokens",
+              "GET /v1/users/me/invitations",
+              "POST /v1/users/me/invitations/{invitation_id}/accept",
+              "POST /v1/users/me/invitations/{invitation_id}/decline",
+              "GET /v1/users/me/refresh-tokens",
+              "DELETE /v1/users/me/refresh-tokens/{refresh_token_id}",
+              "GET /v1/users/me/status",
+              "DELETE /v1/users/me/tokens"
+            ]
+          },
+          {
+            "group": "Organizations",
+            "pages": [
+              "GET /v1/organizations",
+              "POST /v1/organizations",
+              "GET /v1/organizations/{org_id}",
+              "PUT /v1/organizations/{org_id}",
+              "DELETE /v1/organizations/{org_id}"
+            ]
+          },
+          {
+            "group": "Organization Members",
+            "pages": [
+              "DELETE /v1/organizations/{org_id}/invitations/{invitation_id}",
+              "GET /v1/organizations/{org_id}/members",
+              "POST /v1/organizations/{org_id}/members",
+              "GET /v1/organizations/{org_id}/members/invitations",
+              "DELETE /v1/organizations/{org_id}/members/invitations/{invitation_id}",
+              "POST /v1/organizations/{org_id}/members/invite-by-email",
+              "PUT /v1/organizations/{org_id}/members/{user_id}",
+              "DELETE /v1/organizations/{org_id}/members/{user_id}"
+            ]
+          },
+          {
+            "group": "Invitations",
+            "pages": [
+              "GET /v1/invitations/{token}",
+              "POST /v1/invitations/{token}/accept"
+            ]
+          },
+          {
+            "group": "Workspaces",
+            "pages": [
+              "GET /v1/organizations/{org_id}/workspaces",
+              "POST /v1/organizations/{org_id}/workspaces",
+              "GET /v1/workspaces/{workspace_id}",
+              "PUT /v1/workspaces/{workspace_id}",
+              "DELETE /v1/workspaces/{workspace_id}",
+              "GET /v1/workspaces/{workspace_id}/api-keys",
+              "POST /v1/workspaces/{workspace_id}/api-keys",
+              "DELETE /v1/workspaces/{workspace_id}/api-keys/{key_id}",
+              "PATCH /v1/workspaces/{workspace_id}/api-keys/{key_id}",
+              "PATCH /v1/workspaces/{workspace_id}/api-keys/{key_id}/spend-limit"
+            ]
+          },
+          {
+            "group": "Usage",
+            "pages": [
+              "GET /v1/organizations/{org_id}/usage/balance",
+              "GET /v1/organizations/{org_id}/usage/by-model",
+              "GET /v1/organizations/{org_id}/usage/history",
+              "GET /v1/organizations/{org_id}/usage/metrics",
+              "GET /v1/organizations/{org_id}/usage/timeseries",
+              "GET /v1/workspaces/{workspace_id}/api-keys/{api_key_id}/usage/history"
+            ]
+          },
+          {
+            "group": "Reporting",
+            "pages": [
+              "GET /v1/organizations/{org_id}/reporting-tokens",
+              "POST /v1/organizations/{org_id}/reporting-tokens",
+              "DELETE /v1/organizations/{org_id}/reporting-tokens/{token_id}",
+              "GET /v1/organizations/{org_id}/usage/export",
+              "GET /v1/organizations/{org_id}/usage/summary"
+            ]
+          },
+          {
+            "group": "Billing",
+            "pages": [
+              "POST /v1/billing/costs"
+            ]
+          },
+          {
+            "group": "Staking Farm",
+            "pages": [
+              "GET /v1/organizations/{org_id}/staking/farm",
+              "POST /v1/organizations/{org_id}/staking/farm/sync",
+              "GET /v1/staking/farm/config"
+            ]
+          },
+          {
+            "group": "Services",
+            "pages": [
+              "GET /v1/services",
+              "GET /v1/services/{service_name}"
+            ]
+          },
+          {
+            "group": "Gateway",
+            "pages": [
+              "POST /v1/check_api_key"
+            ]
+          },
+          {
+            "group": "Health",
+            "pages": [
+              "GET /v1/health"
+            ]
+          },
+          {
+            "group": "Feature Requests",
+            "pages": [
+              "GET /v1/admin/feature-requests",
+              "POST /v1/feature-requests"
+            ]
+          },
+          {
+            "group": "Admin",
+            "pages": [
+              "GET /v1/admin/access-tokens",
+              "POST /v1/admin/access-tokens",
+              "DELETE /v1/admin/access-tokens/{token_id}",
+              "GET /v1/admin/invitation-email-deliveries",
+              "POST /v1/admin/invitation-email-deliveries/{invitation_id}/resend",
+              "GET /v1/admin/models",
+              "PATCH /v1/admin/models",
+              "POST /v1/admin/models/deprecate",
+              "GET /v1/admin/models/pricing-changes",
+              "POST /v1/admin/models/pricing-changes/confirm",
+              "POST /v1/admin/models/pricing-changes/preview",
+              "DELETE /v1/admin/models/pricing-changes/{id}",
+              "DELETE /v1/admin/models/{model_name}",
+              "POST /v1/admin/models/{model_name}/deprecation/confirm",
+              "POST /v1/admin/models/{model_name}/deprecation/preview",
+              "GET /v1/admin/models/{model_name}/history",
+              "GET /v1/admin/organizations/{org_id}",
+              "GET /v1/admin/organizations/{org_id}/concurrent-limit",
+              "PATCH /v1/admin/organizations/{org_id}/concurrent-limit",
+              "PATCH /v1/admin/organizations/{org_id}/limits",
+              "GET /v1/admin/organizations/{org_id}/limits/history",
+              "GET /v1/admin/organizations/{org_id}/members",
+              "GET /v1/admin/organizations/{org_id}/metrics",
+              "GET /v1/admin/organizations/{org_id}/metrics/timeseries",
+              "GET /v1/admin/organizations/{org_id}/staking/farm",
+              "POST /v1/admin/organizations/{org_id}/staking/farm/sync",
+              "GET /v1/admin/organizations/{org_id}/usage/balance",
+              "GET /v1/admin/platform/billing-summary",
+              "GET /v1/admin/platform/infra-summary",
+              "GET /v1/admin/platform/metrics",
+              "GET /v1/admin/platform/metrics/timeseries",
+              "GET /v1/admin/platform/model-revenue",
+              "GET /v1/admin/platform/org-revenue",
+              "POST /v1/admin/services",
+              "PATCH /v1/admin/services/{id}",
+              "GET /v1/admin/users"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Developer Dashboard",
+        "href": "https://cloud.near.ai"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "telegram": "https://t.me/nearaialpha",
+      "x": "https://x.com/near_ai",
+      "github": "https://github.com/nearai/docs"
+    },
+    "links": [
+      {
+        "header": "Docs",
+        "items": [
+          {
+            "label": "Quickstart",
+            "href": "https://docs.near.ai/cloud/quickstart"
+          },
+          {
+            "label": "Models",
+            "href": "https://docs.near.ai/cloud/models"
+          },
+          {
+            "label": "Private Inference",
+            "href": "https://docs.near.ai/cloud/private-inference"
+          },
+          {
+            "label": "Verification",
+            "href": "https://docs.near.ai/cloud/verification"
+          },
+          {
+            "label": "API Reference",
+            "href": "https://docs.near.ai/api-reference/introduction"
+          }
+        ]
+      },
+      {
+        "header": "Community",
+        "items": [
+          {
+            "label": "Telegram",
+            "href": "https://t.me/nearaialpha"
+          },
+          {
+            "label": "X",
+            "href": "https://x.com/near_ai"
+          }
+        ]
+      },
+      {
+        "header": "More",
+        "items": [
+          {
+            "label": "Developer Dashboard",
+            "href": "https://cloud.near.ai"
+          },
+          {
+            "label": "GitHub",
+            "href": "https://github.com/nearai/docs"
+          }
+        ]
+      }
+    ]
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude"
+    ]
+  },
+  "seo": {
+    "metatags": {
+      "og:site_name": "NEAR AI Docs",
+      "og:image": "https://docs.near.ai/images/icons/social-card.png",
+      "twitter:card": "summary_large_image",
+      "twitter:image": "https://docs.near.ai/images/icons/social-card.png"
+    }
+  },
+  "redirects": [
+    {
+      "source": "/cloud/introduction",
+      "destination": "/"
+    },
+    {
+      "source": "/api",
+      "destination": "/api-reference/introduction"
+    }
+  ]
+}

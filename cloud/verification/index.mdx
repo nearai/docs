@@ -1,0 +1,57 @@
+---
+title: "Verification"
+---
+
+[NEAR AI Cloud](https://cloud.near.ai) operates in Trusted Execution Environments (TEEs) which use cryptographic proofs to verify that your private AI conversations actually happened in secure, isolated environments that are not on compromised systems or with unauthorized access.
+
+This section will show you step-by-step processes for checking these proofs, validating digital signatures, and confirming that your AI interactions haven't been tampered with.
+
+<Tip>
+  See an easy-to-follow example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo.
+
+  A more complete verifier implementation is available in the [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) repo.
+</Tip>
+<Tip>
+  **Simplified Verification with Direct Completions**
+
+  When using [direct completions endpoints](/cloud/private-inference#direct-completions) (e.g., `https://qwen35-122b.completions.near.ai`), your requests go straight to the model's TEE. This means only **model verification** is needed — there is no gateway in the path, so [gateway verification](/cloud/verification/gateway) can be skipped entirely.
+</Tip>
+<Tip>
+  **TLS Termination Inside the TEE**
+
+  If you also need to prove that your HTTPS connection terminates inside the same TEE, request attestation with `include_tls_fingerprint=true`. That opt-in flag changes the attested `report_data` from `signing_address || nonce` to `SHA256(signing_address || tls_cert_fingerprint) || nonce`. See [TLS Attestation Verification](/cloud/verification/tls).
+</Tip>
+## How NEAR AI Cloud Verification Works
+
+1. **Secure Key Generation:** When NEAR AI Cloud initializes, it generates a unique cryptographic signing key pair inside the Trusted Execution Environment (TEE). The private key never leaves the secure hardware.
+
+2. **Hardware Attestation:** The system generates attestation reports that cryptographically prove it's running on genuine NVIDIA H100/H200 hardware in TEE mode within a confidential VM.
+
+3. **Key Binding:** These attestation reports include the public key from step 1, creating a verifiable link between the secure hardware and the signing capability.
+
+4. **Message Signing:** Every AI inference request and response is digitally signed using the private key that remains secured within the TEE.
+
+5. **End-to-End Verification:** You can verify that your AI interactions were genuinely processed in the secure environment by:
+
+    - Checking the hardware attestation reports
+    - Validating the digital signatures on your messages
+    - Confirming the signing key matches the attested hardware
+
+---
+
+## What You Can Verify
+
+<CardGroup cols={2}>
+  <Card title="Model Verification" icon="brain-circuit" href="/cloud/verification/model">
+    Verify that AI models are running in secure TEE environments using NVIDIA and Intel attestation
+  </Card>
+  <Card title="Gateway Verification" icon="router" href="/cloud/verification/gateway">
+    Verify that the private inference gateway is running in secure TEE environments using Intel attestation
+  </Card>
+  <Card title="TLS Attestation Verification" icon="shield-check" href="/cloud/verification/tls">
+    Verify that your HTTPS connection terminates inside the attested TEE by binding the TLS certificate into report_data
+  </Card>
+  <Card title="Chat Verification" icon="message-square-check" href="/cloud/verification/chat">
+    Verify individual chat messages and responses through cryptographic signatures
+  </Card>
+</CardGroup>

@@ -1,0 +1,57 @@
+---
+title: "API Reference"
+sidebarTitle: "Overview"
+description: "OpenAI-compatible REST API for private, verifiable AI inference on NEAR AI Cloud"
+icon: "braces"
+---
+
+The NEAR AI Cloud API is a REST API served from a single base URL. Inference endpoints
+are OpenAI-compatible, so any OpenAI SDK works by pointing it at NEAR AI.
+
+```text
+https://cloud-api.near.ai/v1
+```
+
+## Authentication
+
+Every request is authenticated with a bearer token in the `Authorization` header. The API
+accepts four token types; for programmatic access you almost always want an **API key**.
+
+| Token | Prefix | Use for |
+| --- | --- | --- |
+| **API key** | `sk-` | Programmatic access to inference and most endpoints. Create keys in the [Developer Dashboard](https://cloud.near.ai). |
+| **Access token** (JWT) | — | Short-lived user session token used by the dashboard. Create via `POST /v1/users/me/access-tokens` with a refresh token. |
+| **Refresh token** | `rt_` | Long-lived token from OAuth login. Only valid for `POST /v1/users/me/access-tokens`. |
+| **Reporting token** | `rpt-` | Read-only access to the [usage reporting](/cloud/guides/usage-reporting) endpoints. Create via `POST /v1/organizations/{org_id}/reporting-tokens`. |
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Authorization: Bearer $NEAR_AI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "zai-org/GLM-5.1-FP8",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'
+```
+
+Each endpoint page lists which token types it accepts under **Authorizations**.
+
+Every endpoint page has an interactive playground: paste your key, edit the request, and
+send it directly from the browser.
+
+<CardGroup cols={3}>
+  <Card title="Chat Completions" icon="message-square" href="/api-reference/chat/create-chat-completion">
+    The primary inference endpoint
+  </Card>
+  <Card title="Models" icon="boxes" href="/api-reference/models/list-models-with-pricing">
+    List models, context windows, and pricing
+  </Card>
+  <Card title="Attestation" icon="file-check" href="/api-reference/attestation/get-attestation-report">
+    Verify the TEE running your requests
+  </Card>
+</CardGroup>
+
+<Note>
+  New to NEAR AI Cloud? Start with the [Quickstart](/cloud/quickstart), then see
+  [OpenAI Compatibility](/cloud/guides/openai-compatibility) for SDK setup details.
+</Note>
