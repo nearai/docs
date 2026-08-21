@@ -146,6 +146,7 @@ first = client.responses.create(
     model="z-ai/glm-5.2",
     input=prompt,
     tools=tools,
+    tool_choice="required",
     store=False,
 )
 

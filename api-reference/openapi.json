@@ -19272,13 +19272,11 @@
             ]
           },
           "store": {
-            "type": [
-              "boolean",
-              "null"
-            ],
+            "type": "boolean",
             "description": "Must be `false` when supplied; omitted is normalized to `false`.",
             "default": false,
-            "example": false
+            "example": false,
+            "const": false
           },
           "stream": {
             "type": [

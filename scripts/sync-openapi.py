@@ -23,6 +23,13 @@ spec = json.load(urllib.request.urlopen(SRC))
 spec["info"]["description"] = (
     "NEAR AI Cloud API for private AI model inference and organization administration."
 )
+stateless_request = spec.get("components", {}).get("schemas", {}).get(
+    "StatelessCreateResponseRequestSchema"
+)
+if stateless_request:
+    store = stateless_request["properties"]["store"]
+    store["type"] = "boolean"
+    store["const"] = False
 spec["servers"] = [{"url": "https://cloud-api.near.ai", "description": "NEAR AI Cloud"}]
 with open(SPEC, "w") as f:
     json.dump(spec, f, indent=2, ensure_ascii=False); f.write("\n")
