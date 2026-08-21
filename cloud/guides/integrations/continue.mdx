@@ -109,7 +109,7 @@ If curl fails, fix the NEAR AI Cloud key, model ID, or network path before chang
 | model not listed | Continue has not loaded the new `config.yaml`, the model picker is stale, or the model entry was not added to `models`. | Confirm the YAML contains `model: z-ai/glm-5.2`, save the file, then reload the IDE or restart Continue. |
 | `401` | The secret is missing, invalid, or not visible to the Continue process. | Put `NEARAI_API_KEY=...` in a workspace `.env`, workspace `.continue/.env`, or `~/.continue/.env`, then restart the IDE. For the CLI, export the variable before running `cn`. |
 | Wrong base URL includes `/chat/completions` | The full curl request URL was pasted into `apiBase`. | Set `apiBase: https://cloud-api.near.ai/v1`. Use `/chat/completions` only in full request URLs such as the curl smoke test. |
-| Continue calls `/responses` and the request fails | Some OpenAI model families can make Continue use the Responses API. NEAR AI Cloud integrations should use chat completions unless a model-specific guide says otherwise. | Add `useResponsesApi: false` to the affected model entry only if logs show Continue is calling `/responses`; keep it out of the default config. |
+| Continue calls `/responses` and the request fails | Some OpenAI model families can make Continue use Responses features that require provider-side storage or built-in tools. NEAR AI Cloud supports only [stateless Responses](/cloud/guides/stateless-responses). | Add `useResponsesApi: false` to the affected model entry only if logs show Continue is calling `/responses`; keep it out of the default config. |
 
 Example targeted fallback:
 

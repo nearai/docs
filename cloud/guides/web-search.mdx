@@ -1,61 +1,17 @@
 ---
 title: "Web Search"
-description: "Give models access to live web results with the built-in web search tools"
+description: "Give models access to live web results through Chat Completions"
 icon: "globe"
 ---
 
 
-NEAR AI Cloud provides built-in **server-side web search tools** that let any model answer questions about current events and live data. The model decides when to search, the platform executes the search, and the results are fed back to the model — all in a single API call, with no tool-handling code on your side.
+NEAR AI Cloud provides a built-in **server-side web search tool** for Chat Completions. The model decides when to search, the platform executes the search, and the results are fed back to the model without tool-handling code on your side.
 
 Web search is billed per request as a platform service in addition to model tokens. Current pricing is available from the public [`/v1/services`](https://cloud-api.near.ai/v1/services) endpoint.
 
-## Tool Types
-
-| Tool type | Behavior |
-|-----------|----------|
-| `web_search` | OpenAI-compatible hosted search tool. Supports optional `search_context_size` and `user_location` parameters. |
-| `web_context_search` | NEAR AI's search tool. The model issues search queries in an agentic loop and receives result snippets as context. |
-
-## Responses API
-
-Add the tool to the `tools` array — no other changes needed:
-
-```bash
-curl https://cloud-api.near.ai/v1/responses \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -d '{
-    "model": "zai-org/GLM-5.1-FP8",
-    "input": "What is the current population of Tokyo? Reply in one short sentence.",
-    "tools": [{"type": "web_context_search"}]
-  }'
-```
-
-The response `output` array contains the search activity followed by the final answer:
-
-```json
-{
-  "status": "completed",
-  "output": [
-    { "type": "web_search_call", "status": "completed" },
-    { "type": "reasoning", "...": "..." },
-    {
-      "type": "message",
-      "content": [{
-        "type": "output_text",
-        "text": "As of 2026, the Tokyo metropolitan area has a population of approximately 37 million people, while Tokyo prefecture itself has about 14.2 million residents."
-      }]
-    }
-  ],
-  "usage": {
-    "input_tokens": 3302,
-    "input_tokens_details": { "cached_tokens": 1216 },
-    "output_tokens": 133,
-    "output_tokens_details": { "reasoning_tokens": 96 },
-    "total_tokens": 3435
-  }
-}
-```
+<Warning>
+  The stateless Responses API does not execute built-in `web_search` or `web_context_search` tools. Use Chat Completions as shown below, or expose search as a custom function and execute it in your application.
+</Warning>
 
 ## Chat Completions API
 
@@ -66,7 +22,7 @@ curl https://cloud-api.near.ai/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
-    "model": "zai-org/GLM-5.1-FP8",
+    "model": "z-ai/glm-5.2",
     "messages": [{"role": "user", "content": "What is the current population of Tokyo? One short sentence."}],
     "tools": [{"type": "web_context_search"}],
     "stream": true
@@ -86,5 +42,6 @@ This makes it easy to display "searching the web…" states and surface sources 
 </Note>
 ## See Also
 
-- [OpenAI Compatibility](/cloud/guides/openai-compatibility) — Responses API and SDK setup
+- [Stateless Responses](/cloud/guides/stateless-responses) — client-managed functions and unsupported built-in tools
+- [OpenAI Compatibility](/cloud/guides/openai-compatibility) — SDK setup
 - [Prompt Caching](/cloud/guides/prompt-caching) — search context benefits from cache-read pricing on repeated turns
