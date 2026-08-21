@@ -50,6 +50,8 @@ The number of input tokens served from cache is reported in the `usage` object o
 
 On the first request with a given prefix, `cached_tokens` is `0` (or `prompt_tokens_details` is `null`). Repeat the request — or send another request sharing the same prefix — and `cached_tokens` reflects the reused portion.
 
+The Responses API is stateless, so your application sends the relevant history with each turn. Keeping that caller-managed history in a stable order creates the repeated prefix that prompt caching can reuse. See [Stateless Responses](/cloud/guides/stateless-responses).
+
 ## Getting the Most Out of the Cache
 
 - **Put stable content first.** The cache matches *prefixes*: keep your system prompt, instructions, and reference documents at the start of the message list, and the parts that change (the user's latest question) at the end.

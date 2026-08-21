@@ -71,6 +71,7 @@
             "group": "Guides",
             "pages": [
               "cloud/guides/openai-compatibility",
+              "cloud/guides/stateless-responses",
               "cloud/guides/usage-reporting",
               {
                 "group": "Integrations",
@@ -130,27 +131,7 @@
           {
             "group": "Responses",
             "pages": [
-              "POST /v1/responses",
-              "GET /v1/responses/{response_id}",
-              "DELETE /v1/responses/{response_id}",
-              "POST /v1/responses/{response_id}/cancel",
-              "GET /v1/responses/{response_id}/input_items"
-            ]
-          },
-          {
-            "group": "Conversations",
-            "pages": [
-              "POST /v1/conversations",
-              "GET /v1/conversations/{conversation_id}",
-              "POST /v1/conversations/{conversation_id}",
-              "DELETE /v1/conversations/{conversation_id}",
-              "POST /v1/conversations/{conversation_id}/archive",
-              "DELETE /v1/conversations/{conversation_id}/archive",
-              "POST /v1/conversations/{conversation_id}/clone",
-              "GET /v1/conversations/{conversation_id}/items",
-              "POST /v1/conversations/{conversation_id}/items",
-              "POST /v1/conversations/{conversation_id}/pin",
-              "DELETE /v1/conversations/{conversation_id}/pin"
+              "POST /v1/responses"
             ]
           },
           {
@@ -190,16 +171,6 @@
             "pages": [
               "POST /v1/privacy/classify",
               "POST /v1/privacy/redact"
-            ]
-          },
-          {
-            "group": "Files",
-            "pages": [
-              "GET /v1/files",
-              "POST /v1/files",
-              "GET /v1/files/{file_id}",
-              "DELETE /v1/files/{file_id}",
-              "GET /v1/files/{file_id}/content"
             ]
           },
           {

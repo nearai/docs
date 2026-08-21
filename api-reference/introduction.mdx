@@ -5,8 +5,8 @@ description: "OpenAI-compatible REST API for private, verifiable AI inference on
 icon: "braces"
 ---
 
-The NEAR AI Cloud API is a REST API served from a single base URL. Inference endpoints
-are OpenAI-compatible, so any OpenAI SDK works by pointing it at NEAR AI.
+The NEAR AI Cloud API is a REST API served from a single base URL. Its documented
+OpenAI-compatible inference surfaces work with OpenAI SDKs by pointing them at NEAR AI.
 
 ```text
 https://cloud-api.near.ai/v1
@@ -50,6 +50,12 @@ send it directly from the browser.
     Verify the TEE running your requests
   </Card>
 </CardGroup>
+
+<Note>
+  `POST /v1/responses` is stateless and supports `store: false` only. Read the
+  [Stateless Responses guide](/cloud/guides/stateless-responses) before migrating
+  an integration that uses conversations, files, response history, or built-in tools.
+</Note>
 
 <Note>
   New to NEAR AI Cloud? Start with the [Quickstart](/cloud/quickstart), then see

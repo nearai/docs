@@ -1,0 +1,215 @@
+---
+title: "Stateless Responses API"
+sidebarTitle: "Stateless Responses"
+description: "Use the OpenAI Responses shape without server-side conversation or response storage"
+icon: "message-square"
+---
+
+The NEAR AI Cloud Responses API is a stateless compatibility layer over Chat Completions. It keeps the OpenAI Responses request, output, and streaming shapes while leaving conversation state and tool execution under your application's control.
+
+```text
+POST https://cloud-api.near.ai/v1/responses
+```
+
+Every successful request makes exactly one Chat Completions inference. NEAR AI Cloud does not store the raw request, response, output items, or conversation history for later retrieval.
+
+<Note>
+  `store` must be `false`. If you omit it, NEAR AI Cloud treats it as `false`.
+</Note>
+
+## Create a Response
+
+<Tabs>
+<Tab title="Python">
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://cloud-api.near.ai/v1",
+    api_key="YOUR_NEAR_AI_API_KEY",
+)
+
+response = client.responses.create(
+    model="z-ai/glm-5.2",
+    input="Explain confidential inference in one sentence.",
+    store=False,
+)
+
+print(response.output_text)
+```
+
+</Tab>
+<Tab title="JavaScript/TypeScript">
+
+```javascript
+import OpenAI from 'openai';
+
+const client = new OpenAI({
+  baseURL: 'https://cloud-api.near.ai/v1',
+  apiKey: 'YOUR_NEAR_AI_API_KEY',
+});
+
+const response = await client.responses.create({
+  model: 'z-ai/glm-5.2',
+  input: 'Explain confidential inference in one sentence.',
+  store: false,
+});
+
+console.log(response.output_text);
+```
+
+</Tab>
+<Tab title="curl">
+
+```bash
+curl https://cloud-api.near.ai/v1/responses \
+  -H "Authorization: Bearer $NEARAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "z-ai/glm-5.2",
+    "input": "Explain confidential inference in one sentence.",
+    "store": false
+  }'
+```
+
+</Tab>
+</Tabs>
+
+Both streaming and non-streaming requests are supported. Responses include `Cache-Control: no-store`.
+
+## Manage Conversation History
+
+There is no server-side conversation object and no `previous_response_id` continuation. For each new turn, send the relevant messages again:
+
+```json
+{
+  "model": "z-ai/glm-5.2",
+  "store": false,
+  "input": [
+    {
+      "role": "user",
+      "content": "My deployment is called Orion."
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Understood. Your deployment is called Orion."
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "What is my deployment called?"
+    }
+  ]
+}
+```
+
+Store this history in your application only for as long as your own data-handling policy requires. Repeated, byte-identical history prefixes can still benefit from [prompt caching](/cloud/guides/prompt-caching).
+
+## Use Client-Managed Functions
+
+Responses accepts custom tools with `type: "function"`. NEAR AI Cloud can ask for a function call, but it never executes that function or starts a server-side agent loop.
+
+The client-managed flow is:
+
+1. Send a stateless request with your function definitions.
+2. If the model requests a function, the response has `status: "incomplete"`, `incomplete_details.reason: "function_call_required"`, and a `function_call` output item.
+3. Execute the function in your application.
+4. Send a new stateless request containing your message history, the returned `function_call` item, its matching `function_call_output`, and the same function definitions.
+
+```python
+import json
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://cloud-api.near.ai/v1",
+    api_key="YOUR_NEAR_AI_API_KEY",
+)
+
+tools = [{
+    "type": "function",
+    "name": "get_weather",
+    "description": "Get the current weather for a city.",
+    "parameters": {
+        "type": "object",
+        "properties": {"city": {"type": "string"}},
+        "required": ["city"],
+    },
+}]
+
+prompt = "What is the weather in Paris?"
+first = client.responses.create(
+    model="z-ai/glm-5.2",
+    input=prompt,
+    tools=tools,
+    store=False,
+)
+
+function_call = next(item for item in first.output if item.type == "function_call")
+
+# Your application executes the function.
+function_result = {"temperature_c": 22, "condition": "sunny"}
+
+second = client.responses.create(
+    model="z-ai/glm-5.2",
+    store=False,
+    tools=tools,
+    input=[
+        {"role": "user", "content": prompt},
+        function_call.model_dump(),
+        {
+            "type": "function_call_output",
+            "call_id": function_call.call_id,
+            "output": json.dumps(function_result),
+        },
+    ],
+)
+
+print(second.output_text)
+```
+
+Echo the returned `function_call` item unchanged. This preserves provider-specific fields needed for the next inference. Include exactly one matching `function_call_output` later in the same request for each replayed call.
+
+## Unsupported Stateful Features
+
+The following Responses inputs return `400 invalid_request_error`:
+
+- `store: true`
+- `conversation`
+- `previous_response_id`
+- `background: true`
+- `input_file`
+- Built-in `web_search`, `web_context_search`, `file_search`, `code_interpreter`, and `computer` tools
+- Remote `mcp` tools and MCP approval or tool-list continuation items
+- Image-generation or image-editing output models; use the [Images endpoints](/cloud/guides/specialized-endpoints#image-generation) instead
+
+For server-side web search, use the supported [Chat Completions flow](/cloud/guides/web-search). You can also expose search as a custom function and execute it in your application.
+
+## Retired APIs
+
+The following stateful surfaces are no longer available:
+
+- `/v1/conversations` and all subpaths
+- `/v1/files` and all subpaths
+- `GET` and `DELETE /v1/responses/{response_id}`
+- `POST /v1/responses/{response_id}/cancel`
+- `GET /v1/responses/{response_id}/input_items`
+
+Missing or invalid API keys receive `401 Unauthorized`. Authenticated requests to a retired endpoint receive `410 Gone` with migration guidance.
+
+Existing historical records and objects are not deleted by the API retirement. Their retention, export, or deletion is handled separately from the public inference contract.
+
+## Response IDs and Signatures
+
+A stateless response still has a `resp_` ID, but the ID does not refer to retrievable response history. For a completed response, NEAR AI Cloud attempts to store a gateway signature over request and response digests. Signature persistence is best-effort, so `GET /v1/signature/resp_*` is not guaranteed to succeed. Raw request and response content is not stored with that signature.
+
+## Related Guides
+
+- [OpenAI Compatibility](/cloud/guides/openai-compatibility)
+- [Web Search](/cloud/guides/web-search)
+- [Prompt Caching](/cloud/guides/prompt-caching)
+- [API Reference](/api-reference/introduction)

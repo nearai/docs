@@ -6,7 +6,7 @@ icon: "cloud"
 ---
 
 
-NEAR AI Cloud provides an API that is fully compatible with the OpenAI API specification. This means you can use the official OpenAI client libraries for Python and JavaScript/TypeScript with minimal configuration changes.
+NEAR AI Cloud implements the OpenAI-compatible inference surfaces documented below. You can use the official OpenAI client libraries for Python and JavaScript/TypeScript by changing the base URL and API key. Features that require provider-side storage or tool execution are intentionally limited; each section describes the supported contract.
 
 ## Configuration
 
@@ -28,7 +28,7 @@ https://{slug}.completions.near.ai/v1
 
 For example, `https://qwen35-122b.completions.near.ai/v1` connects directly to Qwen3.5-122B. See [completions.near.ai/endpoints](https://completions.near.ai/endpoints) for all available endpoints.
 
-Both URLs use the same API key and the same OpenAI-compatible API. Direct completions offer lower latency and a simpler trust model since TLS terminates directly in the model's TEE. See [Private Inference — Direct Completions](/cloud/private-inference#direct-completions) for details.
+Both URLs use the same API key. Direct completions offer lower latency and a simpler trust model since TLS terminates directly in the model's TEE. See [Private Inference — Direct Completions](/cloud/private-inference#direct-completions) for details.
 
 ### API Key
 You can generate your API key in the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations).
@@ -171,9 +171,7 @@ NEAR AI Cloud supports the following core OpenAI API features:
 - **Embeddings** (`/v1/embeddings`) - See [Beyond Chat](/cloud/guides/specialized-endpoints#embeddings)
 - **Images** (`/v1/images/generations`, `/v1/images/edits`) - See [Beyond Chat](/cloud/guides/specialized-endpoints#image-generation)
 - **Audio Transcription** (`/v1/audio/transcriptions`) - See [Beyond Chat](/cloud/guides/specialized-endpoints#audio-transcription)
-- **Files** (`/v1/files`) - Upload, list, retrieve, and delete files
-- **Conversations** (`/v1/conversations`) - Manage multi-turn conversations
-- **Responses** (`/v1/responses`) - Generate responses with advanced tool calling, including built-in [Web Search](/cloud/guides/web-search)
+- **Responses** (`/v1/responses`) - Stateless, `store: false` inference with client-managed history and custom functions; see [Stateless Responses](/cloud/guides/stateless-responses)
 - **Streaming** (Server-Sent Events)
 
 NEAR AI Cloud also provides non-OpenAI extensions:
@@ -183,70 +181,9 @@ NEAR AI Cloud also provides non-OpenAI extensions:
 - **Privacy redaction** (`/v1/privacy/redact`) - Gateway-only endpoint for redacting personally identifiable information
 - **Attestation & Signatures** (`/v1/attestation/report`, `/v1/signature/{chat_id}`) - See [Verification](/cloud/verification)
 
-### Files API Example
+### Stateless Responses
 
-You can use the Files API to upload documents for use with supported models.
-
-<Tabs>
-<Tab title="Python">
-
-```python
-from openai import OpenAI
-
-client = OpenAI(
-    base_url="https://cloud-api.near.ai/v1",
-    api_key="YOUR_NEAR_AI_API_KEY",
-)
-
-# Upload a file
-file = client.files.create(
-  file=open("mydata.jsonl", "rb"),
-  purpose="fine-tune"
-)
-print(f"Uploaded file ID: {file.id}")
-
-# List files
-files = client.files.list()
-for f in files.data:
-    print(f.filename, f.id)
-```
-
-</Tab>
-<Tab title="JavaScript/TypeScript">
-
-```javascript
-import OpenAI from 'openai';
-import fs from 'fs';
-
-const openai = new OpenAI({
-  baseURL: 'https://cloud-api.near.ai/v1',
-  apiKey: 'YOUR_NEAR_AI_API_KEY',
-});
-
-async function main() {
-  // Upload a file
-  const file = await openai.files.create({
-    file: fs.createReadStream('mydata.jsonl'),
-    purpose: 'fine-tune',
-  });
-  console.log(`Uploaded file ID: ${file.id}`);
-
-  // List files
-  const files = await openai.files.list();
-  files.data.forEach(f => {
-    console.log(f.filename, f.id);
-  });
-}
-
-main();
-```
-
-</Tab>
-</Tabs>
-
-### Conversations and Responses (Beta)
-
-The Conversations and Responses APIs are newer OpenAI features that provide more structured management of multi-turn conversations and advanced tool usage.
+The Responses API preserves the OpenAI Responses input, output, and streaming shapes without storing conversation or response history. Set `store: false` or omit it, and include any prior context in each new request.
 
 <Tabs>
 <Tab title="Python">
@@ -259,22 +196,13 @@ client = OpenAI(
     api_key="YOUR_NEAR_AI_API_KEY",
 )
 
-# 1. Create a conversation
-conversation = client.conversations.create(
-    metadata={"topic": "demo"}
-)
-print(f"Conversation ID: {conversation.id}")
-
-# 2. Generate a response
 response = client.responses.create(
-    conversation_id=conversation.id,
-    model="zai-org/GLM-5.1-FP8",
-    input=[
-        {"type": "message", "role": "user", "content": "Tell me a fun fact about it."}
-    ]
+    model="z-ai/glm-5.2",
+    input="Explain confidential inference in one sentence.",
+    store=False,
 )
 
-print(response.output[0].content[0].text)
+print(response.output_text)
 ```
 
 </Tab>
@@ -289,22 +217,13 @@ const openai = new OpenAI({
 });
 
 async function main() {
-  // 1. Create a conversation
-  const conversation = await openai.conversations.create({
-    metadata: { topic: 'demo' }
-  });
-  console.log(`Conversation ID: ${conversation.id}`);
-
-  // 2. Generate a response
   const response = await openai.responses.create({
-    conversation_id: conversation.id,
-    model: 'zai-org/GLM-5.1-FP8',
-    input: [
-        { type: 'message', role: 'user', content: 'Tell me a fun fact about it.' }
-    ]
+    model: 'z-ai/glm-5.2',
+    input: 'Explain confidential inference in one sentence.',
+    store: false,
   });
 
-  console.log(response.output[0].content[0].text);
+  console.log(response.output_text);
 }
 
 main();
@@ -312,6 +231,8 @@ main();
 
 </Tab>
 </Tabs>
+
+See [Stateless Responses](/cloud/guides/stateless-responses) for caller-managed multi-turn history, custom function replay, retired endpoints, and unsupported server-executed tools.
 
 ## Environment Variables
 
