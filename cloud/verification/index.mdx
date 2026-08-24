@@ -1,80 +1,43 @@
 ---
 title: "Verification"
-description: "Verify NEAR AI Cloud attestation reports, TLS endpoints, signed chat responses, and deployed image provenance."
+description: "Choose the Cloud API or direct-model verification flow, then verify the evidence for that request path."
 ---
 
-Verification lets you independently check evidence for a specific NEAR AI Cloud request path. Each check answers a different question: whether an attestation is fresh, whether a TLS connection reaches the attested endpoint, whether a response was signed by an attested signer, or whether deployed images have the provenance your policy requires.
-
-Start with the result you need to verify.
+NEAR AI Cloud has two verification paths. They use different endpoints, response envelopes, and signer relationships. Select the path your application actually uses before interpreting an attestation report.
 
 <CardGroup cols={2}>
-  <Card title="Model verification" icon="brain-circuit" href="/cloud/verification/model">
-    Verify a model attestation, including its Intel TDX quote, nonce, signer, GPU evidence, and measured configuration.
+  <Card title="Cloud API" icon="cloud" href="/cloud/verification/cloud-api">
+    Verify requests sent to cloud-api.near.ai, including its gateway attestation and any returned model attestations.
   </Card>
-  <Card title="Gateway verification" icon="router" href="/cloud/verification/gateway">
-    Verify the Cloud API gateway when requests are sent through cloud-api.near.ai.
-  </Card>
-  <Card title="TLS attestation" icon="shield-check" href="/cloud/verification/tls">
-    Verify that one HTTPS connection terminates at the endpoint named by its attestation.
-  </Card>
-  <Card title="Chat verification" icon="message-square-check" href="/cloud/verification/chat">
-    Verify the integrity and signer of a chat completion.
-  </Card>
-  <Card title="Image provenance" icon="package-check" href="/cloud/verification/provenance">
-    Apply a source and build-provenance policy to every image pinned in an attested deployment.
+  <Card title="Direct model endpoints" icon="server" href="/cloud/verification/direct">
+    Verify requests sent directly to a model's completions.near.ai endpoint, without the Cloud API gateway in the request path.
   </Card>
 </CardGroup>
 
-## Choose the checks you need
+## Why the paths are separate
 
-| Goal | Required evidence |
-| --- | --- |
-| Verify a model environment | A fresh model attestation, a verified Intel TDX quote, the request nonce, signer binding, and GPU evidence when present. |
-| Verify the gateway | A fresh gateway attestation and a verified Intel TDX quote. Verify the model separately when you also need evidence for model execution. |
-| Verify an HTTPS connection | A TLS-bound attestation and the live certificate's SPKI hash from the **same TLS connection**. |
-| Verify a chat response | The exact request and response bytes, a valid signature, and an attestation for the signature's signer. |
-| Verify deployed software provenance | A verified compose measurement plus a provenance decision for every image digest in that compose file. |
+| | Cloud API | Direct model endpoint |
+| --- | --- | --- |
+| Request host | `cloud-api.near.ai` | `<MODEL_SLUG>.completions.near.ai` |
+| Attestation envelope | `gateway_attestation` and optional `model_attestations[]` | A model report at the response root, plus `all_attestations[]` |
+| Gateway evidence | Available as `gateway_attestation` | Not in the request path |
+| Response signature routing | `signature_kind` identifies a gateway or model-serving signer when present | Match the signature to the direct model report's signer |
 
-## Recommended verification flow
+Do not rename or map these fields as if they were aliases. In particular, `model_attestations[]` is a Cloud API response field; it is not the direct endpoint's `all_attestations[]` field.
 
-For a production integration, use the following order:
+## Shared requirements
 
-1. Generate a fresh, random 32-byte nonce in your client. Send it as 64 hexadecimal characters with the attestation request.
-2. Request the attestation for the endpoint and model you are using. When you need TLS endpoint verification, set `include_tls_fingerprint=true`.
-3. Verify the Intel TDX quote with an Intel DCAP verifier. Read `report_data` and measurements from the **verified quote**, not from unverified response fields.
-4. Check that the verified quote binds your nonce and the reported signing identity. Verify NVIDIA GPU evidence when the report contains it.
-5. Apply your workload policy: inspect the measured compose configuration and, when required, verify provenance for every pinned image digest.
-6. For a chat response, verify the signature over the exact bytes you sent and received, then match its signer to the appropriate attestation.
+Both paths require a client-generated nonce, a verified Intel TDX quote, a signer binding, and an explicit acceptance policy. The path guides show where to find those values; the reference pages explain how to evaluate them.
 
-<Tip>
-  The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) contains implementation examples for individual checks. Treat any example as a starting point for your own policy: your application should fail verification when a check it requires is missing or does not pass.
-</Tip>
+<CardGroup cols={2}>
+  <Card title="Quote, nonce, and signer bindings" icon="fingerprint" href="/cloud/verification/reference/quote-nonce-signer">
+    Verify fresh evidence from the quote rather than trusting echoed HTTP fields.
+  </Card>
+  <Card title="Verification policy" icon="list-checks" href="/cloud/verification/reference/verification-policy">
+    Define required checks, handling for unavailable evidence, and image-provenance policy.
+  </Card>
+</CardGroup>
 
-## Direct completions and the gateway
-
-Requests sent to a [direct completions endpoint](/cloud/private-inference#direct-completions) go directly to the model endpoint. In that path, start with [model verification](/cloud/verification/model); gateway verification is not required for the direct request path.
-
-Requests sent to `https://cloud-api.near.ai` pass through the Cloud API gateway. Verify the gateway when you need evidence for that request path, and verify the model when you need evidence for the model environment.
-
-## Important details for load-balanced endpoints
-
-An endpoint can be served by more than one attested instance. Do not assume that two independent requests reached the same instance.
-
-- When verifying a chat response, use the response's `signing_address` and `signing_algo` to select the matching attestation.
-- When verifying TLS, obtain the live certificate and the attestation over the same TLS connection. Fetching them over separate connections can produce a false mismatch after load balancing or certificate rotation.
-- When an instance is redeployed or its certificate changes, fetch a new attestation before accepting the new evidence.
-
-## What attestation does and does not establish
-
-Attestation verifies specific cryptographic evidence about a runtime and its measured configuration. It does not, by itself, validate the quality of a model response, secure a compromised client device, or establish source provenance for an image whose build evidence you have not verified.
-
-Use the individual guides in this section to decide which guarantees your application requires.
-
-## Common verification failures
-
-| Symptom | What to do |
-| --- | --- |
-| Nonce mismatch | Reject the report. Generate a new nonce in the client and request a new attestation. |
-| TLS fingerprint mismatch | Reject the connection. Repeat the TLS flow using one connection for both the certificate and attestation request. |
-| Signature is unavailable | Do not mark the response as verified. Retry briefly after completion; if it remains unavailable, retain the response ID and request ID for support. |
-| Image provenance is unavailable | Treat the image as unverified under a provenance-required policy. Fetch a fresh attestation after a deployment change, then repeat the provenance check. |
+<Warning>
+  A report for one connection or one instance is not automatically evidence for another. For a TLS conclusion, obtain the peer certificate and report on the same TLS connection. For a signed response, match its signer and algorithm to the applicable attestation.
+</Warning>

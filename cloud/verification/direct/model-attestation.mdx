@@ -1,0 +1,52 @@
+---
+title: "Model Attestation Report"
+description: "Verify the root model report returned by a direct completions endpoint."
+---
+
+Use this page for a direct `https://<MODEL_SLUG>.completions.near.ai` endpoint. This response is not the Cloud API `gateway_attestation` / `model_attestations[]` envelope.
+
+## Request a fresh report
+
+Generate the nonce in your client as 32 random bytes encoded as 64 hexadecimal characters.
+
+```bash
+NONCE="$(openssl rand -hex 32)"
+
+curl --fail-with-body -G 'https://<MODEL_SLUG>.completions.near.ai/v1/attestation/report' \
+  --data-urlencode 'signing_algo=ecdsa' \
+  --data-urlencode "nonce=${NONCE}" \
+  -H 'Accept: application/json'
+```
+
+To request evidence for a response signer, add `signing_address=<SIGNER>` and use the response's `signing_algo`. Add `include_tls_fingerprint=true` only for [direct TLS connection binding](/cloud/verification/direct/tls).
+
+## Direct response shape
+
+The root response is the model report. Relevant fields include:
+
+| Field | Meaning |
+| --- | --- |
+| `model_name` | The model name configured for this direct endpoint. |
+| `signing_address`, `signing_algo` | The model signing identity and algorithm. |
+| `request_nonce` | The nonce echoed for diagnostics; verify it inside the quote. |
+| `intel_quote` | The model's Intel TDX quote. |
+| `nvidia_payload` | GPU evidence, when present. |
+| `tls_cert_fingerprint` | The direct endpoint TLS binding, when requested. |
+| `all_attestations[]` | Model-report entries in this direct response envelope. It can include the root report and is not a fleet inventory. |
+| `compose_manager_attestation` | Optional, separate deployment-control evidence. See [deployment control evidence](/cloud/verification/direct/deployment-control-evidence). |
+
+The direct response does not define a top-level `report_data` field. Read `report_data` and measurements from the verified TDX quote.
+
+## Verify the report
+
+1. Verify `intel_quote` with an Intel DCAP verifier and apply your TCB and advisory policy.
+2. Check the client-generated nonce, signer identity, and signing algorithm against the verified quote.
+3. When GPU evidence is present, verify it with the applicable NVIDIA verifier and ensure it is bound to the same nonce.
+4. Apply your accepted measurement policy to the verified configuration.
+5. If source and build provenance are required, continue with [direct image provenance](/cloud/verification/direct/image-provenance).
+
+When a response signature is being verified, match both `signing_address` and `signing_algo`. A direct report for another signer is not a substitute, even when the hostname and model name are the same.
+
+## Load balancing and freshness
+
+The same direct model hostname can serve more than one instance. Do not assume two independent HTTP requests reached the same instance. Fetch fresh evidence when the signer, certificate, measured configuration, or accepted-attestation-age policy changes.

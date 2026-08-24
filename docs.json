@@ -59,11 +59,35 @@
                 "icon": "file-check",
                 "root": "cloud/verification/index",
                 "pages": [
-                  "cloud/verification/model",
-                  "cloud/verification/gateway",
-                  "cloud/verification/tls",
-                  "cloud/verification/chat",
-                  "cloud/verification/provenance"
+                  {
+                    "group": "Cloud API",
+                    "root": "cloud/verification/cloud-api/index",
+                    "pages": [
+                      "cloud/verification/cloud-api/gateway-attestation",
+                      "cloud/verification/cloud-api/model-attestations",
+                      "cloud/verification/cloud-api/tls",
+                      "cloud/verification/cloud-api/response-signatures",
+                      "cloud/verification/cloud-api/image-provenance"
+                    ]
+                  },
+                  {
+                    "group": "Direct Model Endpoints",
+                    "root": "cloud/verification/direct/index",
+                    "pages": [
+                      "cloud/verification/direct/model-attestation",
+                      "cloud/verification/direct/tls",
+                      "cloud/verification/direct/response-signatures",
+                      "cloud/verification/direct/image-provenance",
+                      "cloud/verification/direct/deployment-control-evidence"
+                    ]
+                  },
+                  {
+                    "group": "Reference",
+                    "pages": [
+                      "cloud/verification/reference/quote-nonce-signer",
+                      "cloud/verification/reference/verification-policy"
+                    ]
+                  }
                 ]
               }
             ]

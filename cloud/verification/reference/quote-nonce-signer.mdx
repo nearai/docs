@@ -1,0 +1,47 @@
+---
+title: "Quote, Nonce, and Signer Bindings"
+description: "Shared rules for reading verified quotes, checking freshness, and matching signing identities."
+---
+
+Every verification flow starts with a client-generated nonce and a verified quote. HTTP fields are inputs to compare with the quote; they are not a replacement for quote verification.
+
+## Use a client-generated nonce
+
+Generate 32 random bytes in the client and encode them as 64 hexadecimal characters. Retain the value until verification completes.
+
+```bash
+NONCE="$(openssl rand -hex 32)"
+```
+
+Send this value with the attestation request. Reject a report unless the verified quote contains the same nonce in its request-freshness binding.
+
+## Find the quote for your path
+
+| Request path | Quote location |
+| --- | --- |
+| Cloud API gateway | `gateway_attestation.intel_quote` |
+| Cloud API model evidence | The provider-specific item in `model_attestations[]` |
+| Direct model endpoint | Root `intel_quote` (and any applicable direct report entry) |
+
+The direct report does not expose a top-level `report_data` field. Always obtain report data and measurements from the verified quote itself.
+
+## Verify the signer binding
+
+For a NEAR-operated TLS-bound report, the verified quote binds the signer identity, TLS certificate fingerprint, and nonce. A provider can use a different report format, so verify the exact binding required by the selected endpoint and provider flow before accepting the report.
+
+`signing_address` is algorithm-specific:
+
+| `signing_algo` | `signing_address` |
+| --- | --- |
+| `ecdsa` | An Ethereum-style address derived from the signing key. |
+| `ed25519` | Ed25519 public-key bytes encoded as hexadecimal. |
+
+Always compare both `signing_address` and `signing_algo`. Do not compare identities across algorithms.
+
+## Verify GPU evidence when present
+
+When a report contains NVIDIA GPU evidence, verify it with the applicable NVIDIA verification service and require that it is bound to the same client nonce. Define in advance whether GPU evidence is mandatory for your workload policy.
+
+## Reference code
+
+The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) contains implementation examples for individual quote, GPU, TLS, signature, and configuration checks. Use it as an implementation reference, then enforce the acceptance policy required by your application.

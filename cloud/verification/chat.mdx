@@ -1,103 +1,15 @@
 ---
-title: "Chat Verification"
-description: "Verify an available chat-completion signature against the exact request and response bytes."
+title: "Choose a Response-Signature Flow"
+description: "Select the response-signature guide that matches the endpoint your application calls."
 ---
 
-Chat verification checks the integrity of a response for which a signature is available. It combines three pieces of evidence:
+The signature payload and the attestation to match depend on the request path.
 
-1. SHA-256 hashes of the exact request and response bytes;
-2. a valid signature over the expected payload; and
-3. a matching [model](/cloud/verification/model) or [gateway](/cloud/verification/gateway) attestation for the signer.
-
-<Note>
-  Not every response has an available signature. An unavailable signature is not a successful verification result. If response verification is required by your policy, treat that response as unverified.
-</Note>
-
-## Preserve the exact bytes
-
-Build the request body once and retain the exact UTF-8 bytes that your HTTP client sends. Read and retain the raw response body before parsing it as JSON or Server-Sent Events.
-
-Calculate:
-
-```text
-request_hash  = SHA-256(exact request-body bytes)
-response_hash = SHA-256(exact response-body bytes)
-```
-
-Do not parse and re-serialize JSON, normalize whitespace or line endings, omit stream delimiters, or reconstruct the response from parsed events. Any of those changes can produce a different hash.
-
-For a streaming response, capture all bytes delivered by the HTTP response body, including framing such as the final SSE delimiter when present.
-
-## Fetch the signature
-
-After completion, use the completion ID as `chat_id` and request a signature with the algorithm you want to verify.
-
-<Tabs>
-  <Tab title="Cloud API gateway">
-
-```bash
-curl --fail-with-body -G 'https://cloud-api.near.ai/v1/signature/<CHAT_ID>' \
-  --data-urlencode 'model=<MODEL_ID>' \
-  --data-urlencode 'signing_algo=ecdsa' \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
-```
-
-  </Tab>
-  <Tab title="Direct completions">
-
-```bash
-curl --fail-with-body -G 'https://<MODEL_SLUG>.completions.near.ai/v1/signature/<CHAT_ID>' \
-  --data-urlencode 'signing_algo=ecdsa' \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
-```
-
-  </Tab>
-</Tabs>
-
-The returned object contains:
-
-| Field | Meaning |
-| --- | --- |
-| `text` | The payload that was signed. |
-| `signature` | The cryptographic signature over `text`. |
-| `signing_address` | The algorithm-specific identity that made the signature. |
-| `signing_algo` | The algorithm required to verify the signature. |
-| `signature_kind` | On a gateway response, identifies whether the model-serving signer or gateway signer produced the signature. |
-
-## Check the signed payload
-
-First calculate your `request_hash` and `response_hash`. Then construct the expected payload from `signature_kind`:
-
-| `signature_kind` | Expected `text` | Match signer to |
-| --- | --- | --- |
-| `provider_tee` | `<MODEL_ID>:<request_hash>:<response_hash>` | A model attestation with the same `signing_address` and `signing_algo`. |
-| `gateway` | `<request_hash>:<response_hash>` | A gateway attestation with the same `signing_address` and `signing_algo`. |
-
-For a direct completion signature, use the model-attestation path. For a gateway response whose `signature_kind` is absent or unfamiliar, do not infer its classification from the shape of `text`; treat the signer classification as unavailable unless your endpoint contract supplies it.
-
-Reject the signature if `text` does not exactly equal the expected payload. Then verify `signature` locally with a cryptographic library that supports the reported `signing_algo`.
-
-<Tip>
-  `ecdsa` signatures use an Ethereum-style signing address. `ed25519` signatures use an Ed25519 public key. Use the verification method appropriate to the reported algorithm; do not send prompts, responses, or signatures to a third-party verification website.
-</Tip>
-
-## Match the signature to attestation
-
-Fetch or select an attestation for the signer reported in the signature. Verify the quote, your client-generated nonce, the signer binding, and the workload policy as described in [model verification](/cloud/verification/model) or [gateway verification](/cloud/verification/gateway).
-
-Record the response time and attestation time, and enforce the maximum attestation age your policy requires. A matching report establishes the signer binding for that attestation; your policy determines how close in time it must be to the response.
-
-## Signature availability and retries
-
-The signature can be unavailable immediately after completion or when the response did not complete. Retry for a short, bounded interval, then make a decision according to your policy.
-
-| Result | Recommended handling |
-| --- | --- |
-| Signature returned | Complete the payload, cryptographic-signature, and attestation checks. |
-| Temporary lookup failure | Retry briefly with the same completion ID and signing algorithm. |
-| No signature after the retry window | Treat the response as unverified if a signature is required. |
-| Signature or signer mismatch | Reject the verification result; do not substitute a different response or attestation. |
-
-The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) contains implementation examples for signature-related verification steps.
+<CardGroup cols={2}>
+  <Card title="Cloud API response signatures" icon="cloud" href="/cloud/verification/cloud-api/response-signatures">
+    Use `signature_kind` when present to select a gateway or model attestation.
+  </Card>
+  <Card title="Direct endpoint response signatures" icon="server" href="/cloud/verification/direct/response-signatures">
+    Match the signature to the direct model report.
+  </Card>
+</CardGroup>

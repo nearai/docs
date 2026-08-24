@@ -54,7 +54,7 @@ NEAR AI Cloud combines Intel TDX and NVIDIA TEE technologies to create isolated,
 
 If you're using a standard OpenAI SDK or curl, your prompts are automatically protected by TLS encryption—no additional setup required.
 
-NEAR AI Cloud supports two connection modes. Use [TLS attestation](/cloud/verification/tls) when your application requires evidence for the TLS endpoint of a particular connection:
+NEAR AI Cloud supports two connection modes. Each has its own TLS-attestation flow when your application requires evidence for the TLS endpoint of a particular connection:
 
 **Gateway mode** routes through `cloud-api.near.ai`, which runs in its own TEE before forwarding to the model TEE:
 
@@ -77,7 +77,7 @@ flowchart LR
     style C fill:#2e7d32,stroke:#81c784,stroke-width:2px,color:#fff
 ```
 
-**Key insight:** TLS protects traffic in transit. When the [TLS attestation flow](/cloud/verification/tls) passes for a particular connection, it binds that connection's endpoint to verified attestation evidence.
+**Key insight:** TLS protects traffic in transit. When the route-specific TLS attestation flow passes for a particular connection, it binds that connection's endpoint to verified attestation evidence.
 
 Here's why this works:
 
@@ -138,8 +138,8 @@ Gateway and direct completions responses include an `X-Request-Id` response head
 
 **Benefits of direct completions:**
 - **Fewer hops** — Your request reaches the model TEE directly, reducing latency
-- **Simpler trust model** — Only the model TEE needs to be verified (no [gateway verification](/cloud/verification/gateway) required)
-- **TLS binds to attestation** — The `include_tls_fingerprint=true` parameter on the attestation endpoint binds the TLS certificate to the attestation report
+- **Simpler trust model** — Only the model TEE needs to be verified (no [Cloud API gateway attestation](/cloud/verification/cloud-api/gateway-attestation) required)
+- **TLS binds to attestation** — The `include_tls_fingerprint=true` parameter can bind the direct endpoint TLS certificate to its attestation report when the [direct TLS flow](/cloud/verification/direct/tls) is completed
 
 ### The Inference Process
 
@@ -148,7 +148,7 @@ When you make a request to NEAR AI Cloud, your data flows through a secure pipel
 **Via Gateway (`cloud-api.near.ai`):**
 
     1. **Request Initiation:**
-    You send chat completion requests via HTTPS to the LLM Gateway. TLS protects data in transit; use [TLS attestation](/cloud/verification/tls) when your application needs to verify the endpoint for a particular connection.
+    You send chat completion requests via HTTPS to the LLM Gateway. TLS protects data in transit; use [Cloud API TLS connection binding](/cloud/verification/cloud-api/tls) when your application needs to verify the endpoint for a particular connection.
 
     2. **Secure Request Routing:**
     The LLM Gateway routes your request to the appropriate Private LLM Node based on the requested model, availability, and load balancing requirements.
@@ -168,7 +168,7 @@ When you make a request to NEAR AI Cloud, your data flows through a secure pipel
 **Via Direct Completions (`{slug}.completions.near.ai`):**
 
     1. **Direct Request:**
-    You send chat completion requests via HTTPS directly to the model's subdomain, with no intermediate Cloud API gateway in the request path. Use [TLS attestation](/cloud/verification/tls) when endpoint verification is required.
+    You send chat completion requests via HTTPS directly to the model's subdomain, with no intermediate Cloud API gateway in the request path. Use [direct TLS connection binding](/cloud/verification/direct/tls) when endpoint verification is required.
 
     2. **Secure Inference:**
     The model processes your request entirely within its TEE, where all data and model weights are protected by hardware-enforced isolation.
@@ -177,7 +177,7 @@ When you make a request to NEAR AI Cloud, your data flows through a secure pipel
     Attestation reports provide environment evidence; supported flows can make response signatures available for integrity verification.
 
     4. **Verifiable Response:**
-    Use [model verification](/cloud/verification/model) for the direct endpoint. If response verification is required, also check that a signature is available and valid.
+    Use [direct model attestation](/cloud/verification/direct/model-attestation) for the direct endpoint. If response verification is required, also check that a signature is available and valid.
 
 ---
 
@@ -215,13 +215,13 @@ NEAR AI Cloud's private inference implements multiple layers of security to prot
   TEEs create isolated execution environments enforced at the hardware level, preventing unauthorized access to memory and computation even from privileged system administrators or cloud providers.
 
 - **Secure Communication** :
-All communication between your applications and the LLM infrastructure uses TLS encryption. Use [TLS attestation](/cloud/verification/tls) to verify endpoint binding for a particular connection when that property is required.
+All communication between your applications and the LLM infrastructure uses TLS encryption. Use the route-specific [verification guide](/cloud/verification) to verify endpoint binding for a particular connection when that property is required.
 
 - **Cryptographic Attestation** :
 Every TEE environment generates cryptographic proofs that verify the integrity of the execution environment, allowing you to independently confirm your computations occurred in a genuine, unmodified TEE.
 
 - **Result Authentication** :
-All AI outputs are cryptographically signed inside the TEE before leaving the secure environment, ensuring the authenticity and integrity of responses.
+When a response signature is available, it can be verified against the attested signer to check response integrity.
 
 ### Threat Protection
 
@@ -247,8 +247,8 @@ Cryptographic signatures generated inside the TEE ensure that responses cannot b
   <Card title="Verification" icon="file-check" href="/cloud/verification">
     Understand how to verify and validate secure interactions with AI models
   </Card>
-  <Card title="TLS Attestation Verification" icon="book-open" href="/cloud/verification/tls">
-    Verify TLS endpoint binding for a particular HTTPS connection using hardware-backed attestation
+  <Card title="Cloud API Verification" icon="book-open" href="/cloud/verification/cloud-api">
+    Verify gateway, model, TLS, and response evidence for Cloud API requests
   </Card>
   <Card title="E2EE Chat Completions" icon="book-open" href="/cloud/guides/e2ee-chat-completions">
     Add client-side encryption for defense-in-depth protection of your messages
