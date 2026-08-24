@@ -62,7 +62,8 @@
                   "cloud/verification/model",
                   "cloud/verification/gateway",
                   "cloud/verification/tls",
-                  "cloud/verification/chat"
+                  "cloud/verification/chat",
+                  "cloud/verification/provenance"
                 ]
               }
             ]
