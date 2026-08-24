@@ -3,7 +3,7 @@ title: "Model Attestation Report"
 description: "Verify the root model report returned by a direct completions endpoint."
 ---
 
-Use this page for a direct `https://<MODEL_SLUG>.completions.near.ai` endpoint. This response is not the NEAR AI Cloud gateway's `gateway_attestation` / `model_attestations[]` envelope.
+Use this page to verify the model environment serving a direct `https://<MODEL_SLUG>.completions.near.ai` endpoint.
 
 ## Request a fresh report
 
@@ -26,7 +26,7 @@ The root response is the model report. Relevant fields include:
 
 | Field | Meaning |
 | --- | --- |
-| `model_name` | The model name configured for this direct endpoint. |
+| `model_name` | The model name stated in this report. |
 | `signing_address`, `signing_algo` | The model signing identity and algorithm. |
 | `request_nonce` | The nonce echoed for diagnostics; verify it inside the quote. |
 | `intel_quote` | The model's Intel TDX quote. |

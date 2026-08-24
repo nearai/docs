@@ -1,11 +1,9 @@
 ---
 title: "Model Attestations"
-description: "Verify model evidence returned in the NEAR AI Cloud gateway's model_attestations array."
+description: "Verify evidence for the model environment selected for a request through the NEAR AI Cloud gateway."
 ---
 
-Use this page when a request to `cloud-api.near.ai` needs evidence for a model environment in addition to the gateway.
-
-The NEAR AI Cloud gateway returns model evidence in `model_attestations[]`; this is different from the direct endpoint's root model report and `all_attestations[]` field. Treat the gateway envelope and each provider report as separate contracts.
+Use this page when a request to `cloud-api.near.ai` needs evidence for a model environment in addition to the gateway. Model evidence is returned with the gateway attestation report. Its format and verification requirements can vary by provider, so use the guidance for the provider your application selected.
 
 ## Request model evidence
 
@@ -22,11 +20,11 @@ curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
   -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
 ```
 
-The response always has `gateway_attestation`; model evidence, when available, is carried in `model_attestations[]`.
+The response includes gateway evidence. When model evidence is available, it is carried in `model_attestations[]`.
 
 When matching a response signature, request fresh evidence for that signer by adding both `signing_address=<SIGNER>` and the signature's `signing_algo`. Do not use a report for a different signer as a substitute.
 
-The NEAR AI Cloud gateway also accepts `provider=near` or `provider=chutes`. These provider tiers can use different model-report formats and verification rules, so select one only when it is covered by your policy.
+Model providers can use different report formats and verification rules. Apply only the requirements documented for the provider your application uses; treat an unfamiliar report format as unverified under your policy.
 
 ## Verify the applicable entry
 
@@ -36,7 +34,7 @@ The NEAR AI Cloud gateway also accepts `provider=near` or `provider=chutes`. The
 4. Apply your own allowlist and provenance policy to the verified measurements.
 
 <Warning>
-  Do not assume every `model_attestations[]` entry has the same fields, or that the array lists every model CVM behind a model URL. A response signature must be matched by signer identity and algorithm; a report from a different signer is not an equivalent substitute.
+  An entry in `model_attestations[]` is not an inventory of every model instance behind a URL. A response signature must be matched by signer identity and algorithm; a report from a different signer is not an equivalent substitute.
 </Warning>
 
 ## Relationship to NEAR AI Cloud gateway TLS
