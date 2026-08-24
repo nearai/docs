@@ -1,15 +1,15 @@
 ---
 title: "Choose an Image-Provenance Flow"
-description: "Select the provenance guide for the attestation envelope your application uses."
+description: "Select the provenance guide that matches the endpoint your application uses."
 ---
 
-The configuration to inspect is carried by different attestation envelopes for the NEAR AI Cloud gateway and direct model endpoints. Select the matching path before evaluating image digests.
+Choose the guide from the URL your application uses for inference.
 
 <CardGroup cols={2}>
   <Card title="NEAR AI Cloud gateway image provenance" icon="cloud" href="/cloud/verification/cloud-api/image-provenance">
-    Evaluate configuration measurements from the gateway and any returned model attestations.
+    Use this when your application sends requests through `cloud-api.near.ai`.
   </Card>
   <Card title="Direct endpoint image provenance" icon="server" href="/cloud/verification/direct/image-provenance">
-    Evaluate the measured configuration from the direct model report.
+    Use this when your application sends requests directly to a model's `completions.near.ai` endpoint.
   </Card>
 </CardGroup>

@@ -3,13 +3,13 @@ title: "Choose a Response-Signature Flow"
 description: "Select the response-signature guide that matches the endpoint your application calls."
 ---
 
-The signature payload and the attestation to match depend on the request path.
+Choose the guide from the URL your application used for the completion.
 
 <CardGroup cols={2}>
   <Card title="NEAR AI Cloud gateway response signatures" icon="cloud" href="/cloud/verification/cloud-api/response-signatures">
-    Use `signature_kind` when present to select a gateway or model attestation.
+    Use this when your application sent the completion through `cloud-api.near.ai`.
   </Card>
   <Card title="Direct endpoint response signatures" icon="server" href="/cloud/verification/direct/response-signatures">
-    Match the signature to the direct model report.
+    Use this when your application sent the completion directly to a model endpoint.
   </Card>
 </CardGroup>

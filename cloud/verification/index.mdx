@@ -1,43 +1,36 @@
 ---
 title: "Verification"
-description: "Choose the NEAR AI Cloud gateway or direct-model verification flow, then verify the evidence for that request path."
+description: "Choose the verification guide that matches the URL your application uses for inference."
 ---
 
-NEAR AI Cloud has two verification paths. They use different endpoints, response envelopes, and signer relationships. Select the path your application actually uses before interpreting an attestation report.
+Use these guides to verify the evidence returned for your AI requests. Start with the URL your application sends requests to.
+
+## Choose your request path
 
 <CardGroup cols={2}>
   <Card title="NEAR AI Cloud Gateway" icon="cloud" href="/cloud/verification/cloud-api">
-    Verify requests sent to cloud-api.near.ai, including its gateway attestation and any returned model attestations.
+    Use this when your application sends requests through `cloud-api.near.ai`. Verify the gateway and, when available, model evidence returned with the report.
   </Card>
   <Card title="Direct model endpoints" icon="server" href="/cloud/verification/direct">
-    Verify requests sent directly to a model's completions.near.ai endpoint, without the NEAR AI Cloud gateway in the request path.
+    Use this when your application connects directly to a model's `completions.near.ai` endpoint. Verify the model environment reported by that endpoint.
   </Card>
 </CardGroup>
 
-## Why the paths are separate
+<Note>
+  Choose the guide from the request URL in your application configuration, not from the model name. If your application uses both request paths, verify each request with the guide for the path it used.
+</Note>
 
-| | NEAR AI Cloud gateway | Direct model endpoint |
-| --- | --- | --- |
-| Request host | `cloud-api.near.ai` | `<MODEL_SLUG>.completions.near.ai` |
-| Attestation envelope | `gateway_attestation` and optional `model_attestations[]` | A model report at the response root, plus `all_attestations[]` |
-| Gateway evidence | Available as `gateway_attestation` | Not in the request path |
-| Response signature routing | `signature_kind` identifies a gateway or model-serving signer when present | Match the signature to the direct model report's signer |
+## What happens next
 
-Do not rename or map these fields as if they were aliases. In particular, `model_attestations[]` is a NEAR AI Cloud gateway response field; it is not the direct endpoint's `all_attestations[]` field.
+After you choose a path, its guide walks you through obtaining fresh attestation evidence and verifying the environment that handled the request. Depending on your application's policy, you can also verify the TLS connection, signed responses, and software-image provenance.
 
-## Shared requirements
-
-Both paths require a client-generated nonce, a verified Intel TDX quote, a signer binding, and an explicit acceptance policy. The path guides show where to find those values; the reference pages explain how to evaluate them.
+## Common verification concepts
 
 <CardGroup cols={2}>
   <Card title="Quote, nonce, and signer bindings" icon="fingerprint" href="/cloud/verification/reference/quote-nonce-signer">
-    Verify fresh evidence from the quote rather than trusting echoed HTTP fields.
+    Learn how fresh attestation evidence is tied to your request and to a signing identity.
   </Card>
   <Card title="Verification policy" icon="list-checks" href="/cloud/verification/reference/verification-policy">
-    Define required checks, handling for unavailable evidence, and image-provenance policy.
+    Decide which checks, measurements, and source-provenance requirements your application accepts.
   </Card>
 </CardGroup>
-
-<Warning>
-  A report for one connection or one instance is not automatically evidence for another. For a TLS conclusion, obtain the peer certificate and report on the same TLS connection. For a signed response, match its signer and algorithm to the applicable attestation.
-</Warning>

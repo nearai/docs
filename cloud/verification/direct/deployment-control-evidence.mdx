@@ -3,13 +3,11 @@ title: "Deployment Control Evidence"
 description: "Interpret optional Compose Manager evidence returned by a direct model endpoint."
 ---
 
-A direct model attestation response can include an optional top-level `compose_manager_attestation`. This is separate deployment-control evidence; it is not a model-attestation entry and is not part of the NEAR AI Cloud gateway attestation contract.
-
-The current payload records deployment-control actions and related integrity data. It can be useful for deployment investigation, but it has a narrower purpose than a model quote or a response signature.
+Some direct model reports include optional deployment-control evidence in `compose_manager_attestation`. It can help investigate deployment operations, but it does not verify an individual inference request.
 
 ## What it can and cannot establish
 
-Use it as supplementary evidence about deployment-control activity. Do not use it alone to conclude that:
+Use it as supplementary evidence about deployment activity. Do not use it alone to conclude that:
 
 - a particular project, model, or backend is currently running;
 - every recorded action completed successfully;

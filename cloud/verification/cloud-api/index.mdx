@@ -1,71 +1,35 @@
 ---
 title: "Verify the NEAR AI Cloud Gateway"
-description: "Verify gateway, model, TLS, response-signature, and image-provenance evidence for requests sent through cloud-api.near.ai."
+description: "Verify the gateway, selected model, connection, response, and software evidence for requests sent through cloud-api.near.ai."
 ---
 
-Use this flow when your application sends requests to `https://cloud-api.near.ai`. The request path includes the NEAR AI Cloud gateway and can include evidence for a selected model.
+Use this guide when your application sends inference requests to `https://cloud-api.near.ai`. If your application sends requests directly to a model's `completions.near.ai` endpoint, use the [direct model endpoint guide](/cloud/verification/direct) instead.
 
-The relevant verification fields in a NEAR AI Cloud gateway response are:
-
-```text
-gateway_attestation
-model_attestations[]          # returned when model evidence is available
-tls_certificate               # optional
-```
-
-`gateway_attestation` and `model_attestations[]` are separate pieces of evidence. Verify the gateway when you need evidence for the NEAR AI Cloud gateway request path; verify a model attestation when you also need evidence for the model environment.
-
-<Warning>
-  `model_attestations[]` is not an inventory of every healthy model instance. Do not use its length, or the presence of one entry, as evidence that a later request will be served by that same instance.
-</Warning>
-
-## Recommended flow
-
-1. Generate a fresh 32-byte nonce in the client for each verification attempt.
-2. Request a NEAR AI Cloud gateway attestation report, including `model=<MODEL_ID>` when model evidence is needed.
-3. Verify `gateway_attestation` and apply your gateway measurement policy.
-4. Verify the applicable item in `model_attestations[]` using the verifier and policy for its provider.
-5. If you need endpoint binding, verify the TLS connection to `cloud-api.near.ai` against the **gateway** attestation.
-6. If you need response integrity, verify the response signature and match its signer to the appropriate gateway or model attestation.
-7. Apply an image-provenance policy to each measured configuration your policy requires.
+## What you can verify
 
 <CardGroup cols={2}>
   <Card title="Gateway attestation" icon="router" href="/cloud/verification/cloud-api/gateway-attestation">
-    Verify the gateway quote and signer binding.
+    Verify the trusted environment that receives your request at the NEAR AI Cloud gateway.
   </Card>
   <Card title="Model attestations" icon="brain-circuit" href="/cloud/verification/cloud-api/model-attestations">
-    Verify provider model evidence returned in `model_attestations[]`.
+    When your policy requires it, verify model evidence returned with the gateway report.
   </Card>
   <Card title="TLS connection binding" icon="shield-check" href="/cloud/verification/cloud-api/tls">
-    Bind the live gateway TLS connection to `gateway_attestation`.
+    Verify that your live HTTPS connection terminates at the attested gateway.
   </Card>
   <Card title="Response signatures" icon="message-square-check" href="/cloud/verification/cloud-api/response-signatures">
-    Match a response signature to its gateway or model signer.
+    Verify that a signed response came from the attested gateway or model environment.
   </Card>
   <Card title="Image provenance" icon="package-check" href="/cloud/verification/cloud-api/image-provenance">
-    Apply provenance policy to measured gateway and model configurations.
+    Check that the software images in the attested environment meet your source and build policy.
   </Card>
 </CardGroup>
 
-## Get a fresh report
+## Start with gateway attestation
 
-```bash
-NONCE="$(openssl rand -hex 32)"
+1. Generate a fresh nonce for this verification attempt.
+2. Request a fresh gateway attestation report.
+3. Verify the gateway's hardware attestation and apply your acceptance policy.
+4. Add model, TLS, response-signature, or image-provenance checks when your application requires them.
 
-curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
-  --data-urlencode 'model=<MODEL_ID>' \
-  --data-urlencode 'signing_algo=ecdsa' \
-  --data-urlencode "nonce=${NONCE}" \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
-```
-
-Use the same `signing_algo` as the response signature you intend to verify. Add `include_tls_fingerprint=true` only when following the [NEAR AI Cloud gateway TLS flow](/cloud/verification/cloud-api/tls).
-
-## Provider-specific model evidence
-
-The NEAR AI Cloud gateway can return model evidence from different provider tiers. The outer `model_attestations[]` field does not make their internal report formats interchangeable.
-
-This guide describes the NEAR AI Cloud gateway envelope and the NEAR-operated model flow. When your integration selects a different provider, use that provider's report format and verification policy; do not apply a NEAR-specific signer or measurement rule to an unfamiliar report shape.
-
-The report request accepts `provider=near` or `provider=chutes` when your integration needs to select a provider tier. Those choices can return different model-evidence formats, so make the selection part of your verification policy.
+Start with [Gateway attestation](/cloud/verification/cloud-api/gateway-attestation). That guide shows how to request fresh evidence; the other guides explain the additional checks.

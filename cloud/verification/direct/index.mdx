@@ -1,52 +1,35 @@
 ---
 title: "Verify Direct Model Endpoints"
-description: "Verify model, TLS, response-signature, and image-provenance evidence for direct completions endpoints."
+description: "Verify the model, connection, response, and software evidence for direct completions endpoints."
 ---
 
-Use this flow when your application sends requests directly to `https://<MODEL_SLUG>.completions.near.ai`. The NEAR AI Cloud gateway is not in this request path.
+Use this guide when your application sends inference requests directly to `https://<MODEL_SLUG>.completions.near.ai`. The NEAR AI Cloud gateway is not in this request path. If your application sends requests to `cloud-api.near.ai`, use the [NEAR AI Cloud gateway guide](/cloud/verification/cloud-api) instead.
 
-The direct attestation response is a model report at the response root. It includes fields such as `model_name`, `signing_address`, `signing_algo`, `request_nonce`, and `intel_quote`, and also includes `all_attestations[]`.
-
-<Warning>
-  `all_attestations[]` is not a fleet inventory. Do not infer that it enumerates every healthy CVM, or that a later completion will be served by the same instance as an earlier report.
-</Warning>
-
-## Recommended flow
-
-1. Generate a fresh 32-byte nonce in the client for each verification attempt.
-2. Request the report from the same direct model endpoint used for inference.
-3. Verify the model's quote, nonce, signer binding, GPU evidence when present, and accepted measurements.
-4. If you need endpoint binding, verify the TLS connection to the direct model endpoint against that model report.
-5. If you need response integrity, verify the response signature and match it to the model report's signer.
-6. Apply image-provenance policy to the measured model configuration.
+## What you can verify
 
 <CardGroup cols={2}>
   <Card title="Model attestation report" icon="brain-circuit" href="/cloud/verification/direct/model-attestation">
-    Verify the direct endpoint's root model report and `all_attestations[]` semantics.
+    Verify the trusted model environment reported by the direct endpoint.
   </Card>
   <Card title="TLS connection binding" icon="shield-check" href="/cloud/verification/direct/tls">
-    Bind the live direct-model TLS connection to its model quote.
+    Verify that your live HTTPS connection terminates at the attested model endpoint.
   </Card>
   <Card title="Response signatures" icon="message-square-check" href="/cloud/verification/direct/response-signatures">
-    Verify a direct-model response signature against the matching model signer.
+    Verify that a signed response came from the attested model environment.
   </Card>
   <Card title="Image provenance" icon="package-check" href="/cloud/verification/direct/image-provenance">
-    Apply provenance policy to the direct model's measured configuration.
+    Check that the software images in the attested environment meet your source and build policy.
   </Card>
   <Card title="Deployment control evidence" icon="settings-2" href="/cloud/verification/direct/deployment-control-evidence">
-    Interpret optional Compose Manager evidence without treating it as request-to-CVM binding.
+    Review optional deployment-management evidence separately from verification of an individual request.
   </Card>
 </CardGroup>
 
-## Get a fresh report
+## Start with model attestation
 
-```bash
-NONCE="$(openssl rand -hex 32)"
+1. Generate a fresh nonce for this verification attempt.
+2. Request a fresh report from the same direct endpoint your application uses for inference.
+3. Verify the model's hardware attestation and apply your acceptance policy.
+4. Add TLS, response-signature, or image-provenance checks when your application requires them.
 
-curl --fail-with-body -G 'https://<MODEL_SLUG>.completions.near.ai/v1/attestation/report' \
-  --data-urlencode 'signing_algo=ecdsa' \
-  --data-urlencode "nonce=${NONCE}" \
-  -H 'Accept: application/json'
-```
-
-The endpoint hostname identifies the model, so this request does not use a `model` parameter. Add `include_tls_fingerprint=true` only when following the [direct TLS flow](/cloud/verification/direct/tls). If you are matching a response signature, use its `signing_address` and `signing_algo` when requesting the applicable report.
+Start with [Model attestation report](/cloud/verification/direct/model-attestation). That guide shows how to request fresh evidence; the other guides explain the additional checks.

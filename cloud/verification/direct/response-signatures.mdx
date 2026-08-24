@@ -3,7 +3,7 @@ title: "Response Signatures"
 description: "Verify an available direct-model response signature against exact bytes and the matching model report."
 ---
 
-Use this flow for a completion sent directly to a model endpoint. The direct signature response has `text`, `signature`, `signing_address`, and `signing_algo`; it does not use the NEAR AI Cloud gateway's `signature_kind` routing field.
+Use this flow for a completion sent directly to a model endpoint. When a signature is available, it lets you verify that the exact response bytes came from the attested model environment.
 
 <Note>
   A response without an available signature is not a successfully verified response. If response verification is required by your policy, treat it as unverified after a short, bounded retry interval.
@@ -41,6 +41,6 @@ Use the `model_name` reported by the direct model attestation. A different strin
 
 Request or select a direct model attestation whose `signing_address` and `signing_algo` exactly match the signature. Verify its quote, client-generated nonce, signer binding, and required workload policy as described in [direct model attestation](/cloud/verification/direct/model-attestation).
 
-Do not infer a gateway/model classification from the format of the signed text, and do not substitute a report for a different signer. The direct endpoint's `all_attestations[]` field is not proof that every instance behind the hostname has been attested.
+Do not infer a gateway or model classification from the format of the signed text, and do not substitute a report for a different signer.
 
 `ecdsa` identities are Ethereum-style signing addresses. `ed25519` identities are Ed25519 public-key bytes encoded as hexadecimal. Always compare the identity together with `signing_algo`.
