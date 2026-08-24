@@ -1,0 +1,50 @@
+---
+title: "Image Provenance"
+description: "Verify source and build provenance for images named in an attested deployment."
+---
+
+An attestation can establish that a measured deployment configuration was running. Image provenance answers a separate question: whether each image in that configuration was built from the source and build process your policy accepts.
+
+Use both checks when your application requires a source-to-runtime trust chain.
+
+## Verification flow
+
+1. Verify the Intel TDX quote. Obtain the compose configuration text from the report, calculate its hash, and compare it with the configuration measurement in the verified quote. Only then treat that text as the attested configuration.
+2. Extract every container image pinned by immutable digest (`@sha256:…`) from the matched configuration.
+3. For each digest, retrieve provenance evidence from the relevant build-provenance system.
+4. Cryptographically verify the provenance statement and confirm that its subject digest exactly matches the image digest in the attested configuration.
+5. Apply your policy to the verified statement, such as the expected repository, build identity, workflow, ref, and source revision.
+6. Accept the deployment only when every image required by your policy passes the checks.
+
+<Warning>
+  An image tag is not sufficient evidence. A search result or an HTTP `200` response only locates a possible record; it does not cryptographically verify the statement, its signer, or its subject digest.
+</Warning>
+
+## Define a provenance policy
+
+Your policy should specify the identities and inputs you accept before you evaluate a report. At minimum, define:
+
+- the expected source repository or repositories;
+- the accepted build identity and workflow;
+- the allowed source branch, tag, or commit policy; and
+- whether provenance is required for every image or only selected images.
+
+Pin every evaluated image by digest. If a configuration references an image without an immutable digest, it cannot satisfy a digest-matching provenance check.
+
+## When a provenance record is missing
+
+A missing record, including an HTTP `404`, means provenance for the reported image digest could not be verified. It does not by itself identify a security incident.
+
+Deployments can change. Fetch a fresh attestation report and repeat the verification flow. If the current report still references a digest without the provenance required by your policy, treat that image as unverified.
+
+When requesting help, include the endpoint, time, report identifier, image name, and full digest. Do not include API keys, prompts, or response content.
+
+## Relationship to attestation
+
+| Check | What it establishes |
+| --- | --- |
+| Quote and configuration measurement | The configuration text you matched is bound to a measurement in the verified quote. |
+| Image provenance | A particular image digest satisfies your source and build policy. |
+| Both together | The measured runtime configuration uses images whose provenance satisfies your policy. |
+
+The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) includes reference code for inspecting image digests. Use a provenance verifier that validates the cryptographic evidence required by your policy.
