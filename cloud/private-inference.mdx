@@ -60,7 +60,7 @@ NEAR AI Cloud supports two connection modes. Each has its own TLS-attestation fl
 
 ```mermaid
 flowchart LR
-    A["Your Machine"] -->|"🔒 HTTPS"| B["Cloud API gateway"] -->|"🔒 HTTPS"| C["Model endpoint → LLM"]
+    A["Your Machine"] -->|"🔒 HTTPS"| B["NEAR AI Cloud gateway"] -->|"🔒 HTTPS"| C["Model endpoint → LLM"]
 
     style A fill:#1a1a2e,stroke:#4fc3f7,stroke-width:2px,color:#fff
     style B fill:#1b5e20,stroke:#66bb6a,stroke-width:2px,color:#fff
@@ -138,7 +138,7 @@ Gateway and direct completions responses include an `X-Request-Id` response head
 
 **Benefits of direct completions:**
 - **Fewer hops** — Your request reaches the model TEE directly, reducing latency
-- **Simpler trust model** — Only the model TEE needs to be verified (no [Cloud API gateway attestation](/cloud/verification/cloud-api/gateway-attestation) required)
+- **Simpler trust model** — Only the model TEE needs to be verified (no [NEAR AI Cloud gateway attestation](/cloud/verification/cloud-api/gateway-attestation) required)
 - **TLS binds to attestation** — The `include_tls_fingerprint=true` parameter can bind the direct endpoint TLS certificate to its attestation report when the [direct TLS flow](/cloud/verification/direct/tls) is completed
 
 ### The Inference Process
@@ -148,7 +148,7 @@ When you make a request to NEAR AI Cloud, your data flows through a secure pipel
 **Via Gateway (`cloud-api.near.ai`):**
 
     1. **Request Initiation:**
-    You send chat completion requests via HTTPS to the LLM Gateway. TLS protects data in transit; use [Cloud API TLS connection binding](/cloud/verification/cloud-api/tls) when your application needs to verify the endpoint for a particular connection.
+    You send chat completion requests via HTTPS to the LLM Gateway. TLS protects data in transit; use [NEAR AI Cloud gateway TLS connection binding](/cloud/verification/cloud-api/tls) when your application needs to verify the endpoint for a particular connection.
 
     2. **Secure Request Routing:**
     The LLM Gateway routes your request to the appropriate Private LLM Node based on the requested model, availability, and load balancing requirements.
@@ -168,7 +168,7 @@ When you make a request to NEAR AI Cloud, your data flows through a secure pipel
 **Via Direct Completions (`{slug}.completions.near.ai`):**
 
     1. **Direct Request:**
-    You send chat completion requests via HTTPS directly to the model's subdomain, with no intermediate Cloud API gateway in the request path. Use [direct TLS connection binding](/cloud/verification/direct/tls) when endpoint verification is required.
+    You send chat completion requests via HTTPS directly to the model's subdomain, with no intermediate NEAR AI Cloud gateway in the request path. Use [direct TLS connection binding](/cloud/verification/direct/tls) when endpoint verification is required.
 
     2. **Secure Inference:**
     The model processes your request entirely within its TEE, where all data and model weights are protected by hardware-enforced isolation.
@@ -247,8 +247,8 @@ Cryptographic signatures generated inside the TEE ensure that responses cannot b
   <Card title="Verification" icon="file-check" href="/cloud/verification">
     Understand how to verify and validate secure interactions with AI models
   </Card>
-  <Card title="Cloud API Verification" icon="book-open" href="/cloud/verification/cloud-api">
-    Verify gateway, model, TLS, and response evidence for Cloud API requests
+  <Card title="NEAR AI Cloud Gateway Verification" icon="book-open" href="/cloud/verification/cloud-api">
+    Verify gateway, model, TLS, and response evidence for requests sent through the NEAR AI Cloud gateway
   </Card>
   <Card title="E2EE Chat Completions" icon="book-open" href="/cloud/guides/e2ee-chat-completions">
     Add client-side encryption for defense-in-depth protection of your messages

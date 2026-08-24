@@ -1,11 +1,11 @@
 ---
 title: "Model Attestations"
-description: "Verify model evidence returned in the Cloud API model_attestations array."
+description: "Verify model evidence returned in the NEAR AI Cloud gateway's model_attestations array."
 ---
 
 Use this page when a request to `cloud-api.near.ai` needs evidence for a model environment in addition to the gateway.
 
-Cloud API returns model evidence in `model_attestations[]`; this is different from the direct endpoint's root model report and `all_attestations[]` field. Treat the Cloud API envelope and each provider report as separate contracts.
+The NEAR AI Cloud gateway returns model evidence in `model_attestations[]`; this is different from the direct endpoint's root model report and `all_attestations[]` field. Treat the gateway envelope and each provider report as separate contracts.
 
 ## Request model evidence
 
@@ -26,7 +26,7 @@ The response always has `gateway_attestation`; model evidence, when available, i
 
 When matching a response signature, request fresh evidence for that signer by adding both `signing_address=<SIGNER>` and the signature's `signing_algo`. Do not use a report for a different signer as a substitute.
 
-Cloud API also accepts `provider=near` or `provider=chutes`. These provider tiers can use different model-report formats and verification rules, so select one only when it is covered by your policy.
+The NEAR AI Cloud gateway also accepts `provider=near` or `provider=chutes`. These provider tiers can use different model-report formats and verification rules, so select one only when it is covered by your policy.
 
 ## Verify the applicable entry
 
@@ -39,10 +39,10 @@ Cloud API also accepts `provider=near` or `provider=chutes`. These provider tier
   Do not assume every `model_attestations[]` entry has the same fields, or that the array lists every model CVM behind a model URL. A response signature must be matched by signer identity and algorithm; a report from a different signer is not an equivalent substitute.
 </Warning>
 
-## Relationship to Cloud API TLS
+## Relationship to NEAR AI Cloud gateway TLS
 
-The browser or client connection is to `cloud-api.near.ai`. Its TLS endpoint binding is verified against `gateway_attestation`, not against a TLS fingerprint carried by an upstream model report. See [Cloud API TLS connection binding](/cloud/verification/cloud-api/tls).
+The browser or client connection is to `cloud-api.near.ai`. Its TLS endpoint binding is verified against `gateway_attestation`, not against a TLS fingerprint carried by an upstream model report. See [NEAR AI Cloud gateway TLS connection binding](/cloud/verification/cloud-api/tls).
 
 ## Verify a signed response
 
-For a Cloud API response with `signature_kind: "provider_tee"`, verify the signature over the endpoint-defined payload and match its signer to the applicable model attestation. For a `gateway` signature, match the signer to `gateway_attestation` instead. See [Cloud API response signatures](/cloud/verification/cloud-api/response-signatures).
+For a NEAR AI Cloud gateway response with `signature_kind: "provider_tee"`, verify the signature over the endpoint-defined payload and match its signer to the applicable model attestation. For a `gateway` signature, match the signer to `gateway_attestation` instead. See [NEAR AI Cloud gateway response signatures](/cloud/verification/cloud-api/response-signatures).

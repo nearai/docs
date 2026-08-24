@@ -1,29 +1,29 @@
 ---
 title: "Verification"
-description: "Choose the Cloud API or direct-model verification flow, then verify the evidence for that request path."
+description: "Choose the NEAR AI Cloud gateway or direct-model verification flow, then verify the evidence for that request path."
 ---
 
 NEAR AI Cloud has two verification paths. They use different endpoints, response envelopes, and signer relationships. Select the path your application actually uses before interpreting an attestation report.
 
 <CardGroup cols={2}>
-  <Card title="Cloud API" icon="cloud" href="/cloud/verification/cloud-api">
+  <Card title="NEAR AI Cloud Gateway" icon="cloud" href="/cloud/verification/cloud-api">
     Verify requests sent to cloud-api.near.ai, including its gateway attestation and any returned model attestations.
   </Card>
   <Card title="Direct model endpoints" icon="server" href="/cloud/verification/direct">
-    Verify requests sent directly to a model's completions.near.ai endpoint, without the Cloud API gateway in the request path.
+    Verify requests sent directly to a model's completions.near.ai endpoint, without the NEAR AI Cloud gateway in the request path.
   </Card>
 </CardGroup>
 
 ## Why the paths are separate
 
-| | Cloud API | Direct model endpoint |
+| | NEAR AI Cloud gateway | Direct model endpoint |
 | --- | --- | --- |
 | Request host | `cloud-api.near.ai` | `<MODEL_SLUG>.completions.near.ai` |
 | Attestation envelope | `gateway_attestation` and optional `model_attestations[]` | A model report at the response root, plus `all_attestations[]` |
 | Gateway evidence | Available as `gateway_attestation` | Not in the request path |
 | Response signature routing | `signature_kind` identifies a gateway or model-serving signer when present | Match the signature to the direct model report's signer |
 
-Do not rename or map these fields as if they were aliases. In particular, `model_attestations[]` is a Cloud API response field; it is not the direct endpoint's `all_attestations[]` field.
+Do not rename or map these fields as if they were aliases. In particular, `model_attestations[]` is a NEAR AI Cloud gateway response field; it is not the direct endpoint's `all_attestations[]` field.
 
 ## Shared requirements
 

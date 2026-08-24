@@ -60,7 +60,7 @@
                 "root": "cloud/verification/index",
                 "pages": [
                   {
-                    "group": "Cloud API",
+                    "group": "NEAR AI Cloud Gateway",
                     "root": "cloud/verification/cloud-api/index",
                     "pages": [
                       "cloud/verification/cloud-api/gateway-attestation",

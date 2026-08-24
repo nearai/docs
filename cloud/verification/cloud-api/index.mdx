@@ -1,11 +1,11 @@
 ---
-title: "Verify Cloud API"
+title: "Verify the NEAR AI Cloud Gateway"
 description: "Verify gateway, model, TLS, response-signature, and image-provenance evidence for requests sent through cloud-api.near.ai."
 ---
 
-Use this flow when your application sends requests to `https://cloud-api.near.ai`. The request path includes the Cloud API gateway and can include evidence for a selected model.
+Use this flow when your application sends requests to `https://cloud-api.near.ai`. The request path includes the NEAR AI Cloud gateway and can include evidence for a selected model.
 
-The relevant verification fields in a Cloud API response are:
+The relevant verification fields in a NEAR AI Cloud gateway response are:
 
 ```text
 gateway_attestation
@@ -13,7 +13,7 @@ model_attestations[]          # returned when model evidence is available
 tls_certificate               # optional
 ```
 
-`gateway_attestation` and `model_attestations[]` are separate pieces of evidence. Verify the gateway when you need evidence for the Cloud API request path; verify a model attestation when you also need evidence for the model environment.
+`gateway_attestation` and `model_attestations[]` are separate pieces of evidence. Verify the gateway when you need evidence for the NEAR AI Cloud gateway request path; verify a model attestation when you also need evidence for the model environment.
 
 <Warning>
   `model_attestations[]` is not an inventory of every healthy model instance. Do not use its length, or the presence of one entry, as evidence that a later request will be served by that same instance.
@@ -22,7 +22,7 @@ tls_certificate               # optional
 ## Recommended flow
 
 1. Generate a fresh 32-byte nonce in the client for each verification attempt.
-2. Request a Cloud API attestation report, including `model=<MODEL_ID>` when model evidence is needed.
+2. Request a NEAR AI Cloud gateway attestation report, including `model=<MODEL_ID>` when model evidence is needed.
 3. Verify `gateway_attestation` and apply your gateway measurement policy.
 4. Verify the applicable item in `model_attestations[]` using the verifier and policy for its provider.
 5. If you need endpoint binding, verify the TLS connection to `cloud-api.near.ai` against the **gateway** attestation.
@@ -31,13 +31,13 @@ tls_certificate               # optional
 
 <CardGroup cols={2}>
   <Card title="Gateway attestation" icon="router" href="/cloud/verification/cloud-api/gateway-attestation">
-    Verify the Cloud API gateway quote and signer binding.
+    Verify the gateway quote and signer binding.
   </Card>
   <Card title="Model attestations" icon="brain-circuit" href="/cloud/verification/cloud-api/model-attestations">
     Verify provider model evidence returned in `model_attestations[]`.
   </Card>
   <Card title="TLS connection binding" icon="shield-check" href="/cloud/verification/cloud-api/tls">
-    Bind the live Cloud API TLS connection to `gateway_attestation`.
+    Bind the live gateway TLS connection to `gateway_attestation`.
   </Card>
   <Card title="Response signatures" icon="message-square-check" href="/cloud/verification/cloud-api/response-signatures">
     Match a response signature to its gateway or model signer.
@@ -60,12 +60,12 @@ curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
   -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
 ```
 
-Use the same `signing_algo` as the response signature you intend to verify. Add `include_tls_fingerprint=true` only when following the [Cloud API TLS flow](/cloud/verification/cloud-api/tls).
+Use the same `signing_algo` as the response signature you intend to verify. Add `include_tls_fingerprint=true` only when following the [NEAR AI Cloud gateway TLS flow](/cloud/verification/cloud-api/tls).
 
 ## Provider-specific model evidence
 
-Cloud API can return model evidence from different provider tiers. The outer `model_attestations[]` field does not make their internal report formats interchangeable.
+The NEAR AI Cloud gateway can return model evidence from different provider tiers. The outer `model_attestations[]` field does not make their internal report formats interchangeable.
 
-This guide describes the Cloud API envelope and the NEAR-operated model flow. When your integration selects a different provider, use that provider's report format and verification policy; do not apply a NEAR-specific signer or measurement rule to an unfamiliar report shape.
+This guide describes the NEAR AI Cloud gateway envelope and the NEAR-operated model flow. When your integration selects a different provider, use that provider's report format and verification policy; do not apply a NEAR-specific signer or measurement rule to an unfamiliar report shape.
 
 The report request accepts `provider=near` or `provider=chutes` when your integration needs to select a provider tier. Those choices can return different model-evidence formats, so make the selection part of your verification policy.

@@ -19,8 +19,8 @@ Send this value with the attestation request. Reject a report unless the verifie
 
 | Request path | Quote location |
 | --- | --- |
-| Cloud API gateway | `gateway_attestation.intel_quote` |
-| Cloud API model evidence | The provider-specific item in `model_attestations[]` |
+| NEAR AI Cloud gateway | `gateway_attestation.intel_quote` |
+| NEAR AI Cloud gateway model evidence | The provider-specific item in `model_attestations[]` |
 | Direct model endpoint | Root `intel_quote` (and any applicable direct report entry) |
 
 The direct report does not expose a top-level `report_data` field. Always obtain report data and measurements from the verified quote itself.
