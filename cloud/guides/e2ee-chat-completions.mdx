@@ -222,7 +222,10 @@ response = requests.get(
 # )
 
 attestation = response.json()
+# Cloud API:
 model_public_key_hex = attestation["model_attestations"][0]["signing_public_key"]
+# Direct completions use the root model report instead:
+# model_public_key_hex = attestation["signing_public_key"]
 print(f"Model Ed25519 public key: {model_public_key_hex}")
 ```
 
@@ -251,7 +254,7 @@ console.log('Model Ed25519 public key:', modelPublicKeyHex);
 </Tab>
 </Tabs>
 
-The response contains `model_attestations` with the model's `signing_public_key` in hex format.
+For Cloud API, the model key is in `model_attestations[0].signing_public_key`. For a direct completions endpoint, it is in the root report's `signing_public_key`.
 
 ---
 
@@ -691,7 +694,7 @@ E2EE is supported on the **Chat Completions API** (`/v1/chat/completions`), **Co
 
 ### Verification
 
-You can verify the model's public key is authentic by checking the attestation report against hardware attestation. See [Model Verification](/cloud/verification/model) for details.
+You can verify the model's public key is authentic by checking the attestation report against hardware attestation. Choose the matching endpoint flow in [Verification](/cloud/verification).
 
 ---
 
@@ -810,5 +813,5 @@ You can verify the model's public key is authentic by checking the attestation r
 ## See Also
 
 - [Private Inference](/cloud/private-inference) — How TEE isolation protects your data
-- [Model Verification](/cloud/verification/model) — Verify the model's TEE attestation
-- [Chat Verification](/cloud/verification/chat) — Verify chat signatures
+- [Verification](/cloud/verification) — Select Cloud API or direct model attestation verification
+- [Verification Policy](/cloud/verification/reference/verification-policy) — Define the evidence your application requires

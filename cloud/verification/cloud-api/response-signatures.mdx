@@ -1,0 +1,47 @@
+---
+title: "Response Signatures"
+description: "Verify available Cloud API response signatures against the exact bytes and the matching attestation."
+---
+
+Cloud API response signatures can be produced by either a model-serving TEE or the Cloud API gateway. When present, `signature_kind` determines which attestation must match the signer.
+
+<Note>
+  A response without an available signature is not a successfully verified response. If response verification is required by your policy, treat it as unverified after a short, bounded retry interval.
+</Note>
+
+## Preserve exact request and response bytes
+
+Build the request body once and retain the exact bytes sent by the client. Retain the raw response bytes before parsing JSON or Server-Sent Events.
+
+```text
+request_hash  = SHA-256(exact request-body bytes)
+response_hash = SHA-256(exact response-body bytes)
+```
+
+Do not parse and re-serialize JSON, normalize whitespace or line endings, omit stream delimiters, or reconstruct a streamed response from parsed events.
+
+## Fetch and verify the signature
+
+```bash
+curl --fail-with-body -G 'https://cloud-api.near.ai/v1/signature/<CHAT_ID>' \
+  --data-urlencode 'signing_algo=ecdsa' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
+```
+
+Verify `signature` locally using the returned `signing_algo`, then compare `text` with the expected payload:
+
+| `signature_kind` | Expected `text` | Required attestation match |
+| --- | --- | --- |
+| `provider_tee` | `<MODEL_ID>:<request_hash>:<response_hash>` | An applicable `model_attestations[]` item with the same `signing_address` and `signing_algo`. |
+| `gateway` | `<request_hash>:<response_hash>` | `gateway_attestation` with the same `signing_address` and `signing_algo`. |
+
+If `signature_kind` is absent or unfamiliar, do not infer it from the shape of `text`. Treat the signer classification as unavailable unless your endpoint contract gives a rule for that response.
+
+For `provider_tee`, `<MODEL_ID>` is the canonical model identifier in the signed payload. Do not assume it is an alias originally supplied by the client.
+
+## Match the attestation
+
+For the selected signer, request a fresh report with a client-generated nonce and the signature's `signing_address` and `signing_algo`. Include `model=<MODEL_ID>` for model evidence. Then verify the quote and apply the required measurement and provenance policy. A signature made by a different signer is not evidence for the response, even if the model name or endpoint is the same.
+
+`ecdsa` identities are Ethereum-style signing addresses. `ed25519` identities are Ed25519 public-key bytes encoded as hexadecimal. Always compare the identity together with `signing_algo`.

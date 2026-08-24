@@ -1,88 +1,15 @@
 ---
-title: "Model Verification"
-description: "Verify the attestation evidence for a NEAR AI Cloud model endpoint."
+title: "Choose a Model Attestation Flow"
+description: "Select the verification guide that matches the endpoint your application calls."
 ---
 
-Use model verification to check the environment serving a model. It is the required attestation check for [direct completions](/cloud/private-inference#direct-completions), and it complements [gateway verification](/cloud/verification/gateway) when you call `cloud-api.near.ai`.
+The report structure depends on the endpoint, so select the guide for the request path your application uses.
 
-Model verification does not prove a particular response by itself. To verify a response, also follow [chat verification](/cloud/verification/chat).
-
-## Request a fresh report
-
-Generate the nonce in your client. Use 32 random bytes encoded as 64 hexadecimal characters, and retain it until verification has completed.
-
-<Tabs>
-  <Tab title="Cloud API gateway">
-
-```bash
-NONCE="$(openssl rand -hex 32)"
-
-curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
-  --data-urlencode 'model=<MODEL_ID>' \
-  --data-urlencode 'signing_algo=ecdsa' \
-  --data-urlencode "nonce=${NONCE}" \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
-```
-
-  </Tab>
-  <Tab title="Direct completions">
-
-```bash
-NONCE="$(openssl rand -hex 32)"
-
-curl --fail-with-body -G 'https://<MODEL_SLUG>.completions.near.ai/v1/attestation/report' \
-  --data-urlencode 'signing_algo=ecdsa' \
-  --data-urlencode "nonce=${NONCE}" \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
-```
-
-  </Tab>
-</Tabs>
-
-Use the same `signing_algo` as the signature you plan to verify. Supported values are `ecdsa` and `ed25519`. If you need to bind the report to the HTTPS endpoint, add `include_tls_fingerprint=true` and follow the [TLS attestation guide](/cloud/verification/tls).
-
-The Cloud API request accepts a `model` parameter. A direct endpoint already identifies the model through its hostname. If you are verifying a response signature and the endpoint supports it, include its `signing_address` and `signing_algo` to request evidence for that signer.
-
-<Note>
-  A report can contain evidence from more than one serving instance. Do not assume a fixed number of entries. Select the entry that matches the signer and algorithm of the response you are verifying.
-</Note>
-
-## Verify the report
-
-Verify the Intel TDX quote before trusting fields copied into the HTTP response. Your verifier should read the report data and measurements from the verified quote.
-
-For each applicable model-attestation entry, check the following:
-
-1. Verify the Intel TDX quote using an Intel DCAP verifier and apply your policy for its result and advisories.
-2. Verify that the quote's report data contains the nonce your client generated and binds the reported signing identity.
-3. Match `signing_address` and `signing_algo` to the identity that signed the response, when you are verifying a response.
-4. When GPU evidence is present, verify it with the applicable NVIDIA verifier and ensure it is bound to the same nonce.
-5. Check the measured configuration against the policy your application accepts. If you require source and build provenance, continue with [image provenance verification](/cloud/verification/provenance).
-
-The response's `request_nonce` and `report_data` fields are useful for diagnostics, but the verified quote is the cryptographic source of truth.
-
-## Signing identities
-
-`signing_address` is an algorithm-specific identity, not always a public key in the same format:
-
-| `signing_algo` | `signing_address` |
-| --- | --- |
-| `ecdsa` | An Ethereum-style address derived from the signing key. |
-| `ed25519` | The Ed25519 public-key bytes, encoded as hexadecimal. |
-
-Always compare both the identity and `signing_algo`. Do not compare identities across algorithms.
-
-## Handling rotations and load balancing
-
-An endpoint may be served by several instances. A report fetched before or after a completion can therefore describe a different signer.
-
-- Fetch a new report when the signer, certificate, or measured configuration changes.
-- For a signed response, request or select the attestation entry that matches its signer.
-- Record the report time and enforce the maximum attestation age your policy permits.
-- When a required check cannot be completed, treat that result as unverified rather than substituting evidence from a different instance.
-
-## Reference implementation
-
-The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) provides implementation examples for quote, GPU, TLS, signature, and image-digest inspection. Integrate the checks and acceptance policy appropriate for your application.
+<CardGroup cols={2}>
+  <Card title="Cloud API model attestations" icon="cloud" href="/cloud/verification/cloud-api/model-attestations">
+    Use `model_attestations[]` returned by cloud-api.near.ai.
+  </Card>
+  <Card title="Direct model attestation" icon="server" href="/cloud/verification/direct/model-attestation">
+    Use the model report returned by a direct completions endpoint.
+  </Card>
+</CardGroup>
