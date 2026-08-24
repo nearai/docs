@@ -20,6 +20,12 @@ Use both checks when your application requires a source-to-runtime trust chain.
   An image tag is not sufficient evidence. A search result or an HTTP `200` response only locates a possible record; it does not cryptographically verify the statement, its signer, or its subject digest.
 </Warning>
 
+## Compose Manager images
+
+When the attested configuration contains platform images such as `compose-manager` or `compose-manager-launcher`, evaluate their exact digests the same way as every other image in the configuration. First bind the configuration to the verified quote, then verify build provenance for each digest under your policy.
+
+An integrity check for a reported action list is a separate check. It does not establish the provenance of the image that ran the action, and it does not replace quote or image-provenance verification.
+
 ## Define a provenance policy
 
 Your policy should specify the identities and inputs you accept before you evaluate a report. At minimum, define:
@@ -47,4 +53,4 @@ When requesting help, include the endpoint, time, report identifier, image name,
 | Image provenance | A particular image digest satisfies your source and build policy. |
 | Both together | The measured runtime configuration uses images whose provenance satisfies your policy. |
 
-The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) includes reference code for inspecting image digests. Use a provenance verifier that validates the cryptographic evidence required by your policy.
+The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) includes reference code for locating selected image digests in a configuration. Use a provenance verifier that validates the cryptographic evidence required by your policy.
