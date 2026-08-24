@@ -3,7 +3,7 @@ title: "Verify Direct Model Endpoints"
 description: "Verify model, TLS, response-signature, and image-provenance evidence for direct completions endpoints."
 ---
 
-Use this flow when your application sends requests directly to `https://<MODEL_SLUG>.completions.near.ai`. The Cloud API gateway is not in this request path.
+Use this flow when your application sends requests directly to `https://<MODEL_SLUG>.completions.near.ai`. The NEAR AI Cloud gateway is not in this request path.
 
 The direct attestation response is a model report at the response root. It includes fields such as `model_name`, `signing_address`, `signing_algo`, `request_nonce`, and `intel_quote`, and also includes `all_attestations[]`.
 

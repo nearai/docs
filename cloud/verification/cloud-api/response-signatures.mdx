@@ -1,9 +1,9 @@
 ---
 title: "Response Signatures"
-description: "Verify available Cloud API response signatures against the exact bytes and the matching attestation."
+description: "Verify available response signatures from the NEAR AI Cloud gateway against the exact bytes and the matching attestation."
 ---
 
-Cloud API response signatures can be produced by either a model-serving TEE or the Cloud API gateway. When present, `signature_kind` determines which attestation must match the signer.
+Response signatures returned through the NEAR AI Cloud gateway can be produced by either a model-serving TEE or the gateway itself. When present, `signature_kind` determines which attestation must match the signer.
 
 <Note>
   A response without an available signature is not a successfully verified response. If response verification is required by your policy, treat it as unverified after a short, bounded retry interval.

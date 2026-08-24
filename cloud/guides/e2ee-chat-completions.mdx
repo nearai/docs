@@ -222,7 +222,7 @@ response = requests.get(
 # )
 
 attestation = response.json()
-# Cloud API:
+# NEAR AI Cloud gateway:
 model_public_key_hex = attestation["model_attestations"][0]["signing_public_key"]
 # Direct completions use the root model report instead:
 # model_public_key_hex = attestation["signing_public_key"]
@@ -254,7 +254,7 @@ console.log('Model Ed25519 public key:', modelPublicKeyHex);
 </Tab>
 </Tabs>
 
-For Cloud API, the model key is in `model_attestations[0].signing_public_key`. For a direct completions endpoint, it is in the root report's `signing_public_key`.
+For the NEAR AI Cloud gateway, the model key is in `model_attestations[0].signing_public_key`. For a direct completions endpoint, it is in the root report's `signing_public_key`.
 
 ---
 
@@ -813,5 +813,5 @@ You can verify the model's public key is authentic by checking the attestation r
 ## See Also
 
 - [Private Inference](/cloud/private-inference) — How TEE isolation protects your data
-- [Verification](/cloud/verification) — Select Cloud API or direct model attestation verification
+- [Verification](/cloud/verification) — Select NEAR AI Cloud gateway or direct model attestation verification
 - [Verification Policy](/cloud/verification/reference/verification-policy) — Define the evidence your application requires

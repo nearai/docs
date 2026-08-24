@@ -3,7 +3,7 @@ title: "Response Signatures"
 description: "Verify an available direct-model response signature against exact bytes and the matching model report."
 ---
 
-Use this flow for a completion sent directly to a model endpoint. The direct signature response has `text`, `signature`, `signing_address`, and `signing_algo`; it does not use the Cloud API `signature_kind` routing field.
+Use this flow for a completion sent directly to a model endpoint. The direct signature response has `text`, `signature`, `signing_address`, and `signing_algo`; it does not use the NEAR AI Cloud gateway's `signature_kind` routing field.
 
 <Note>
   A response without an available signature is not a successfully verified response. If response verification is required by your policy, treat it as unverified after a short, bounded retry interval.
@@ -35,7 +35,7 @@ Verify `signature` locally using the returned `signing_algo`. Then require that 
 <MODEL_NAME>:<request_hash>:<response_hash>
 ```
 
-Use the `model_name` reported by the direct model attestation. A different string, even if it resembles the hostname or Cloud API model ID, does not satisfy this check.
+Use the `model_name` reported by the direct model attestation. A different string, even if it resembles the hostname or a NEAR AI Cloud gateway model ID, does not satisfy this check.
 
 ## Match the model signer
 
