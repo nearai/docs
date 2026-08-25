@@ -240,6 +240,49 @@ For v1 reporting, `inference.inference_id` is the customer-facing request correl
 
 Cloud API enforces a maximum 366-day query range per request. Reporting returns records retained in Cloud API usage tables for your organization. It is not a payment ledger or archival warehouse, and there is no separate reporting TTL/SLA beyond the records currently retained in those usage tables. If you need durable historical archives, export or sync usage regularly.
 
+## Per-Request Costs with an Inference API Key
+
+Inference API keys can read the cost of individual requests with `POST /v1/billing/costs`, without a reporting token. This is the per-request cost signal available to data-plane integrations, for example programmatic burn monitoring.
+
+Every successful `/v1/chat/completions` and `/v1/messages` response carries its billing request ID in the `inference-id` response header, for both streaming and non-streaming requests:
+
+```bash
+curl -sD - https://cloud-api.near.ai/v1/chat/completions \
+  -H "Authorization: Bearer $NEAR_AI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "zai-org/GLM-5.1-FP8", "messages": [{"role": "user", "content": "Hello"}], "max_tokens": 32}' \
+  -o /dev/null | grep -i inference-id
+```
+
+```
+inference-id: 02958e3f-c812-57a3-b6e7-387dd0aba823
+```
+
+Do not use the `x-request-id` response header: it is a transport correlation ID for support and debugging, matches no usage record, and `/v1/billing/costs` reports `costNanoUsd: 0` for it. The `inference-id` value is deterministic — UUIDv5 of the response body `id` in the DNS namespace — so it can also be recomputed later from stored responses (in Python: `uuid.uuid5(uuid.NAMESPACE_DNS, body_id)`).
+
+Query costs for up to 10,000 request IDs at a time:
+
+```bash
+curl https://cloud-api.near.ai/v1/billing/costs \
+  -X POST \
+  -H "Authorization: Bearer $NEAR_AI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"requestIds": ["02958e3f-c812-57a3-b6e7-387dd0aba823"]}'
+```
+
+```json
+{
+  "requests": [
+    {
+      "requestId": "02958e3f-c812-57a3-b6e7-387dd0aba823",
+      "costNanoUsd": 59000
+    }
+  ]
+}
+```
+
+Request IDs that match no usage record for your organization are still returned, with `costNanoUsd: 0`, and the response then carries a `warning` field explaining where the correct IDs come from. Usage for a just-finished request can take a few seconds to become visible, so re-query briefly before treating a zero as authoritative. The same identifier appears as `inference.inference_id` in the usage export above, which lets you reconcile per-request checks against full reporting exports.
+
 ## Privacy Exclusions
 
 Usage reporting responses do not include prompt text, model output text, uploaded file contents, OAuth/session material, raw API keys, stored token digests, upstream provider identifiers, or provider-attribution fields. Reporting tokens also cannot be used for chat completions, responses, files, workspace mutation, or reporting-token management.
