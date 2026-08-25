@@ -35,8 +35,6 @@ The root response is the model report. Relevant fields include:
 | `all_attestations[]` | Model-report entries in this direct response envelope. It can include the root report and is not a fleet inventory. |
 | `compose_manager_attestation` | Optional, separate deployment-control evidence. See [deployment control evidence](/cloud/verification/direct/deployment-control-evidence). |
 
-The direct response does not define a top-level `report_data` field. Read `report_data` and measurements from the verified TDX quote.
-
 ## Verify the report
 
 1. Verify `intel_quote` with an Intel DCAP verifier and apply your TCB and advisory policy.
