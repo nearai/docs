@@ -22,6 +22,8 @@ Do not parse and re-serialize JSON, normalize whitespace or line endings, omit s
 
 ## Fetch and verify the signature
 
+Set `<CHAT_ID>` to the `id` in the completion response whose exact bytes you retained. For the Responses API, use its returned `resp_…` ID.
+
 ```bash
 curl --fail-with-body -G 'https://cloud-api.near.ai/v1/signature/<CHAT_ID>' \
   --data-urlencode 'signing_algo=ecdsa' \
@@ -29,11 +31,15 @@ curl --fail-with-body -G 'https://cloud-api.near.ai/v1/signature/<CHAT_ID>' \
   -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
 ```
 
-Verify `signature` locally using the returned `signing_algo`, then compare `text` with the expected payload:
+A `200` response containing `error_code` and `message` is an unavailable result, not a signature.
+
+For `ecdsa`, recover the Ethereum EIP-191 signer from `text` and `signature`, then compare it with `signing_address`. For `ed25519`, verify the UTF-8 bytes of `text` using `signing_address` as the public key. Reject unsupported algorithms.
+
+Then compare `text` with the expected payload:
 
 | `signature_kind` | Expected `text` | Required attestation match |
 | --- | --- | --- |
-| `provider_tee` | `<MODEL_ID>:<request_hash>:<response_hash>` | An applicable `model_attestations[]` item with the same `signing_address` and `signing_algo`. |
+| `provider_tee` | `<MODEL_ID>:<request_hash>:<response_hash>` | A NEAR model report requested with `provider=near`, with the same `signing_address` and `signing_algo`. |
 | `gateway` | `<request_hash>:<response_hash>` | `gateway_attestation` with the same `signing_address` and `signing_algo`. |
 
 If `signature_kind` is absent or unfamiliar, do not infer it from the shape of `text`. Treat the signer classification as unavailable unless your endpoint contract gives a rule for that response.
@@ -42,6 +48,6 @@ For `provider_tee`, `<MODEL_ID>` is the canonical model identifier in the signed
 
 ## Match the attestation
 
-For the selected signer, request a fresh report with a client-generated nonce and the signature's `signing_address` and `signing_algo`. Include `model=<MODEL_ID>` for model evidence. Then verify the quote and apply the required measurement and provenance policy. A signature made by a different signer is not evidence for the response, even if the model name or endpoint is the same.
+For the selected signer, request a fresh report with a client-generated nonce and the signature's `signing_address` and `signing_algo`. For `provider_tee`, include `model=<MODEL_ID>` and `provider=near` to obtain the NEAR model report. Then verify the quote and apply the required measurement and provenance policy. A signature made by a different signer is not evidence for the response, even if the model name or endpoint is the same.
 
 `ecdsa` identities are Ethereum-style signing addresses. `ed25519` identities are Ed25519 public-key bytes encoded as hexadecimal. Always compare the identity together with `signing_algo`.

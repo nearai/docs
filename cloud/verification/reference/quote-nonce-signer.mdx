@@ -3,7 +3,7 @@ title: "Quote, Nonce, and Signer Bindings"
 description: "Shared rules for reading verified quotes, checking freshness, and matching signing identities."
 ---
 
-Every verification flow starts with a client-generated nonce and a verified quote. HTTP fields are inputs to compare with the quote; they are not a replacement for quote verification.
+Every NEAR verification flow starts with a client-generated nonce and a verified quote. HTTP fields are inputs to compare with the quote; they are not a replacement for quote verification.
 
 ## Use a client-generated nonce
 
@@ -20,12 +20,12 @@ Send this value with the attestation request. Reject a report unless the verifie
 | Request path | Quote location |
 | --- | --- |
 | NEAR AI Cloud gateway | `gateway_attestation.intel_quote` |
-| NEAR AI Cloud gateway model evidence | The provider-specific item in `model_attestations[]` |
+| NEAR AI Cloud gateway model evidence (`provider=near`) | The single model report in `model_attestations[]` |
 | Direct model endpoint | Root `intel_quote` (and any applicable direct report entry) |
 
 ## Verify the signer binding
 
-For a NEAR-operated TLS-bound report, the verified quote binds the signer identity, TLS certificate fingerprint, and nonce. A provider can use a different report format, so verify the exact binding required by the selected endpoint and provider flow before accepting the report.
+For a NEAR-operated report requested with `include_tls_fingerprint=true`, the verified quote binds the signer identity, TLS certificate fingerprint, and nonce.
 
 `signing_address` is algorithm-specific:
 
@@ -42,4 +42,4 @@ When a report contains NVIDIA GPU evidence, verify it with the applicable NVIDIA
 
 ## Reference code
 
-The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) contains implementation examples for individual quote, GPU, TLS, signature, and configuration checks. Use it as an implementation reference, then enforce the acceptance policy required by your application.
+The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) contains implementation examples for NEAR quote, GPU, and configuration processing. Use the report-request examples in these guides; the repository is not a complete Cloud API client. Follow the endpoint-specific guides for TLS binding, response signatures, and image provenance.

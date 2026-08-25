@@ -8,7 +8,7 @@ Image provenance is separate from hardware attestation. A verified direct model 
 ## Verification flow
 
 1. Verify the direct model's Intel TDX quote first.
-2. Obtain the configuration text from the direct report, calculate its configuration hash, and compare it with the configuration measurement in the verified quote.
+2. Use the raw `info.tcb_info.app_compose` string from the direct report. Calculate its SHA-256 hash without parsing or reserializing it, and compare it with the configuration measurement in the verified quote.
 3. Extract every immutable image digest (`@sha256:…`) from the matched configuration.
 4. Cryptographically verify provenance for each required digest and confirm that the statement's subject equals the image digest exactly.
 5. Apply your policy for repository, build identity, workflow, ref, and source revision.

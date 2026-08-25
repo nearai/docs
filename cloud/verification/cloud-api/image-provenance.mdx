@@ -8,13 +8,13 @@ Image provenance is separate from hardware attestation. A verified quote can bin
 For a NEAR AI Cloud gateway flow, decide separately whether your policy requires provenance for:
 
 - the configuration measured by `gateway_attestation`;
-- each applicable model report in `model_attestations[]`; or
+- the NEAR model report in `model_attestations[]`, requested with `provider=near`; or
 - both.
 
 ## Verification flow
 
 1. Verify the relevant Intel TDX quote first.
-2. Obtain the configuration text from that report, calculate its configuration hash, and compare it with the configuration measurement in the verified quote.
+2. For a NEAR model report, use the raw `info.tcb_info.app_compose` string. Calculate its SHA-256 hash without parsing or reserializing it, and compare it with the configuration measurement in the verified quote.
 3. Extract every immutable image digest (`@sha256:…`) from the matched configuration.
 4. Cryptographically verify provenance for each required digest and confirm that the statement's subject equals the image digest exactly.
 5. Apply your policy for repository, build identity, workflow, ref, and source revision.

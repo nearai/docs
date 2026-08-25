@@ -38,7 +38,7 @@ The root response is the model report. Relevant fields include:
 ## Verify the report
 
 1. Verify `intel_quote` with an Intel DCAP verifier and apply your TCB and advisory policy.
-2. Check the client-generated nonce, signer identity, and signing algorithm against the verified quote.
+2. Check the client-generated nonce and signer identity against the verified quote. Use `signing_algo` to interpret that identity and verify response signatures.
 3. When GPU evidence is present, verify it with the applicable NVIDIA verifier and ensure it is bound to the same nonce.
 4. Apply your accepted measurement policy to the verified configuration.
 5. If source and build provenance are required, continue with [direct image provenance](/cloud/verification/direct/image-provenance).

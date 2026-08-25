@@ -22,6 +22,8 @@ Do not parse and re-serialize JSON, normalize whitespace or line endings, omit s
 
 ## Fetch and verify the signature
 
+Set `<CHAT_ID>` to the `id` in the completion response whose exact bytes you retained.
+
 ```bash
 curl --fail-with-body -G 'https://<MODEL_SLUG>.completions.near.ai/v1/signature/<CHAT_ID>' \
   --data-urlencode 'signing_algo=ecdsa' \
@@ -29,7 +31,9 @@ curl --fail-with-body -G 'https://<MODEL_SLUG>.completions.near.ai/v1/signature/
   -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
 ```
 
-Verify `signature` locally using the returned `signing_algo`. Then require that `text` is exactly:
+For `ecdsa`, recover the Ethereum EIP-191 signer from `text` and `signature`, then compare it with `signing_address`. For `ed25519`, verify the UTF-8 bytes of `text` using `signing_address` as the public key. Reject unsupported algorithms.
+
+Then require that `text` is exactly:
 
 ```text
 <MODEL_NAME>:<request_hash>:<response_hash>
