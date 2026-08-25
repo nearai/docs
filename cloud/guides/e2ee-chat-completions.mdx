@@ -8,6 +8,8 @@ icon: "message-square-lock"
 
 NEAR AI Cloud runs both the gateway and model inference inside Trusted Execution Environments (TEEs), providing strong hardware-level isolation. End-to-end encryption (E2EE) adds an additional layer of protection by encrypting your messages with the model's public key before they leave your machine.
 
+This guide uses the NEAR model E2EE protocol. The gateway sends client-E2EE requests only to a compatible NEAR-serving path; if none is available, the request is unsupported rather than routed through a different E2EE protocol.
+
 ## Why Use E2EE?
 
 With E2EE enabled, your messages are encrypted client-side using the model's public key, which is cryptographically bound to its TEE attestation. This provides:
