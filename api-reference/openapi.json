@@ -3458,7 +3458,7 @@
           "Billing"
         ],
         "summary": "Get costs by request IDs",
-        "description": "Returns the cost in nano-USD for each request ID provided.\nThis endpoint is designed for HuggingFace billing integration.\n\nRequest IDs that are not found will be returned with costNanoUsd: 0",
+        "description": "Returns the cost in nano-USD for each request ID provided. A request ID is\nthe UUID from the `inference-id` response header of /v1/chat/completions\nand /v1/messages responses (equivalently: UUIDv5 of the response body `id`\nunder the DNS namespace). The `x-request-id` response header is a transport\ncorrelation ID and cannot be used here.\n\nRequest IDs that are not found are returned with costNanoUsd: 0\n(HuggingFace-compatible); the response then carries a `warning` field\npointing at the correct ID source. Usage for a just-finished request can\ntake a few seconds to become visible.",
         "operationId": "get_billing_costs",
         "requestBody": {
           "content": {
@@ -11471,7 +11471,7 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "Array of request IDs (inference IDs) to get costs for"
+            "description": "Array of request IDs to get costs for: the UUID values of the\n`inference-id` response header returned by /v1/chat/completions and\n/v1/messages (not the `x-request-id` header)."
           }
         }
       },
@@ -11488,6 +11488,13 @@
               "$ref": "#/components/schemas/RequestCost"
             },
             "description": "Array of request costs"
+          },
+          "warning": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Present when some request IDs matched no usage record for this\norganization (those entries report costNanoUsd 0). Explains where the\ncorrect request IDs come from."
           }
         }
       },
