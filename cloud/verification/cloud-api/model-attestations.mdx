@@ -25,6 +25,10 @@ The response includes gateway evidence and one NEAR model report in `model_attes
 
 When matching a response signature, request fresh evidence for that signer by adding both `signing_address=<SIGNER>` and the signature's `signing_algo`. Do not use a report for a different signer as a substitute.
 
+<Note>
+  `provider=near` selects the model report returned by this request. It does not select the provider for a later completion. Treat a report as evidence for a completion only when its signer and algorithm match a `provider_tee` response signature.
+</Note>
+
 ## NEAR model report fields
 
 The NEAR report uses these fields:

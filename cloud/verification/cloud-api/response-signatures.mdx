@@ -42,6 +42,8 @@ Then compare `text` with the expected payload:
 | `provider_tee` | `<MODEL_ID>:<request_hash>:<response_hash>` | A NEAR model report requested with `provider=near`, with the same `signing_address` and `signing_algo`. |
 | `gateway` | `<request_hash>:<response_hash>` | `gateway_attestation` with the same `signing_address` and `signing_algo`. |
 
+Only `provider_tee` binds a response to a model-serving TEE. A `gateway` signature binds the response to the gateway, not to a model report. If a model signature is unavailable, model-level response binding is unavailable.
+
 If `signature_kind` is absent or unfamiliar, do not infer it from the shape of `text`. Treat the signer classification as unavailable unless your endpoint contract gives a rule for that response.
 
 For `provider_tee`, `<MODEL_ID>` is the canonical model identifier in the signed payload. Do not assume it is an alias originally supplied by the client.
