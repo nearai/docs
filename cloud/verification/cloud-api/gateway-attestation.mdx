@@ -3,7 +3,7 @@ title: "Gateway Attestation"
 description: "Verify the NEAR AI Cloud gateway attestation for requests sent to cloud-api.near.ai."
 ---
 
-`gateway_attestation` is evidence for the NEAR AI Cloud gateway. It is not evidence for a model environment; use [model attestations](/cloud/verification/cloud-api/model-attestations) when your policy also requires model evidence.
+`gateway_attestation` is evidence for the NEAR AI Cloud gateway. It is not evidence for a model environment. Use [model attestations](/cloud/verification/cloud-api/model-attestations) when your policy also requires model evidence.
 
 ## Request gateway evidence
 
@@ -40,7 +40,7 @@ For `gateway_attestation`:
 | `gateway_attestation.intel_quote` | The gateway's Intel TDX quote. |
 | `gateway_attestation.signing_address` and `.signing_algo` | The gateway signing identity and algorithm. |
 | `gateway_attestation.tls_cert_fingerprint` | The gateway TLS binding when requested. |
-| `model_attestations[]` | Separate NEAR model evidence when requested with `model` and `provider=near`; do not use it as a substitute for the gateway quote. |
+| `model_attestations[]` | Separate NEAR model evidence when requested with `model` and `provider=near`. Do not use it as a substitute for the gateway quote. |
 
 ## Freshness and failure handling
 

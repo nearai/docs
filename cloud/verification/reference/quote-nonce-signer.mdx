@@ -3,7 +3,7 @@ title: "Quote, Nonce, and Signer Bindings"
 description: "Shared rules for reading verified quotes, checking freshness, and matching signing identities."
 ---
 
-Every NEAR verification flow starts with a client-generated nonce and a verified quote. HTTP fields are inputs to compare with the quote; they are not a replacement for quote verification.
+Every NEAR verification flow starts with a client-generated nonce and a verified quote. HTTP fields are inputs to compare with the quote. They are not a replacement for quote verification.
 
 ## Use a client-generated nonce
 
@@ -42,4 +42,4 @@ When a report contains NVIDIA GPU evidence, verify it with the applicable NVIDIA
 
 ## Reference code
 
-The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) contains implementation examples for NEAR quote, GPU, and configuration processing. Use the report-request examples in these guides; the repository is not a complete Cloud API client. Follow the endpoint-specific guides for TLS binding, response signatures, and image provenance.
+The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) contains implementation examples for NEAR quote, GPU, and configuration processing. Use the report-request examples in these guides. The repository is not a complete Cloud API client. Follow the endpoint-specific guides for TLS binding, response signatures, and image provenance.

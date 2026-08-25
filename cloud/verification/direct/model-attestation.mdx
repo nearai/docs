@@ -28,7 +28,7 @@ The root response is the model report. Relevant fields include:
 | --- | --- |
 | `model_name` | The model name stated in this report. |
 | `signing_address`, `signing_algo` | The model signing identity and algorithm. |
-| `request_nonce` | The nonce echoed for diagnostics; verify it inside the quote. |
+| `request_nonce` | The nonce echoed for diagnostics. Verify it inside the quote. |
 | `intel_quote` | The model's Intel TDX quote. |
 | `nvidia_payload` | GPU evidence, when present. |
 | `tls_cert_fingerprint` | The direct endpoint TLS binding, when requested. |
