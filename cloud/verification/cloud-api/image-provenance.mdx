@@ -23,10 +23,6 @@ For a NEAR AI Cloud gateway flow, decide separately whether your policy requires
   A tag, search result, or HTTP `200` only locates a possible record. It does not cryptographically verify the provenance statement, its signer, or its subject digest.
 </Warning>
 
-## Provider boundaries
-
-Do not assume every model report returned through the NEAR AI Cloud gateway exposes configuration evidence in the same format. Apply this flow only where the provider's report format and your verifier establish the configuration-to-quote binding. An unfamiliar or incomplete report is not equivalent to a verified configuration.
-
 ## Missing evidence
 
 An unavailable provenance record, including an HTTP `404`, means the reported digest could not be verified under that policy. It does not by itself identify a security incident.
