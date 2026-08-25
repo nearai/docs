@@ -25,4 +25,8 @@ The quote and configuration measurement establish that the configuration text yo
 
 An unavailable provenance record, including an HTTP `404`, means the reported digest could not be verified under that policy. It does not by itself identify a security incident.
 
-Fetch a fresh report after a deployment change. If the current evidence still lacks provenance required by your policy, treat that image as unverified. When requesting help, include the endpoint, UTC time, model name, signing address and `info.instance_id` when present, image name, and full digest—never API keys, prompts, or response content.
+Fetch a fresh report after a deployment change. If the current evidence still lacks provenance required by your policy, treat that image as unverified.
+
+<Note>
+  When requesting help, share only non-sensitive verification metadata: the endpoint, UTC time, model name, signing address, `info.instance_id` when present, image name, and full digest. Never include API keys, prompts, or response content.
+</Note>
