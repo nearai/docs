@@ -26,6 +26,8 @@ This check applies to the direct model connection. It does not verify a connecti
 
 A command-line request can retrieve a report, but cannot by itself demonstrate that the report and peer certificate came from one TLS connection.
 
+This result applies only to that open TLS connection. Send the inference request on it; if the client reconnects, repeat this flow before treating the new connection as bound.
+
 ## Required handling
 
 | Result | Action when TLS endpoint binding is required |

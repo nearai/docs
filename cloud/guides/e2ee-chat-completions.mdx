@@ -129,7 +129,7 @@ def v2_decrypt(data: bytes, secret_x25519: bytes) -> bytes:
 attestation = requests.get(
     f"{ENDPOINT}/v1/attestation/report",
     headers={"Authorization": f"Bearer {API_KEY}"},
-    params={"model": MODEL, "signing_algo": "ed25519"},
+    params={"model": MODEL, "provider": "near", "signing_algo": "ed25519"},
 ).json()
 model_ed25519_pub = bytes.fromhex(attestation["model_attestations"][0]["signing_public_key"])
 model_x25519_pub = crypto_sign_ed25519_pk_to_curve25519(model_ed25519_pub)
@@ -187,7 +187,7 @@ The gateway endpoint requires an API key (`Authorization: Bearer <api-key>`); re
 <Tab title="curl (Gateway)">
 
 ```bash
-curl "https://cloud-api.near.ai/v1/attestation/report?model=zai-org/GLM-5.1-FP8&signing_algo=ed25519" \
+curl "https://cloud-api.near.ai/v1/attestation/report?model=zai-org/GLM-5.1-FP8&provider=near&signing_algo=ed25519" \
   -H 'Authorization: Bearer <YOUR-NEAR-AI-CLOUD-API-KEY>'
 ```
 
@@ -211,6 +211,7 @@ response = requests.get(
     headers={"Authorization": f"Bearer {os.environ['NEAR_AI_CLOUD_API_KEY']}"},
     params={
         "model": "zai-org/GLM-5.1-FP8",
+        "provider": "near",
         "signing_algo": "ed25519"
     }
 )
@@ -235,10 +236,11 @@ print(f"Model Ed25519 public key: {model_public_key_hex}")
 ```javascript
 const response = await fetch(
   'https://cloud-api.near.ai/v1/attestation/report?' +
-  new URLSearchParams({
-    model: 'zai-org/GLM-5.1-FP8',
-    signing_algo: 'ed25519'
-  }),
+    new URLSearchParams({
+      model: 'zai-org/GLM-5.1-FP8',
+      provider: 'near',
+      signing_algo: 'ed25519'
+    }),
   {
     headers: {
       'Authorization': `Bearer ${process.env.NEAR_AI_CLOUD_API_KEY}`,
@@ -254,7 +256,7 @@ console.log('Model Ed25519 public key:', modelPublicKeyHex);
 </Tab>
 </Tabs>
 
-For the NEAR AI Cloud gateway, the model key is in `model_attestations[0].signing_public_key`. For a direct completions endpoint, it is in the root report's `signing_public_key`.
+For the NEAR AI Cloud gateway, request `provider=near` before reading `model_attestations[0].signing_public_key`. For a direct completions endpoint, the key is in the root report's `signing_public_key`.
 
 ---
 

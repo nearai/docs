@@ -1,9 +1,9 @@
 ---
-title: "Model Attestations"
-description: "Verify evidence for the model environment selected for a request through the NEAR AI Cloud gateway."
+title: "NEAR Model Attestations"
+description: "Verify the NEAR model-attestation report returned through the NEAR AI Cloud gateway."
 ---
 
-Use this page when a request to `cloud-api.near.ai` needs evidence for a model environment in addition to the gateway. Model evidence is returned with the gateway attestation report. Its format and verification requirements can vary by provider, so use the guidance for the provider your application selected.
+Use this page when a request to `cloud-api.near.ai` needs evidence for a NEAR-operated model environment in addition to the gateway. Request that report explicitly with `provider=near`.
 
 ## Request model evidence
 
@@ -14,27 +14,43 @@ NONCE="$(openssl rand -hex 32)"
 
 curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
   --data-urlencode 'model=<MODEL_ID>' \
+  --data-urlencode 'provider=near' \
   --data-urlencode 'signing_algo=ecdsa' \
   --data-urlencode "nonce=${NONCE}" \
   -H 'Accept: application/json' \
   -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
 ```
 
-The response includes gateway evidence. When model evidence is available, it is carried in `model_attestations[]`.
+The response includes gateway evidence and one NEAR model report in `model_attestations[]`.
 
 When matching a response signature, request fresh evidence for that signer by adding both `signing_address=<SIGNER>` and the signature's `signing_algo`. Do not use a report for a different signer as a substitute.
 
-Model providers can use different report formats and verification rules. Apply only the requirements documented for the provider your application uses; treat an unfamiliar report format as unverified under your policy.
+## NEAR model report fields
 
-## Verify the applicable entry
+The NEAR report uses these fields:
 
-1. Determine which provider's model evidence your request is using.
-2. Verify the Intel TDX quote, nonce, signer binding, GPU evidence, and measurement according to that provider's verification rules.
-3. When verifying a response signed by a model-serving TEE, request or select an entry whose `signing_address` **and** `signing_algo` match the response signature.
-4. Apply your own allowlist and provenance policy to the verified measurements.
+| Field | Purpose |
+| --- | --- |
+| `intel_quote` | Intel TDX evidence. |
+| `event_log` | Runtime measurement log; replay it and match the result to the quote's RTMR3. |
+| `request_nonce` | Echoed request nonce; confirm its binding from the verified quote. |
+| `signing_address` and `signing_algo` | Model signing identity and its algorithm. |
+| `signing_public_key` | Model public key for the E2EE flow; request `signing_algo=ed25519` for that flow. |
+| `nvidia_payload` | NVIDIA GPU evidence, when present. |
+| `info.tcb_info.app_compose` | Raw measured configuration string; hash it and match it to the quote's MRCONFIGID. `tcb_info` can itself be JSON text. |
+
+## Verify the NEAR model report
+
+1. Verify `intel_quote` with an Intel DCAP verifier and apply your TCB and advisory policy.
+2. Check the client-generated nonce and `signing_address` against the verified quote. Interpret the address using `signing_algo`, and compare both values when matching a response signature.
+3. Replay `event_log` and require the resulting RTMR3 to equal the RTMR3 in the verified quote.
+4. If `tcb_info` is JSON text, decode it to obtain `app_compose`. Hash the raw `app_compose` string without parsing or reserializing it. Require the quote's MRCONFIGID to begin with `01` followed by that SHA-256 hash.
+5. When GPU evidence is present, verify `nvidia_payload` and require it to be bound to the same nonce.
+6. When verifying a model-serving response signature, request a report whose `signing_address` and `signing_algo` match that signature.
+7. Apply your own allowlist and provenance policy to the verified measurements.
 
 <Warning>
-  An entry in `model_attestations[]` is not an inventory of every model instance behind a URL. A response signature must be matched by signer identity and algorithm; a report from a different signer is not an equivalent substitute.
+  `model_attestations[]` is not an inventory of every model instance behind a URL. A response signature must be matched by signer identity and algorithm; a report from a different signer is not an equivalent substitute.
 </Warning>
 
 ## Relationship to NEAR AI Cloud gateway TLS
@@ -44,3 +60,7 @@ The browser or client connection is to `cloud-api.near.ai`. Its TLS endpoint bin
 ## Verify a signed response
 
 For a NEAR AI Cloud gateway response with `signature_kind: "provider_tee"`, verify the signature over the endpoint-defined payload and match its signer to the applicable model attestation. For a `gateway` signature, match the signer to `gateway_attestation` instead. See [NEAR AI Cloud gateway response signatures](/cloud/verification/cloud-api/response-signatures).
+
+## Other provider documentation
+
+Chutes documents its own evidence format in [TEE Evidence Verification](https://github.com/chutesai/chutes-api/blob/main/docs/tee-verification.md).
