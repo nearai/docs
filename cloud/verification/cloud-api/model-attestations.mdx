@@ -36,12 +36,12 @@ The NEAR report uses these fields:
 | Field | Purpose |
 | --- | --- |
 | `intel_quote` | Intel TDX evidence. |
-| `event_log` | Runtime measurement log; replay it and match the result to the quote's RTMR3. |
-| `request_nonce` | Echoed request nonce; confirm its binding from the verified quote. |
+| `event_log` | Runtime measurement log. Replay it and match the result to the quote's RTMR3. |
+| `request_nonce` | Echoed request nonce. Confirm its binding from the verified quote. |
 | `signing_address` and `signing_algo` | Model signing identity and its algorithm. |
-| `signing_public_key` | Model public key for the E2EE flow; request `signing_algo=ed25519` for that flow. |
+| `signing_public_key` | Model public key for the E2EE flow. Request `signing_algo=ed25519` for that flow. |
 | `nvidia_payload` | NVIDIA GPU evidence, when present. |
-| `info.tcb_info.app_compose` | Raw measured configuration string; hash it and match it to the quote's MRCONFIGID. `tcb_info` can itself be JSON text. |
+| `info.tcb_info.app_compose` | Raw measured configuration string. Hash it and match it to the quote's MRCONFIGID. `tcb_info` can itself be JSON text. |
 
 ## Verify the NEAR model report
 
@@ -54,7 +54,7 @@ The NEAR report uses these fields:
 7. Apply your own allowlist and provenance policy to the verified measurements.
 
 <Warning>
-  `model_attestations[]` is not an inventory of every model instance behind a URL. A response signature must be matched by signer identity and algorithm; a report from a different signer is not an equivalent substitute.
+  `model_attestations[]` is not an inventory of every model instance behind a URL. A response signature must be matched by signer identity and algorithm. A report from a different signer is not an equivalent substitute.
 </Warning>
 
 ## Relationship to NEAR AI Cloud gateway TLS

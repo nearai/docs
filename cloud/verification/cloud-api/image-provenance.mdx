@@ -3,15 +3,15 @@ title: "Image Provenance"
 description: "Apply an image-provenance policy to configurations measured in NEAR AI Cloud gateway and model attestations."
 ---
 
-Image provenance is separate from hardware attestation. A verified quote can bind a configuration measurement to a runtime; provenance determines whether the image digests in that configuration were built by a source and build process your policy accepts.
+Image provenance is separate from hardware attestation. A verified quote can bind a configuration measurement to a runtime. Provenance determines whether the image digests in that configuration were built by a source and build process your policy accepts.
 
 For model-level provenance through the gateway, this flow applies to the NEAR model report requested with `provider=near`.
 
 For a NEAR AI Cloud gateway flow, decide separately whether your policy requires provenance for:
 
-- the configuration measured by `gateway_attestation`;
-- the NEAR model report in `model_attestations[]`, requested with `provider=near`; or
-- both.
+- the configuration measured by `gateway_attestation`
+- the NEAR model report in `model_attestations[]`, requested with `provider=near`
+- both
 
 ## Verification flow
 
