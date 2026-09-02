@@ -1,0 +1,26 @@
+---
+title: "Verification SDK"
+description: "Use the NEAR AI verification SDK to verify attestation evidence in your application."
+---
+
+The NEAR AI verification SDK provides language-specific implementations for NEAR AI Cloud gateway attestation, NEAR model evidence returned through the gateway, and response signatures.
+
+The SDK supports TypeScript, Python, and Rust.
+
+## Installation
+
+Installation instructions will be added when the SDK packages are published.
+
+## Using the SDK
+
+The SDK follows the same verification model as these guides: generate a fresh nonce, obtain the gateway report, verify its quote and bindings, then apply your application's policy.
+
+For the protocol requirements and trust decisions behind each check, start with the gateway guide:
+
+<Card title="NEAR AI Cloud Gateway" icon="cloud" href="/cloud/verification/cloud-api">
+  Verify gateway and NEAR model evidence returned through `cloud-api.near.ai`.
+</Card>
+
+<Note>
+  Direct model endpoints, Compose Manager evidence, image provenance, and E2EE are not covered by the SDK yet. SDK examples and language-specific API documentation will be added as they become available.
+</Note>

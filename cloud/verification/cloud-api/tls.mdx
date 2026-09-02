@@ -9,6 +9,10 @@ Use this flow to establish that the HTTPS connection to `cloud-api.near.ai` term
   The peer certificate and attestation report must be obtained on the **same TLS connection**. Two independent connections can reach different instances or observe different certificates, so they cannot establish this connection-specific conclusion.
 </Warning>
 
+<Note>
+  Browser Fetch APIs do not expose the peer certificate or its SPKI. A browser client can verify a gateway quote without TLS binding, but cannot establish this TLS connection-binding property.
+</Note>
+
 ## What this checks
 
 When you request `include_tls_fingerprint=true`, `gateway_attestation.tls_cert_fingerprint` is the SHA-256 hash of the gateway certificate's SubjectPublicKeyInfo (SPKI). The verified quote binds that fingerprint, the gateway signing identity, and the nonce.
@@ -25,6 +29,8 @@ This is a gateway check. It does not bind the client connection to an upstream m
 6. Compare the calculated peer SPKI hash with `gateway_attestation.tls_cert_fingerprint`.
 
 The optional `tls_certificate` response field is not a substitute for the peer certificate observed on the connection. A command-line report request alone also cannot establish the same-connection property.
+
+This result applies to the connection used for the evidence request. When it must also cover an inference request, send that request over the same open TLS connection. If the client reconnects, repeat the flow.
 
 ## Required handling
 

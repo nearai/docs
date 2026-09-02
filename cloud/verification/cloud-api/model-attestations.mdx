@@ -7,7 +7,7 @@ Use this page when a request to `cloud-api.near.ai` needs evidence for a NEAR-op
 
 ## Request model evidence
 
-Include the model ID when requesting the report:
+Include the canonical model ID when requesting the report. Do not use an alias: send `x-no-aliasing: true` so the request fails instead of being rewritten to another model ID.
 
 ```bash
 NONCE="$(openssl rand -hex 32)"
@@ -15,13 +15,15 @@ NONCE="$(openssl rand -hex 32)"
 curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
   --data-urlencode 'model=<MODEL_ID>' \
   --data-urlencode 'provider=near' \
+  --data-urlencode 'include_tls_fingerprint=false' \
   --data-urlencode 'signing_algo=ecdsa' \
   --data-urlencode "nonce=${NONCE}" \
   -H 'Accept: application/json' \
+  -H 'x-no-aliasing: true' \
   -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
 ```
 
-The response includes gateway evidence and one NEAR model report in `model_attestations[]`.
+The response includes gateway evidence and exactly one NEAR model report in `model_attestations[]`. Treat an empty or multi-item array as unavailable evidence for this flow; do not choose an entry yourself.
 
 When matching a response signature, request fresh evidence for that signer by adding both `signing_address=<SIGNER>` and the signature's `signing_algo`. Do not use a report for a different signer as a substitute.
 
@@ -38,6 +40,7 @@ The NEAR report uses these fields:
 | `intel_quote` | Intel TDX evidence. |
 | `event_log` | Runtime measurement log. Replay it and match the result to the quote's RTMR3. |
 | `request_nonce` | Echoed request nonce. Confirm its binding from the verified quote. |
+| `report_data` | HTTP copy of quote report data. Compare it with the verified quote. |
 | `signing_address` and `signing_algo` | Model signing identity and its algorithm. |
 | `signing_public_key` | Model public key for the E2EE flow. Request `signing_algo=ed25519` for that flow. |
 | `nvidia_payload` | NVIDIA GPU evidence, when present. |
@@ -46,7 +49,7 @@ The NEAR report uses these fields:
 ## Verify the NEAR model report
 
 1. Verify `intel_quote` with an Intel DCAP verifier and apply your TCB and advisory policy.
-2. Check the client-generated nonce and `signing_address` against the verified quote. Interpret the address using `signing_algo`, and compare both values when matching a response signature.
+2. Check the client-generated nonce and `signing_address` against the verified quote. Require `request_nonce` and `report_data` to match the client nonce and verified quote. Interpret the address using `signing_algo`, and compare both values when matching a response signature.
 3. Replay `event_log` and require the resulting RTMR3 to equal the RTMR3 in the verified quote.
 4. If `tcb_info` is JSON text, decode it to obtain `app_compose`. Hash the raw `app_compose` string without parsing or reserializing it. Require the quote's MRCONFIGID to begin with `01` followed by that SHA-256 hash.
 5. When GPU evidence is present, verify `nvidia_payload` and require it to be bound to the same nonce.

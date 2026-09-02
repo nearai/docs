@@ -18,7 +18,7 @@ request_hash  = SHA-256(exact request-body bytes)
 response_hash = SHA-256(exact response-body bytes)
 ```
 
-Do not parse and re-serialize JSON, normalize whitespace or line endings, omit stream delimiters, or reconstruct a streamed response from parsed events.
+Do not parse and re-serialize JSON, normalize whitespace or line endings, omit stream delimiters, or reconstruct a streamed response from parsed events. Configure the HTTP client to retain the entity bytes it received; requesting `Accept-Encoding: identity` is the simplest way to avoid transparent decompression changing those bytes.
 
 ## Fetch and verify the signature
 

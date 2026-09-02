@@ -13,12 +13,14 @@ Response signatures returned through the NEAR AI Cloud gateway can be produced b
 
 Build the request body once and retain the exact bytes sent by the client. Retain the raw response bytes before parsing JSON or Server-Sent Events.
 
+To verify a `provider_tee` signature, send the original completion with the canonical model ID and `x-no-aliasing: true`. Do not send an alias and replace it after receiving the response: the model ID in the original request is part of the signed text.
+
 ```text
 request_hash  = SHA-256(exact request-body bytes)
 response_hash = SHA-256(exact response-body bytes)
 ```
 
-Do not parse and re-serialize JSON, normalize whitespace or line endings, omit stream delimiters, or reconstruct a streamed response from parsed events.
+Do not parse and re-serialize JSON, normalize whitespace or line endings, omit stream delimiters, or reconstruct a streamed response from parsed events. Configure the HTTP client to retain the entity bytes it received; requesting `Accept-Encoding: identity` is the simplest way to avoid transparent decompression changing those bytes.
 
 ## Fetch and verify the signature
 
@@ -26,12 +28,12 @@ Set `<CHAT_ID>` to the `id` in the completion response whose exact bytes you ret
 
 ```bash
 curl --fail-with-body -G 'https://cloud-api.near.ai/v1/signature/<CHAT_ID>' \
-  --data-urlencode 'signing_algo=ecdsa' \
+  --data-urlencode 'signing_algo=<SIGNING_ALGO>' \
   -H 'Accept: application/json' \
   -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
 ```
 
-A `200` response containing `error_code` and `message` is an unavailable result, not a signature.
+A `200` response containing `error_code` and `message` is an unavailable result, not a signature. A `404` means no matching signature was found; it can be retried for a short, bounded interval when the signature may still be recorded. Treat either result as unverified if a signature is required.
 
 For `ecdsa`, recover the Ethereum EIP-191 signer from `text` and `signature`, then compare it with `signing_address`. For `ed25519`, verify the UTF-8 bytes of `text` using `signing_address` as the public key. Reject unsupported algorithms.
 
@@ -46,10 +48,14 @@ Only `provider_tee` binds a response to a model-serving TEE. A `gateway` signatu
 
 If `signature_kind` is absent or unfamiliar, do not infer it from the shape of `text`. Treat the signer classification as unavailable unless your endpoint contract gives a rule for that response.
 
-For `provider_tee`, `<MODEL_ID>` is the canonical model identifier in the signed payload. Do not assume it is an alias originally supplied by the client.
+For `provider_tee`, `<MODEL_ID>` is the canonical model identifier in the signed payload.
 
 ## Match the attestation
 
-For the selected signer, request a fresh report with a client-generated nonce and the signature's `signing_address` and `signing_algo`. For `provider_tee`, include `model=<MODEL_ID>` and `provider=near` to obtain the NEAR model report. Then verify the quote and apply the required measurement and provenance policy. A signature made by a different signer is not evidence for the response, even if the model name or endpoint is the same.
+For `provider_tee`, request fresh model evidence with a client-generated nonce, `model=<MODEL_ID>`, `provider=near`, `signing_address=<SIGNER>`, and the signature's `signing_algo`. Then verify the quote and apply the required measurement and provenance policy.
+
+For `gateway`, request fresh gateway evidence with a client-generated nonce and the signature's `signing_algo`, then compare the signer returned by the report locally. Gateway evidence does not need a model or provider selector.
+
+A signature made by a different signer is not evidence for the response, even if the model name or endpoint is the same.
 
 `ecdsa` identities are Ethereum-style signing addresses. `ed25519` identities are Ed25519 public-key bytes encoded as hexadecimal. Always compare the identity together with `signing_algo`.
