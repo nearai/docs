@@ -84,6 +84,7 @@
                   {
                     "group": "Reference",
                     "pages": [
+                      "cloud/verification/reference/sdk",
                       "cloud/verification/reference/quote-nonce-signer",
                       "cloud/verification/reference/verification-policy"
                     ]

@@ -29,8 +29,11 @@ The root response is the model report. Relevant fields include:
 | `model_name` | The model name stated in this report. |
 | `signing_address`, `signing_algo` | The model signing identity and algorithm. |
 | `request_nonce` | The nonce echoed for diagnostics. Verify it inside the quote. |
+| `report_data` | Optional HTTP copy of quote report data. When present, compare it with the verified quote. |
 | `intel_quote` | The model's Intel TDX quote. |
+| `event_log` | Runtime measurement log. Replay it and match the result to the quote's RTMR3. |
 | `nvidia_payload` | GPU evidence, when present. |
+| `info.tcb_info.app_compose` | Raw measured configuration string. Hash it and match it to the quote's MRCONFIGID. `tcb_info` can itself be JSON text. |
 | `tls_cert_fingerprint` | The direct endpoint TLS binding, when requested. |
 | `all_attestations[]` | Model-report entries in this direct response envelope. It can include the root report and is not a fleet inventory. |
 | `compose_manager_attestation` | Optional, separate deployment-control evidence. See [deployment control evidence](/cloud/verification/direct/deployment-control-evidence). |
@@ -38,10 +41,12 @@ The root response is the model report. Relevant fields include:
 ## Verify the report
 
 1. Verify `intel_quote` with an Intel DCAP verifier and apply your TCB and advisory policy.
-2. Check the client-generated nonce and signer identity against the verified quote. Use `signing_algo` to interpret that identity and verify response signatures.
-3. When GPU evidence is present, verify it with the applicable NVIDIA verifier and ensure it is bound to the same nonce.
-4. Apply your accepted measurement policy to the verified configuration.
-5. If source and build provenance are required, continue with [direct image provenance](/cloud/verification/direct/image-provenance).
+2. Check the client-generated nonce and signer identity against the verified quote. Read report data from the verified quote; require `request_nonce` to match the client nonce and, when `report_data` is present, require it to match the verified quote. Use `signing_algo` to interpret that identity and verify response signatures.
+3. Replay `event_log` and require the resulting RTMR3 to equal the RTMR3 in the verified quote.
+4. If `tcb_info` is JSON text, decode it to obtain `app_compose`. Hash the raw `app_compose` string without parsing or reserializing it. Require the quote's MRCONFIGID to begin with `01` followed by that SHA-256 hash.
+5. When GPU evidence is present, verify it with the applicable NVIDIA verifier and ensure it is bound to the same nonce.
+6. Apply your accepted measurement policy to the verified configuration.
+7. If source and build provenance are required, continue with [direct image provenance](/cloud/verification/direct/image-provenance).
 
 When a response signature is being verified, match both `signing_address` and `signing_algo`. A direct report for another signer is not a substitute, even when the hostname and model name are the same.
 

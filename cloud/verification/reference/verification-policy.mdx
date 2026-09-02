@@ -10,6 +10,7 @@ Attestation verifies particular cryptographic statements. Your application must 
 At minimum, specify:
 
 - acceptable Intel TDX verification status and advisory policy
+- rejection of quotes with TDX debug mode enabled
 - required signer algorithm and identity matching rules
 - whether GPU evidence is required and the accepted verdict
 - accepted workload measurements and configuration rules
@@ -24,6 +25,7 @@ When a required check is missing, unavailable, malformed, mismatched, or fails v
 | Condition | Recommended result |
 | --- | --- |
 | Quote or nonce mismatch | Reject the evidence and request a fresh report. |
+| Quote has TDX debug mode enabled | Reject the evidence. |
 | TLS report or peer SPKI unavailable | Treat endpoint binding as unverified. |
 | Response signature unavailable after a bounded retry | Treat the response as unverified when signatures are required. |
 | Image-provenance record is missing or returns `404` | Treat that digest as unverified when provenance is required. |

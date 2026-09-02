@@ -36,10 +36,21 @@ For a NEAR-operated report requested with `include_tls_fingerprint=true`, the ve
 
 Always compare both `signing_address` and `signing_algo`. Do not compare identities across algorithms.
 
+## Read NEAR report data
+
+For NEAR-operated reports, quote report data is 64 bytes. The final 32 bytes are the client nonce. The first 32 bytes bind the signing identity:
+
+- Without TLS binding, they are the decoded signing identity, zero-padded on the right to 32 bytes. An ECDSA address occupies 20 bytes; an Ed25519 public key occupies all 32 bytes.
+- With TLS binding, they are `SHA-256(decoded signing identity || TLS SPKI SHA-256)`. Compare the quote-bound fingerprint with the peer certificate observed on the same TLS connection.
+
+This layout applies to NEAR-operated dstack reports only. Compose Manager evidence and other providers have their own report-data contracts.
+
 ## Verify GPU evidence when present
 
 When a report contains NVIDIA GPU evidence, verify it with the applicable NVIDIA verification service and require that it is bound to the same client nonce. Define in advance whether GPU evidence is mandatory for your workload policy.
 
 ## Reference code
 
-The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) contains implementation examples for NEAR quote, GPU, and configuration processing. Use the report-request examples in these guides. The repository is not a complete Cloud API client. Follow the endpoint-specific guides for TLS binding, response signatures, and image provenance.
+The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) contains runnable TypeScript and Python reference flows for gateway and model evidence, response signatures, direct TLS, and Compose Manager evidence. It is reference code rather than a general-purpose client or SDK; use the endpoint guides here to choose the evidence and policy your application requires.
+
+For a language-specific library, see the [Verification SDK](/cloud/verification/reference/sdk).
