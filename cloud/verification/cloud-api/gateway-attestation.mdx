@@ -19,7 +19,7 @@ curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
   -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
 ```
 
-The response contains the gateway report at `gateway_attestation`. Add `model=<MODEL_ID>` and `provider=near` only when you also need the [NEAR model report](/cloud/verification/cloud-api/model-attestations), and add `include_tls_fingerprint=true` only when you are following the [NEAR AI Cloud gateway TLS flow](/cloud/verification/cloud-api/tls).
+The response contains the gateway report at `gateway_attestation`. For a deployment-first completion, verify and retain it before sending the completion. Add `model=<MODEL_ID>` and `provider=near` when you also need the [NEAR model report](/cloud/verification/cloud-api/model-attestations), and add `include_tls_fingerprint=true` only when you are following the [NEAR AI Cloud gateway TLS flow](/cloud/verification/cloud-api/tls).
 
 ## Verify the gateway report
 
@@ -49,4 +49,6 @@ The verified quote is the cryptographic source of truth. The HTTP fields are con
 
 ## Freshness and failure handling
 
-The nonce establishes freshness only when the client generated and retained it, and the verified quote contains that nonce. If the report is unavailable, the quote fails, the nonce does not match, or the identity does not match, treat the gateway property as unverified. Do not reuse evidence from a different request or instance as a substitute.
+The nonce establishes freshness only when the client generated and retained it, and the verified quote contains that nonce. If the report is unavailable, the quote fails, the nonce does not match, or the identity does not match, treat the gateway property as unverified.
+
+For a deployment-first response-signature flow, retain this verified report and require a later `gateway` signature to match its signer and algorithm. A report fetched after the completion cannot replace that preflight evidence, and a report from another signer is not a substitute.

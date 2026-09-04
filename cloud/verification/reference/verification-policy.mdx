@@ -33,10 +33,10 @@ When a required check is missing, unavailable, malformed, mismatched, or fails v
 
 ## Load balancing and rotations
 
-The same hostname can be served by more than one attested instance. A report is not automatically evidence for a later request.
+The same hostname can be served by more than one attested instance. A report is not evidence for a later request merely because it came from the same hostname.
 
 - For TLS, obtain the peer certificate and report on the same connection.
-- For a response signature, use only preflight evidence whose signer identity and algorithm match.
+- For a response signature, retain preflight evidence and use it only when its signer identity and algorithm match. A report fetched after the completion cannot replace that preflight check.
 - Refresh preflight evidence before a later request after a signer, certificate, configuration, deployment, or policy-age change.
 
 ## What attestation does not establish by itself

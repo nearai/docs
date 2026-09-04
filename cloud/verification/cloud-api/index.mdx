@@ -9,27 +9,28 @@ Use this guide when your application sends inference requests to `https://cloud-
 
 <CardGroup cols={2}>
   <Card title="Gateway attestation" icon="router" href="/cloud/verification/cloud-api/gateway-attestation">
-    Verify the trusted environment that receives your request at the NEAR AI Cloud gateway.
+    Verify the NEAR AI Cloud gateway deployment before an inference request.
   </Card>
   <Card title="Model attestation" icon="brain-circuit" href="/cloud/verification/cloud-api/model-attestations">
-    Verify the environment serving the selected model.
+    Verify a selected NEAR model deployment before an inference request.
   </Card>
   <Card title="TLS connection binding" icon="shield-check" href="/cloud/verification/cloud-api/tls">
     Verify that your live HTTPS connection terminates at the attested gateway.
   </Card>
   <Card title="Response signatures" icon="message-square-check" href="/cloud/verification/cloud-api/response-signatures">
-    Verify that a signed response came from the attested gateway or model environment.
+    Verify exact response bytes against the matching preflight signer.
   </Card>
   <Card title="Image provenance" icon="package-check" href="/cloud/verification/cloud-api/image-provenance">
     Check that the software images in the attested environment meet your source and build policy.
   </Card>
 </CardGroup>
 
-## Start with gateway attestation
+## Verify a completion
 
-1. Generate a fresh nonce for this verification attempt.
-2. Request a fresh gateway attestation report.
-3. Verify the gateway's hardware attestation and apply your acceptance policy.
-4. Add model, TLS, response-signature, or image-provenance checks when your application requires them.
+1. Before the completion, request and verify fresh gateway evidence. If your policy requires NEAR model evidence, request and verify the selected model report with its canonical ID and `provider=near` as well. For Gateway TLS binding, follow the same-connection [TLS flow](/cloud/verification/cloud-api/tls).
+2. Send the completion with the same canonical model ID and `x-no-aliasing: true`. Retain the exact request and response bytes.
+3. Fetch the completion signature. Its `signature_kind` selects the matching verified preflight result; it does not decide which deployment checks your policy required.
 
-Start with [Gateway attestation](/cloud/verification/cloud-api/gateway-attestation). That guide shows how to request fresh evidence. The other guides explain the additional checks.
+Use one explicit `signing_algo` for the deployment reports and completion signature. Do not rely on endpoint defaults to choose a matching signer.
+
+Start with [Gateway attestation](/cloud/verification/cloud-api/gateway-attestation). The other guides provide the individual checks.
