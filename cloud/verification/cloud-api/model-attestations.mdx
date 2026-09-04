@@ -25,7 +25,7 @@ curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
 
 The response includes gateway evidence and exactly one NEAR model report in `model_attestations[]`. Treat an empty or multi-item array as unavailable evidence for this flow; do not choose an entry yourself. Verify and retain the report before sending a completion.
 
-For a later `provider_tee` response signature, require its `signing_address` and `signing_algo` to match this verified report. Do not fetch another report after the completion merely to select a signer.
+For a later `provider_tee` response signature, require its `signing_address` and `signing_algo` to match this verified report. A report fetched after the completion cannot replace this preflight evidence.
 
 <Note>
   `provider=near` selects the model report returned by this request. It does not select the provider for a later completion. A `provider_tee` response is verified only when its signer and algorithm match the retained verified report.

@@ -59,6 +59,10 @@ After fetching the signature, use `signature_kind` to select the matching prefli
 - For `provider_tee`, require the signature signer and algorithm to match the verified NEAR model report.
 - For `gateway`, require them to match the verified gateway report.
 
-Do not request a new report after the completion merely to make a signer match. If the signature's signer or algorithm differs from the preflight evidence, the response is unverified.
+Do not use a report obtained after the completion as a substitute for preflight evidence. If the signature's signer or algorithm differs from the preflight evidence, the response is unverified under this flow.
 
 `ecdsa` identities are Ethereum-style signing addresses. `ed25519` identities are Ed25519 public-key bytes encoded as hexadecimal. Always compare the identity together with `signing_algo`.
+
+<Note>
+  Preflight Gateway and model evidence plus one response signature do not yet form a complete model-to-Gateway-to-final-response chain. A `gateway` signature proves that the verified Gateway signed the final client-visible bytes, not that the verified model produced an upstream response. A `provider_tee` signature does not bind its model-signed bytes to the preflight Gateway or TLS evidence.
+</Note>
