@@ -36,8 +36,8 @@ When a required check is missing, unavailable, malformed, mismatched, or fails v
 The same hostname can be served by more than one attested instance. A report is not automatically evidence for a later request.
 
 - For TLS, obtain the peer certificate and report on the same connection.
-- For a response signature, match the signer identity and algorithm to the applicable attestation.
-- Fetch new evidence after a signer, certificate, configuration, deployment, or policy-age change.
+- For a response signature, use only preflight evidence whose signer identity and algorithm match.
+- Refresh preflight evidence before a later request after a signer, certificate, configuration, deployment, or policy-age change.
 
 ## What attestation does not establish by itself
 
