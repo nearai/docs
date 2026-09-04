@@ -41,16 +41,22 @@ Import it as `verifiable_ai_sdk`.
 </Tab>
 </Tabs>
 
-## Using the SDK
+## Verification flow
 
-The SDK follows the same verification model as these guides: generate a fresh nonce, obtain the gateway report, verify its quote and bindings, then apply your application's policy.
+For each completion, first use the SDK to verify the NEAR AI Cloud gateway and selected model deployments. Then send the completion with your HTTP client, retaining the exact request and response bytes. Finally, fetch the completion signature and verify it with the matching preflight result.
 
-For the protocol requirements and trust decisions behind each check, start with the gateway guide:
+The SDK creates a fresh nonce for every evidence request. It retrieves and verifies evidence, but does not send the completion request or retain its bytes for you.
 
 <Card title="NEAR AI Cloud Gateway" icon="cloud" href="/cloud/verification/cloud-api">
-  Verify gateway and NEAR model evidence returned through `cloud-api.near.ai`.
+  Learn the protocol requirements and trust decisions for gateway and NEAR model evidence.
 </Card>
 
+## Examples
+
+Runnable TypeScript, Python, and Rust examples follow this flow for non-streaming and streaming completions.
+
 <Note>
-  Direct model endpoints, Compose Manager evidence, image provenance, and E2EE are not covered by the SDK yet. SDK examples and language-specific API documentation will be added next.
+  In TypeScript, import from `verifiable-ai-sdk/node` when a Node.js application requires Gateway TLS binding. The generic `verifiable-ai-sdk` entry point verifies Gateway evidence without a TLS peer binding.
 </Note>
+
+The SDK currently covers the NEAR AI Cloud Gateway flow. For direct model endpoints, Compose Manager evidence, image provenance, and E2EE, use the corresponding endpoint guides.
