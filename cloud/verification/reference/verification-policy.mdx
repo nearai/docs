@@ -29,14 +29,14 @@ When a required check is missing, unavailable, malformed, mismatched, or fails v
 | TLS report or peer SPKI unavailable | Treat endpoint binding as unverified. |
 | Response signature unavailable after a bounded retry | Treat the response as unverified when signatures are required. |
 | Image-provenance record is missing or returns `404` | Treat that digest as unverified when provenance is required. |
-| Required NEAR model report is unavailable or malformed | Treat the model property as unverified. |
+| A required NEAR model candidate is unavailable, malformed, or fails verification | Treat the model property as unverified. |
 
 ## Load balancing and rotations
 
 The same hostname can be served by more than one attested instance. A report is not evidence for a later request merely because it came from the same hostname.
 
 - For TLS, obtain the peer certificate and report on the same connection.
-- For a response signature, retain preflight evidence and use it only when its signer identity and algorithm match. A report fetched after the completion cannot replace that preflight check.
+- For a `provider_tee` response signature, verify and retain every returned model-attestation candidate before the completion. Accept the signature only when its signer identity and algorithm match exactly one verified candidate. A report fetched after the completion cannot replace that preflight check.
 - Refresh preflight evidence before a later request after a signer, certificate, configuration, deployment, or policy-age change.
 
 ## What attestation does not establish by itself

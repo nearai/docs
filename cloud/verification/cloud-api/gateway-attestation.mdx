@@ -19,7 +19,7 @@ curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
   -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
 ```
 
-The response contains the gateway report at `gateway_attestation`. For a deployment-first completion, verify and retain it before sending the completion. Add `model=<MODEL_ID>` and `provider=near` when you also need the [NEAR model report](/cloud/verification/cloud-api/model-attestations), and add `include_tls_fingerprint=true` only when you are following the [NEAR AI Cloud gateway TLS flow](/cloud/verification/cloud-api/tls).
+The response contains the gateway report at `gateway_attestation`. For a deployment-first completion, verify and retain it before sending the completion. Add `model=<MODEL_ID>` and `provider=near` when you also need [NEAR model evidence](/cloud/verification/cloud-api/model-attestations). That request can return multiple candidates in `model_attestations[]`; verify every candidate before sending the completion. Add `include_tls_fingerprint=true` only when you are following the [NEAR AI Cloud gateway TLS flow](/cloud/verification/cloud-api/tls).
 
 ## Verify the gateway report
 
@@ -45,7 +45,7 @@ The verified quote is the cryptographic source of truth. The HTTP fields are con
 | `gateway_attestation.signing_address` and `.signing_algo` | The gateway signing identity and algorithm. |
 | `gateway_attestation.tls_cert_fingerprint` | The gateway TLS binding when requested. |
 | `gateway_attestation.info.tcb_info.app_compose` | Raw measured configuration string. Hash it and match it to the quote's MRCONFIGID. |
-| `model_attestations[]` | Separate NEAR model evidence when requested with `model` and `provider=near`. Do not use it as a substitute for the gateway quote. |
+| `model_attestations[]` | Separate NEAR model-evidence candidates when requested with `model` and `provider=near`. Verify every candidate separately; none is a substitute for the gateway quote. |
 
 ## Freshness and failure handling
 
