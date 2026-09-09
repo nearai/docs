@@ -1,0 +1,213 @@
+---
+title: "Response Signature Verification"
+description: "Verify a response signature over exact request and response bytes."
+---
+
+Use these helpers after you have fetched a response signature and verified the applicable preflight attestation. They verify only the signed response: exact-byte hashes, the signature, and the signer match. They do not verify a quote or choose which preflight evidence applies.
+
+Pass the signature JSON, the exact request and response bytes, the expected signed text for the endpoint, and the signer from the already verified preflight report:
+
+```text
+preflight_signer = {
+  signing_algo: verified report signing_algo,
+  signing_address: verified report signing_address
+}
+```
+
+The endpoint pages define the expected text and which preflight report to use:
+
+- [NEAR AI Cloud Gateway response signatures](/cloud/verification/cloud-api/response-signatures)
+- [Direct model response signatures](/cloud/verification/direct/response-signatures)
+
+<Tabs>
+<Tab title="Node.js">
+
+Install [`ethers`](https://www.npmjs.com/package/ethers) and [`tweetnacl`](https://www.npmjs.com/package/tweetnacl):
+
+```bash
+npm install ethers tweetnacl
+```
+
+```javascript
+import { Buffer } from 'node:buffer';
+import { createHash, timingSafeEqual } from 'node:crypto';
+import { ethers } from 'ethers';
+import nacl from 'tweetnacl';
+
+function sha256(bytes) {
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+// Omit modelName for a Gateway signature.
+export function responseSignatureText(requestBytes, responseBytes, modelName) {
+  const hashes = `${sha256(requestBytes)}:${sha256(responseBytes)}`;
+  if (modelName === undefined) return hashes;
+  if (typeof modelName !== 'string' || !modelName) {
+    throw new Error('modelName must be a non-empty string');
+  }
+  return `${modelName}:${hashes}`;
+}
+
+function requireHex(value, label, expectedBytes) {
+  if (typeof value !== 'string') throw new Error(`${label} must be hex`);
+  const hex = value.replace(/^0x/i, '');
+  if (!hex || !/^[0-9a-f]*$/i.test(hex) || hex.length % 2) {
+    throw new Error(`${label} must be hexadecimal`);
+  }
+  const bytes = Buffer.from(hex, 'hex');
+  if (bytes.length !== expectedBytes) {
+    throw new Error(`${label} must be ${expectedBytes} bytes`);
+  }
+  return bytes;
+}
+
+function signerIdentity(value, label) {
+  const algorithm = value?.signing_algo;
+  if (algorithm !== 'ecdsa' && algorithm !== 'ed25519') {
+    throw new Error(`${label}.signing_algo is unsupported`);
+  }
+  return {
+    algorithm,
+    address: requireHex(
+      value.signing_address,
+      `${label}.signing_address`,
+      algorithm === 'ecdsa' ? 20 : 32,
+    ),
+  };
+}
+
+function sameBytes(left, right) {
+  return left.length === right.length && timingSafeEqual(left, right);
+}
+
+// signature is the JSON returned by GET /v1/signature/<ID>.
+// preflightSigner comes from the already verified report selected by the endpoint.
+export function verifyResponseSignature({ signature, expectedText, preflightSigner }) {
+  if (typeof signature?.text !== 'string' || signature.text !== expectedText) {
+    throw new Error('signature text does not match the exact request/response bytes');
+  }
+
+  const signer = signerIdentity(signature, 'signature');
+  const signatureBytes = requireHex(
+    signature.signature,
+    'signature.signature',
+    signer.algorithm === 'ecdsa' ? 65 : 64,
+  );
+
+  if (signer.algorithm === 'ecdsa') {
+    // ethers.verifyMessage applies the Ethereum EIP-191 personal-sign prefix.
+    const recovered = requireHex(
+      ethers.verifyMessage(Buffer.from(signature.text, 'utf8'), ethers.hexlify(signatureBytes)),
+      'recovered signer',
+      20,
+    );
+    if (!sameBytes(recovered, signer.address)) {
+      throw new Error('ECDSA signature does not match signing_address');
+    }
+  } else if (!nacl.sign.detached.verify(
+    Buffer.from(signature.text, 'utf8'), signatureBytes, signer.address,
+  )) {
+    throw new Error('Ed25519 signature does not match signing_address');
+  }
+
+  const preflight = signerIdentity(preflightSigner, 'preflightSigner');
+  if (preflight.algorithm !== signer.algorithm || !sameBytes(preflight.address, signer.address)) {
+    throw new Error('signature signer does not match verified preflight evidence');
+  }
+}
+```
+
+</Tab>
+<Tab title="Python">
+
+Install [`eth-account`](https://pypi.org/project/eth-account/) and [`PyNaCl`](https://pypi.org/project/PyNaCl/):
+
+```bash
+pip install eth-account pynacl
+```
+
+```python
+import re
+from hashlib import sha256
+from hmac import compare_digest
+from typing import Optional
+
+from eth_account import Account
+from eth_account.messages import encode_defunct
+from nacl.exceptions import BadSignatureError
+from nacl.signing import VerifyKey
+
+
+def response_signature_text(
+    request_bytes: bytes, response_bytes: bytes, model_name: Optional[str] = None
+) -> str:
+    hashes = f'{sha256(request_bytes).hexdigest()}:{sha256(response_bytes).hexdigest()}'
+    if model_name is None:
+        return hashes
+    if not isinstance(model_name, str) or not model_name:
+        raise ValueError('model_name must be a non-empty string')
+    return f'{model_name}:{hashes}'
+
+
+def _require_hex(value: object, label: str, expected_bytes: int) -> bytes:
+    if not isinstance(value, str):
+        raise ValueError(f'{label} must be hex')
+    value = value.removeprefix('0x').removeprefix('0X')
+    if not value or len(value) % 2 or not re.fullmatch(r'[0-9a-fA-F]*', value):
+        raise ValueError(f'{label} must be hexadecimal')
+    decoded = bytes.fromhex(value)
+    if len(decoded) != expected_bytes:
+        raise ValueError(f'{label} must be {expected_bytes} bytes')
+    return decoded
+
+
+def _signer_identity(value: dict, label: str) -> tuple[str, bytes]:
+    algorithm = value.get('signing_algo')
+    if algorithm not in ('ecdsa', 'ed25519'):
+        raise ValueError(f'{label}.signing_algo is unsupported')
+    address = _require_hex(
+        value.get('signing_address'),
+        f'{label}.signing_address',
+        20 if algorithm == 'ecdsa' else 32,
+    )
+    return algorithm, address
+
+
+# signature is the JSON returned by GET /v1/signature/<ID>.
+# preflight_signer comes from the already verified report selected by the endpoint.
+def verify_response_signature(
+    signature: dict, expected_text: str, preflight_signer: dict
+) -> None:
+    if signature.get('text') != expected_text:
+        raise ValueError('signature text does not match the exact request/response bytes')
+
+    algorithm, address = _signer_identity(signature, 'signature')
+    signature_bytes = _require_hex(
+        signature.get('signature'),
+        'signature.signature',
+        65 if algorithm == 'ecdsa' else 64,
+    )
+
+    if algorithm == 'ecdsa':
+        # encode_defunct applies the Ethereum EIP-191 personal-sign prefix.
+        recovered = Account.recover_message(
+            encode_defunct(text=signature['text']),
+            signature=f'0x{signature_bytes.hex()}',
+        )
+        if not compare_digest(_require_hex(recovered, 'recovered signer', 20), address):
+            raise ValueError('ECDSA signature does not match signing_address')
+    else:
+        try:
+            VerifyKey(address).verify(signature['text'].encode('utf-8'), signature_bytes)
+        except (BadSignatureError, ValueError) as error:
+            raise ValueError('Ed25519 signature does not match signing_address') from error
+
+    preflight_algorithm, preflight_address = _signer_identity(
+        preflight_signer, 'preflight_signer'
+    )
+    if algorithm != preflight_algorithm or not compare_digest(address, preflight_address):
+        raise ValueError('signature signer does not match verified preflight evidence')
+```
+
+</Tab>
+</Tabs>

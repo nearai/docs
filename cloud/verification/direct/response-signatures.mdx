@@ -26,10 +26,12 @@ Set `<CHAT_ID>` to the `id` in the completion response whose exact bytes you ret
 
 ```bash
 curl --fail-with-body -G 'https://<MODEL_SLUG>.completions.near.ai/v1/signature/<CHAT_ID>' \
-  --data-urlencode 'signing_algo=ecdsa' \
+  --data-urlencode 'signing_algo=<SIGNING_ALGO>' \
   -H 'Accept: application/json' \
   -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
 ```
+
+Set `<SIGNING_ALGO>` to the explicit algorithm used for the matching model attestation.
 
 For `ecdsa`, recover the Ethereum EIP-191 signer from `text` and `signature`, then compare it with `signing_address`. For `ed25519`, verify the UTF-8 bytes of `text` using `signing_address` as the public key. Reject unsupported algorithms.
 
@@ -39,7 +41,9 @@ Then require that `text` is exactly:
 <MODEL_NAME>:<request_hash>:<response_hash>
 ```
 
-Use the `model_name` reported by the direct model attestation. A different string, even if it resembles the hostname or a NEAR AI Cloud gateway model ID, does not satisfy this check.
+Use the `model_name` reported by the direct model attestation. A different string, even if it resembles the hostname or a NEAR AI Cloud gateway model ID, does not satisfy this check. If the report has no non-empty `model_name`, this direct response-signature format cannot be verified.
+
+Use the [manual response-signature helpers](/cloud/verification/reference/response-signature-verification) with the exact request and response bytes, this `model_name`, and the signer from the verified direct model attestation.
 
 ## Match the model signer
 
