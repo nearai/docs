@@ -20,7 +20,7 @@ Send this value with the attestation request. Reject a report unless the verifie
 | Request path | Quote location |
 | --- | --- |
 | NEAR AI Cloud gateway | `gateway_attestation.intel_quote` |
-| NEAR AI Cloud gateway model evidence (`provider=near`) | The single model report in `model_attestations[]` |
+| NEAR AI Cloud gateway model evidence (`provider=near`) | Each candidate report in `model_attestations[]` |
 | Direct model endpoint | Root `intel_quote` (and any applicable direct report entry) |
 
 ## Verify the signer binding
@@ -47,7 +47,7 @@ This layout applies to NEAR-operated dstack reports only. Compose Manager eviden
 
 ## Verify GPU evidence when present
 
-`nvidia_payload`, when present, is a JSON string. Decode it and send the resulting JSON object unchanged to NVIDIA NRAS; do not wrap it in another JSON property. For a NEAR AI Cloud response, first save the selected `model_attestations[]` entry as `report.json`; for a direct response, save its root model report.
+`nvidia_payload`, when present, is a JSON string. Decode it and send the resulting JSON object unchanged to NVIDIA NRAS; do not wrap it in another JSON property. For a NEAR AI Cloud response, save each `model_attestations[]` candidate as a separate report file and run this check for every candidate before accepting it. For a direct response, save its root model report.
 
 ```bash
 GPU_PAYLOAD="$(jq -er '.nvidia_payload | fromjson' report.json)"
