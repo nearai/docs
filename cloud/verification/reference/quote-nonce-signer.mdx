@@ -43,7 +43,7 @@ For NEAR-operated reports, quote report data is 64 bytes. The final 32 bytes are
 - Without TLS binding, they are the decoded signing identity, zero-padded on the right to 32 bytes. An ECDSA address occupies 20 bytes; an Ed25519 public key occupies all 32 bytes.
 - With TLS binding, they are `SHA-256(decoded signing identity || TLS SPKI SHA-256)`. Compare the quote-bound fingerprint with the peer certificate observed on the same TLS connection.
 
-This layout applies to NEAR-operated dstack reports only. Compose Manager evidence and other providers have their own report-data contracts.
+This layout applies only to NEAR-operated dstack reports; other providers have their own report-data contracts.
 
 ## Verify GPU evidence when present
 
@@ -66,6 +66,6 @@ NRAS returns a JSON array whose first entry is `["JWT", "<token>"]`. Decode that
 
 ## Reference code
 
-The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) contains runnable TypeScript and Python reference flows for gateway and model evidence, response signatures, direct TLS, and Compose Manager evidence. It is reference code rather than a general-purpose client or SDK; use the endpoint guides here to choose the evidence and policy your application requires.
+The [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) contains runnable TypeScript and Python reference flows for gateway and model evidence, response signatures, and direct TLS. It is reference code rather than a general-purpose client or SDK; use the endpoint guides here to choose the evidence and policy your application requires.
 
 For a language-specific library, see the [Verification SDK](/cloud/verification/reference/sdk).

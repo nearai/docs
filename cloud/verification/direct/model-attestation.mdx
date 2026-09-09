@@ -36,7 +36,6 @@ The root response is the model report. Relevant fields include:
 | `info.tcb_info.app_compose` | Raw measured configuration string. Hash it and match it to the quote's MRCONFIGID. `tcb_info` can itself be JSON text. |
 | `tls_cert_fingerprint` | The direct endpoint TLS binding, when requested. |
 | `all_attestations[]` | Model-report entries in this direct response envelope. It can include the root report and is not a fleet inventory. |
-| `compose_manager_attestation` | Optional, separate deployment-control evidence. See [deployment control evidence](/cloud/verification/direct/deployment-control-evidence). |
 
 ## Verify the report
 
