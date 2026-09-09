@@ -47,6 +47,8 @@ For each completion, first use the SDK to verify the NEAR AI Cloud gateway and s
 
 The SDK creates a fresh nonce for every evidence request. It retrieves and verifies evidence, but does not send the completion request or retain its bytes for you.
 
+Use one explicit `signing_algo` for the Gateway attestation request, model-attestation request, and completion-signature request in the same verification flow. Those Cloud API endpoints have different defaults.
+
 <Card title="NEAR AI Cloud Gateway" icon="cloud" href="/cloud/verification/cloud-api">
   Learn the protocol requirements and trust decisions for gateway and NEAR model evidence.
 </Card>
@@ -56,7 +58,7 @@ The SDK creates a fresh nonce for every evidence request. It retrieves and verif
 Runnable TypeScript, Python, and Rust examples follow this flow for non-streaming and streaming completions.
 
 <Note>
-  In TypeScript, import from `verifiable-ai-sdk/node` when a Node.js application requires Gateway TLS binding. The generic `verifiable-ai-sdk` entry point verifies Gateway evidence without a TLS peer binding.
+  In TypeScript, import from `verifiable-ai-sdk/node` to bind Gateway evidence to the TLS peer observed for the Gateway attestation request. This does not automatically cover a later inference request. The generic `verifiable-ai-sdk` entry point verifies Gateway evidence without a TLS peer binding.
 </Note>
 
 The SDK currently covers the NEAR AI Cloud Gateway flow. For direct model endpoints, Compose Manager evidence, image provenance, and E2EE, use the corresponding endpoint guides.

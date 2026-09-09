@@ -86,6 +86,7 @@
                     "pages": [
                       "cloud/verification/reference/sdk",
                       "cloud/verification/reference/quote-nonce-signer",
+                      "cloud/verification/reference/response-signature-verification",
                       "cloud/verification/reference/verification-policy"
                     ]
                   }
@@ -502,6 +503,26 @@
     {
       "source": "/api",
       "destination": "/api-reference/introduction"
+    },
+    {
+      "source": "/cloud/verification/chat",
+      "destination": "/cloud/verification"
+    },
+    {
+      "source": "/cloud/verification/gateway",
+      "destination": "/cloud/verification/cloud-api/gateway-attestation"
+    },
+    {
+      "source": "/cloud/verification/model",
+      "destination": "/cloud/verification"
+    },
+    {
+      "source": "/cloud/verification/tls",
+      "destination": "/cloud/verification"
+    },
+    {
+      "source": "/cloud/verification/provenance",
+      "destination": "/cloud/verification"
     }
   ]
 }

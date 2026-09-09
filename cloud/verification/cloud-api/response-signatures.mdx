@@ -35,6 +35,8 @@ curl --fail-with-body -G 'https://cloud-api.near.ai/v1/signature/<CHAT_ID>' \
 
 A `200` response containing `error_code` and `message` is an unavailable result, not a signature. A `404` means no matching signature was found; it can be retried for a short, bounded interval when the signature may still be recorded. Treat either result as unverified if a signature is required.
 
+Use the same explicit `signing_algo` as both preflight attestation requests. These endpoints have different defaults.
+
 For `ecdsa`, recover the Ethereum EIP-191 signer from `text` and `signature`, then compare it with `signing_address`. For `ed25519`, verify the UTF-8 bytes of `text` using `signing_address` as the public key. Reject unsupported algorithms.
 
 Then compare `text` with the expected payload:
@@ -46,9 +48,13 @@ Then compare `text` with the expected payload:
 
 Only `provider_tee` binds a response to a model-serving TEE. A `gateway` signature binds the response to the gateway, not to a model report. If a model signature is unavailable, model-level response binding is unavailable.
 
+The Gateway can rewrite client-visible streaming bytes, so a `gateway` signature covers the exact bytes received from the Gateway, including stream framing and terminal events.
+
 If `signature_kind` is absent or unfamiliar, do not infer it from the shape of `text`. Treat the signer classification as unavailable unless your endpoint contract gives a rule for that response.
 
 For `provider_tee`, `<MODEL_ID>` is the canonical model identifier in the signed payload.
+
+Use the [manual response-signature helpers](/cloud/verification/reference/response-signature-verification) with the exact request and response bytes. For `provider_tee`, pass the canonical model ID from the original request to build the expected text and use the verified model report's signer. For `gateway`, omit the model ID and use the verified Gateway report's signer.
 
 ## Match preflight evidence
 

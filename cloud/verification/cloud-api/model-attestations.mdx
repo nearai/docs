@@ -39,20 +39,20 @@ The NEAR report uses these fields:
 | --- | --- |
 | `intel_quote` | Intel TDX evidence. |
 | `event_log` | Runtime measurement log. Replay it and match the result to the quote's RTMR3. |
-| `request_nonce` | Echoed request nonce. Confirm its binding from the verified quote. |
-| `report_data` | HTTP copy of quote report data. Compare it with the verified quote. |
+| `request_nonce` | Echoed request nonce. Require it to match the client nonce, then confirm the nonce binding from the verified quote. |
+| `report_data` | Optional HTTP copy of quote report data. The verified quote is the source of truth; when this field is present, compare it with the verified quote. |
 | `signing_address` and `signing_algo` | Model signing identity and its algorithm. |
-| `signing_public_key` | Model public key for the E2EE flow. Request `signing_algo=ed25519` for that flow. |
+| `signing_public_key` | Model public key needed by the E2EE flow. Other model-attestation flows do not require it. Request `signing_algo=ed25519` for E2EE. |
 | `nvidia_payload` | NVIDIA GPU evidence, when present. |
 | `info.tcb_info.app_compose` | Raw measured configuration string. Hash it and match it to the quote's MRCONFIGID. `tcb_info` can itself be JSON text. |
 
 ## Verify the NEAR model report
 
 1. Verify `intel_quote` with an Intel DCAP verifier and apply your TCB and advisory policy.
-2. Check the client-generated nonce and `signing_address` against the verified quote. Require `request_nonce` and `report_data` to match the client nonce and verified quote. Interpret the address using `signing_algo`, and compare both values when matching a response signature.
+2. Read report data from the verified quote. Require it to bind the client-generated nonce and `signing_address`; require `request_nonce` to match the client nonce. When `report_data` is present, require it to match the verified quote. Interpret the address using `signing_algo`, and compare both values when matching a response signature.
 3. Replay `event_log` and require the resulting RTMR3 to equal the RTMR3 in the verified quote.
 4. If `tcb_info` is JSON text, decode it to obtain `app_compose`. Hash the raw `app_compose` string without parsing or reserializing it. Require the quote's MRCONFIGID to begin with `01` followed by that SHA-256 hash.
-5. When GPU evidence is present, verify `nvidia_payload` and require it to be bound to the same nonce.
+5. When GPU evidence is present, follow [GPU evidence verification](/cloud/verification/reference/quote-nonce-signer#verify-gpu-evidence-when-present).
 6. When verifying a model-serving response signature, require its `signing_address` and `signing_algo` to match this verified report.
 7. Apply your own allowlist and provenance policy to the verified measurements.
 
