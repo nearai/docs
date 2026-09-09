@@ -77,8 +77,7 @@
                       "cloud/verification/direct/model-attestation",
                       "cloud/verification/direct/tls",
                       "cloud/verification/direct/response-signatures",
-                      "cloud/verification/direct/image-provenance",
-                      "cloud/verification/direct/deployment-control-evidence"
+                      "cloud/verification/direct/image-provenance"
                     ]
                   },
                   {
