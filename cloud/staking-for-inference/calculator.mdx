@@ -1,0 +1,618 @@
+---
+title: "Staking Calculator"
+description: "Estimate how much NEAR to stake to cover your private inference usage, or see what a given stake gets you — based on the current NEAR price and staking APY."
+icon: "calculator"
+---
+
+Staking rewards, not your principal, pay for [private inference](/cloud/private-inference) on NEAR AI Cloud. Use this calculator to translate between a monthly inference budget and the NEAR you'd need to stake to cover it, or start from an amount of NEAR and see what it buys.
+
+Everything below is a live model: it fetches the current NEAR price on load, defaults to the network's current staking APY, and lets you override either assumption to see how the numbers move. See [Staking for Inference](/cloud/staking-for-inference/overview) for how the underlying mechanism works.
+
+<iframe
+  title="Stake for Inference calculator"
+  style={{
+    width: "100%",
+    height: "1400px",
+    border: "1px solid var(--gray-a5, #333)",
+    borderRadius: "12px",
+    display: "block",
+    colorScheme: "dark"
+  }}
+  srcDoc={`<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>Stake for Inference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+/* Palette lifted from docs.near.ai — a deliberately dark-only surface. */
+:root{
+  color-scheme:dark;
+  --bg:#0A0E11;
+  --surface:#0E1215;
+  --surface-2:#0B0C0E;
+  --ink:#FFFFFF;
+  --head:#DEE2E6;
+  --muted:#9EA2A6;
+  --line:#25292C;
+  --line-strong:#343A3E;
+  --accent:#0B8FF6;
+  --accent-ink:#83D2FA;
+  --accent-wash:rgba(11,143,246,.10);
+  --accent-edge:#1E3A8A;
+  --shadow:none;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Inter", -apple-system, system-ui, "Segoe UI", sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:36px 24px 72px;}
+@media (max-width:640px){.wrap{padding:24px 16px 56px}}
+
+/* docs chrome: top bar with the near AI wordmark */
+.topbar{border-bottom:1px solid var(--line);background:var(--bg)}
+.topbar-in{
+  max-width:1120px;margin:0 auto;padding:16px 24px;
+  display:flex;align-items:center;gap:14px;
+}
+@media (max-width:640px){.topbar-in{padding:14px 16px}}
+.mark{font-size:22px;font-weight:600;letter-spacing:-.03em;color:#FFFFFF}
+.mark em{font-style:normal;color:var(--accent)}
+.crumb{color:var(--muted);font-size:14px}
+.crumb::before{content:"/";margin-right:12px;color:var(--line-strong)}
+
+.eyebrow{font-size:11px;color:var(--accent-ink);margin:0 0 10px}
+h1{
+  font-weight:600;font-size:clamp(24px,4vw,32px);line-height:1.15;
+  letter-spacing:-.025em;margin:0;color:var(--head);text-wrap:balance;
+}
+.lede{max-width:62ch;color:var(--muted);font-size:14.5px;line-height:1.5;margin:14px 0 0}
+.lede b{color:var(--ink);font-weight:500}
+.header-row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-end;justify-content:space-between}
+
+.price-chip{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface);border:1px solid var(--line);border-radius:999px;
+  padding:7px 14px 7px 12px;box-shadow:var(--shadow);white-space:nowrap;
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+.dot.stale{background:var(--line-strong)}
+.price-chip .k{font-size:10px;color:var(--muted)}
+.price-chip .v{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:500;font-variant-numeric:tabular-nums}
+
+/* underline tabs, the way the docs switch between Python / curl */
+.modes{display:flex;gap:24px;margin:34px 0 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.modes button{
+  font:inherit;font-size:13px;font-weight:400;color:var(--muted);cursor:pointer;
+  background:transparent;border:0;border-bottom:2px solid transparent;
+  padding:0 0 11px;margin-bottom:-1px;
+  transition:color .15s, border-color .15s;
+}
+.modes button:hover{color:var(--head)}
+.modes button[aria-selected="true"]{color:var(--accent-ink);border-bottom-color:var(--accent)}
+.modes button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:20px;align-items:start}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px}
+.panel h2{font-weight:600;font-size:13px;color:var(--head);margin:0 0 4px}
+.panel .sub{color:var(--muted);font-size:11.5px;margin:0 0 18px}
+
+.personas{display:flex;flex-direction:column;gap:8px}
+.persona{
+  display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;
+  width:100%;text-align:left;font:inherit;cursor:pointer;
+  background:transparent;border:1px solid var(--line);border-radius:12px;padding:12px 14px;
+  color:var(--ink);transition:border-color .15s, background .15s;
+}
+.persona:hover{border-color:var(--line-strong);background:rgba(255,255,255,.02)}
+.persona[aria-pressed="true"]{border-color:var(--accent-edge);background:var(--accent-wash)}
+.persona[aria-pressed="true"] .name{color:var(--accent-ink)}
+.persona:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.persona .name{grid-column:1;grid-row:1;font-weight:500;font-size:12.5px;color:var(--head)}
+.persona .desc{grid-column:1;grid-row:2;color:var(--muted);font-size:10.5px;line-height:1.35}
+.persona .spend{
+  grid-column:2;grid-row:1 / span 2;font-family:"IBM Plex Mono",monospace;font-size:11px;
+  font-variant-numeric:tabular-nums;color:var(--muted);text-align:right;
+}
+.persona[aria-pressed="true"] .spend{color:var(--accent-ink)}
+
+.field{margin-top:22px;padding-top:22px;border-top:1px solid var(--line)}
+.field.first{margin-top:0;padding-top:0;border-top:0}
+.field-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px}
+label{font-size:11.5px;font-weight:500;color:var(--head)}
+.field-val{font-family:"IBM Plex Mono",monospace;font-size:13px;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent-ink);height:22px}
+input[type=range]:focus-visible{outline:2px solid var(--accent-ink);outline-offset:4px}
+.scale{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:9px;color:var(--muted);margin-top:2px}
+
+input[type=number],input[type=text]{
+  font:inherit;font-family:"IBM Plex Mono",monospace;font-size:12px;
+  background:var(--bg);color:var(--ink);border:1px solid var(--line);
+  border-radius:9px;padding:8px 11px;width:100%;
+}
+input:focus-visible{outline:2px solid var(--accent-ink);outline-offset:1px}
+
+.answer{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.answer-top{background:var(--accent-wash);padding:26px 24px 22px;border-bottom:1px solid var(--accent-edge)}
+.answer-q{font-size:11.5px;color:var(--accent-ink);font-weight:500;margin:0 0 12px}
+.big{
+  font-weight:600;color:var(--ink);
+  font-size:clamp(28px,4.5vw,42px);line-height:1;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;margin:0;
+}
+.big .unit{font-size:.36em;font-weight:500;letter-spacing:0;margin-left:.2em;color:var(--muted)}
+.big-note{margin:12px 0 0;color:var(--muted);font-size:12px}
+.big-note b{color:var(--head);font-weight:500}
+
+.answer-body{padding:22px 24px 24px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:11px 0;border-bottom:1px solid var(--line)}
+.row:last-of-type{border-bottom:0}
+.row .k{color:var(--muted);font-size:11px}
+.row .k .hint{display:block;font-size:9.5px;opacity:.8}
+.row .v{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+
+/* docs "Note" callout */
+.callout{
+  margin-top:18px;background:var(--accent-wash);border:1px solid var(--accent-edge);
+  border-radius:16px;padding:14px 16px;
+  font-size:11.5px;color:var(--muted);line-height:1.5;
+}
+.callout b{color:var(--head);font-weight:500}
+
+details.assumptions{margin-top:20px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+details.assumptions>summary{
+  cursor:pointer;padding:18px 24px;font-weight:600;font-size:13px;
+  color:var(--head);list-style:none;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+}
+details.assumptions>summary::-webkit-details-marker{display:none}
+details.assumptions>summary::after{content:"+";font-family:"IBM Plex Mono",monospace;color:var(--muted);font-size:15px}
+details.assumptions[open]>summary::after{content:"–"}
+details.assumptions>summary:focus-visible{outline:2px solid var(--accent-ink);outline-offset:-2px;border-radius:18px}
+.assump-body{padding:20px 24px 24px;border-top:1px solid var(--line)}
+.assump-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:18px}
+.assump-grid .k{font-size:11px;font-weight:500;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.note{font-size:10.5px;color:var(--muted);margin:7px 0 0;line-height:1.45}
+
+.info{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:15px;height:15px;border-radius:50%;border:1px solid var(--line-strong);
+  color:var(--muted);font-size:9px;font-weight:600;cursor:help;flex:none;
+  font-family:"IBM Plex Mono",monospace;
+}
+.explain{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+.explain h3{font-size:14px;margin:0 0 8px;font-weight:600;color:var(--head)}
+.explain h3+p{margin-top:0}
+.explain p{margin:0 0 16px;font-size:13.5px;color:var(--muted);max-width:72ch;line-height:1.55}
+.explain p:last-child{margin-bottom:0}
+code{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;
+  background:rgba(255,255,255,.05);padding:2px 6px;border-radius:6px;color:#93C5FD;
+}
+pre{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px;
+  background:var(--surface-2);border:1px solid var(--line);color:var(--head);
+  padding:15px 17px;border-radius:12px;
+  overflow-x:auto;margin:0 0 14px;line-height:1.7;
+}
+footer{margin-top:28px;color:var(--muted);font-size:10.5px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.tag{
+  font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  border:1px solid var(--line-strong);border-radius:999px;padding:3px 9px;color:var(--muted);
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* The docs content column is narrower than a full-bleed page — often
+   600-750px even on a wide desktop, once the left nav and right TOC take
+   their share. Stay two-up down to a real narrow/mobile width instead. */
+@media (max-width:560px){.grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Tighten up the two-column layout once each column is working with well
+   under 400px, so labels and buttons don't feel cramped. This block is
+   deliberately last so it wins the cascade over the base rules above. */
+@media (max-width:760px){
+  .wrap{padding:28px 18px 56px}
+  .panel{padding:16px}
+  .persona{padding:10px 12px}
+  .field{margin-top:18px;padding-top:18px}
+  .answer-top{padding:20px 16px 18px}
+  .answer-body{padding:18px 16px 20px}
+  .big{font-size:clamp(22px,7vw,40px)}
+  .row{gap:10px}
+  .row .k{min-width:0}
+  .row .v{white-space:normal;text-align:right;min-width:0;flex:1 1 auto}
+}
+</style>
+
+<div class="wrap">
+
+  <div class="header-row">
+    <div>
+      <p class="eyebrow">Private Inference</p>
+      <h1>Stake for Inference</h1>
+      <p class="lede">Keep holding your NEAR. Stake it, and the staking rewards pay for private inference — <b>$1 of rewards = $1 of NEAR AI Cloud</b>. The NEAR itself is never spent.</p>
+    </div>
+    <div class="price-chip">
+      <span class="dot stale" id="priceDot"></span>
+      <span class="k">NEAR</span>
+      <span class="v" id="priceLabel">$2.50</span>
+      <span class="k" id="priceSrc">reference price</span>
+    </div>
+  </div>
+
+  <div class="modes" role="tablist" aria-label="Calculator mode">
+    <button role="tab" id="tabA" aria-selected="true" aria-controls="paneA">How much do I need to stake?</button>
+    <button role="tab" id="tabB" aria-selected="false" aria-controls="paneB">What does my stake get me?</button>
+  </div>
+
+  <div class="grid" id="paneA" role="tabpanel" aria-labelledby="tabA">
+    <section class="panel">
+      <h2>How much AI do you use?</h2>
+      <p class="sub">Pick the closest fit, or set your own monthly usage.</p>
+      <div class="personas" id="personas"></div>
+
+      <div class="field">
+        <div class="field-head">
+          <label for="spend">Monthly AI usage to cover</label>
+          <span class="field-val" id="spendVal">$25</span>
+        </div>
+        <input type="range" id="spend" min="0" max="1000" value="500" aria-describedby="spendScale">
+        <div class="scale" id="spendScale"><span>$1</span><span>$100</span><span>$10,000</span></div>
+      </div>
+    </section>
+
+    <section class="answer">
+      <div class="answer-top">
+        <p class="answer-q">To cover <span id="targetSpend">$25</span> of AI every month, stake</p>
+        <p class="big"><span id="stakeNeeded">2,510</span><span class="unit">NEAR</span></p>
+        <p class="big-note"><b id="stakeUsd">$6,276</b> at today's price — and you keep all of it.</p>
+      </div>
+      <div class="answer-body">
+        <div class="row"><span class="k">Buys roughly<span class="hint">blended across NEAR AI Cloud models</span></span><span class="v" id="aTokens">50M tokens / mo</span></div>
+        <div class="row"><span class="k">Or about<span class="hint">at ~1,800 tokens per exchange</span></span><span class="v" id="aPrompts">27,700 prompts / mo</span></div>
+        <div class="row"><span class="k">Every day</span><span class="v" id="aPerDay">$0.82 of AI</span></div>
+        <div class="row"><span class="k">Accrual rate<span class="hint">for continuous workloads billed by the second</span></span><span class="v" id="aPerSec">0.0000095 credits / sec</span></div>
+        <div class="callout" id="calloutA"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="grid" id="paneB" role="tabpanel" aria-labelledby="tabB" hidden>
+    <section class="panel">
+      <h2>How much NEAR are you staking?</h2>
+      <p class="sub">Drag, or type an exact amount.</p>
+      <div class="field first">
+        <div class="field-head">
+          <label for="stake">Staked NEAR</label>
+          <span class="field-val" id="stakeVal">10,000</span>
+        </div>
+        <input type="range" id="stake" min="0" max="1000" value="500" aria-describedby="stakeScale">
+        <div class="scale" id="stakeScale"><span>100</span><span>10,000</span><span>1,000,000</span></div>
+      </div>
+      <div class="field">
+        <div class="field-head"><label for="stakeExact">Exact amount</label></div>
+        <input type="number" id="stakeExact" value="10000" min="0" step="100">
+        <p class="note">Worth <span id="stakeExactUsd">$25,000</span> today. Staking is reversible — unstaking takes about 48–72 hours, and you can spend the rewards while the principal stays yours.</p>
+      </div>
+    </section>
+
+    <section class="answer">
+      <div class="answer-top">
+        <p class="answer-q">Staking <span id="bStake">10,000</span> NEAR covers</p>
+        <p class="big">$<span id="bMonthly">99.6</span><span class="unit">of AI per month</span></p>
+        <p class="big-note">≈ <b id="bYear">$1,196</b> a year, paid entirely out of staking rewards.</p>
+      </div>
+      <div class="answer-body">
+        <div class="row"><span class="k">Buys roughly<span class="hint">blended across NEAR AI Cloud models</span></span><span class="v" id="bTokens">199M tokens / mo</span></div>
+        <div class="row"><span class="k">Or about<span class="hint">at ~1,800 tokens per exchange</span></span><span class="v" id="bPrompts">110,700 prompts / mo</span></div>
+        <div class="row"><span class="k">Every day</span><span class="v" id="bPerDay">$3.27 of AI</span></div>
+        <div class="row"><span class="k">Accrual rate<span class="hint">for continuous workloads billed by the second</span></span><span class="v" id="bPerSec">0.0000379 credits / sec</span></div>
+        <div class="callout" id="calloutB"></div>
+      </div>
+    </section>
+  </div>
+
+  <details class="assumptions">
+    <summary>Assumptions &amp; how this works</summary>
+    <div class="assump-body">
+      <div class="assump-grid">
+        <div>
+          <div class="k">NEAR price
+            <span class="info" title="Fetched from a public market API when the page loads. If that is unavailable, a recent reference price is used and you can override it here.">i</span>
+          </div>
+          <input type="number" id="aPrice" value="2.50" min="0.01" step="0.01">
+          <p class="note" id="priceNote">Live on load, with manual override.</p>
+        </div>
+        <div>
+          <div class="k">Staking reward rate
+            <span class="info" title="A network-wide rate, not a setting. It moves with how much NEAR is staked in total — see the note below.">i</span>
+          </div>
+          <input type="number" id="aApy" value="4.78" min="0.1" step="0.01">
+          <p class="note">% APY, currently ~4.8% network-wide. Editable here only because this is a model.</p>
+        </div>
+        <div>
+          <div class="k">Blended token price
+            <span class="info" title="A weighted average across NEAR AI Cloud models. Small open models cost far less per token; frontier models cost more.">i</span>
+          </div>
+          <input type="number" id="aTokenPrice" value="0.50" min="0.01" step="0.01">
+          <p class="note">$ per 1M tokens, blended across models.</p>
+        </div>
+        <div>
+          <div class="k">Tokens per exchange
+            <span class="info" title="One prompt plus its response, including context carried forward. Long documents and long-running jobs are much larger.">i</span>
+          </div>
+          <input type="number" id="aTpp" value="1800" min="100" step="100">
+          <p class="note">Used only for the “prompts” estimate.</p>
+        </div>
+      </div>
+
+      <div class="explain">
+        <h3>The formula</h3>
+        <pre>monthly AI usage covered = staked NEAR × NEAR price × APY ÷ 12
+stake needed             = monthly AI usage × 12 ÷ (NEAR price × APY)</pre>
+        <p>Rewards accrue continuously, so a long-running workload can also read it per second: <code>staked NEAR × price × APY ÷ 31,557,600</code>.</p>
+
+        <h3>Why the reward rate moves</h3>
+        <p>NEAR issues a fixed amount of new token each year and splits it among everyone staking. Your share depends on how much of the supply is staked network-wide: when less is staked, the same rewards divide among fewer tokens and the rate rises; when more is staked, it falls. In the limit where everything is staked, the reward rate converges on the network's inflation rate — nobody gains on anybody. Validator commission, typically 1–10%, comes out of that.</p>
+        <p>So your covered usage drifts with both the NEAR price and the network's staking share. It is a subsidy that floats, not a fixed plan.</p>
+
+        <h3>What a credit is</h3>
+        <p>One credit is one US dollar of usage on NEAR AI Cloud — the same unit your bill is in. Rewards convert to credits automatically, nothing is sold, and unused credits carry forward.</p>
+      </div>
+    </div>
+  </details>
+
+  <footer>
+    <span>Private inference on NEAR AI Cloud. Figures are illustrative — token pricing and reward rates are modelled, not quoted.</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var S = { price: 2.50, apy: 0.0478, tokenPrice: 0.50, tpp: 1800, spend: 25, stake: 10000, mode: "A" };
+  var SEC_PER_YEAR = 365.25 * 24 * 3600;
+
+  var PERSONAS = [
+    { name: "Curious", desc: "A handful of chats a day, nothing heavy", spend: 5 },
+    { name: "Daily driver", desc: "AI in the loop all day — writing, code, long documents", spend: 25 },
+    { name: "Power user", desc: "Heavy API usage — batch jobs, high request volume", spend: 120 },
+    { name: "Always-on workload", desc: "Continuous inference traffic, running 24/7", spend: 600 },
+    { name: "Small team", desc: "Ten people sharing production inference traffic", spend: 2500 }
+  ];
+
+  function $(id) { return document.getElementById(id); }
+
+  function usd(n) {
+    if (n >= 1000 || Math.abs(n - Math.round(n)) < 0.005) return "$" + Math.round(n).toLocaleString("en-US");
+    if (n >= 10) return "$" + n.toFixed(1);
+    return "$" + n.toFixed(2);
+  }
+  function near(n) {
+    if (n >= 1000) return Math.round(n).toLocaleString("en-US");
+    if (n >= 10) return String(Math.round(n));
+    return n.toFixed(1);
+  }
+  function tokensLabel(n) {
+    if (n >= 1e9) return (n / 1e9).toFixed(1) + "B tokens / mo";
+    if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + "M tokens / mo";
+    return Math.round(n / 1e3).toLocaleString("en-US") + "K tokens / mo";
+  }
+  function promptsLabel(n) {
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + "M prompts / mo";
+    return Math.round(n).toLocaleString("en-US") + " prompts / mo";
+  }
+  function persec(n) {
+    var s = n.toFixed(9).replace(/0+$/, "");
+    if (s.charAt(s.length - 1) === ".") s = s.slice(0, -1);
+    return s + " credits / sec";
+  }
+
+  function logMap(pos, min, max) { return min * Math.pow(max / min, pos / 1000); }
+  function logPos(val, min, max) { return Math.round(1000 * Math.log(val / min) / Math.log(max / min)); }
+  function niceSpend(v) {
+    if (v >= 1000) return Math.round(v / 100) * 100;
+    if (v >= 100) return Math.round(v / 10) * 10;
+    if (v >= 10) return Math.round(v);
+    return Math.round(v * 2) / 2;
+  }
+  function niceStake(v) {
+    if (v >= 100000) return Math.round(v / 5000) * 5000;
+    if (v >= 10000) return Math.round(v / 500) * 500;
+    if (v >= 1000) return Math.round(v / 50) * 50;
+    return Math.round(v / 5) * 5;
+  }
+
+  function monthlyFromStake(stake) { return stake * S.price * S.apy / 12; }
+  function stakeFromMonthly(m) { return m * 12 / (S.price * S.apy); }
+  function creditsPerSec(stake) { return stake * S.price * S.apy / SEC_PER_YEAR; }
+
+  function buildPersonas() {
+    var host = $("personas");
+    host.innerHTML = "";
+    PERSONAS.forEach(function (p) {
+      var b = document.createElement("button");
+      b.className = "persona";
+      b.type = "button";
+      b.setAttribute("aria-pressed", "false");
+      b.dataset.spend = p.spend;
+      b.innerHTML = '<span class="name"></span><span class="spend"></span><span class="desc"></span>';
+      b.querySelector(".name").textContent = p.name;
+      b.querySelector(".spend").textContent = usd(p.spend) + "/mo";
+      b.querySelector(".desc").textContent = p.desc;
+      b.addEventListener("click", function () {
+        S.spend = p.spend;
+        $("spend").value = logPos(p.spend, 1, 10000);
+        render();
+      });
+      host.appendChild(b);
+    });
+  }
+
+  function syncPersonas() {
+    var nodes = $("personas").children;
+    for (var i = 0; i < nodes.length; i++) {
+      var on = Math.abs(Number(nodes[i].dataset.spend) - S.spend) < 0.01;
+      nodes[i].setAttribute("aria-pressed", on ? "true" : "false");
+    }
+  }
+
+  function render() {
+    var stakeNeeded = stakeFromMonthly(S.spend);
+    $("spendVal").textContent = usd(S.spend);
+    $("targetSpend").textContent = usd(S.spend);
+    $("stakeNeeded").textContent = near(stakeNeeded);
+    $("stakeUsd").textContent = usd(stakeNeeded * S.price);
+    $("aTokens").textContent = tokensLabel(S.spend / S.tokenPrice * 1e6);
+    $("aPrompts").textContent = promptsLabel(S.spend / S.tokenPrice * 1e6 / S.tpp);
+    $("aPerDay").textContent = usd(S.spend * 12 / 365.25) + " of AI";
+    $("aPerSec").textContent = persec(creditsPerSec(stakeNeeded));
+    $("calloutA").innerHTML = "Stake <b>" + near(stakeNeeded) + " NEAR</b> and this is covered for as long as you stay staked. " +
+      "Stake less and it becomes a partial subsidy — half the stake takes half the bill.";
+
+    var monthly = monthlyFromStake(S.stake);
+    $("stakeVal").textContent = near(S.stake);
+    $("bStake").textContent = near(S.stake);
+    $("bMonthly").textContent = monthly >= 1000 ? Math.round(monthly).toLocaleString("en-US")
+      : monthly >= 100 ? monthly.toFixed(0)
+      : monthly >= 10 ? monthly.toFixed(1) : monthly.toFixed(2);
+    $("bYear").textContent = usd(monthly * 12);
+    $("bTokens").textContent = tokensLabel(monthly / S.tokenPrice * 1e6);
+    $("bPrompts").textContent = promptsLabel(monthly / S.tokenPrice * 1e6 / S.tpp);
+    $("bPerDay").textContent = usd(monthly * 12 / 365.25) + " of AI";
+    $("bPerSec").textContent = persec(creditsPerSec(S.stake));
+    $("stakeExactUsd").textContent = usd(S.stake * S.price);
+
+    var fit = null;
+    PERSONAS.forEach(function (p) { if (p.spend <= monthly) fit = p; });
+    $("calloutB").innerHTML = fit
+      ? "That fully covers a <b>" + fit.name.toLowerCase() + "</b> — " + fit.desc.charAt(0).toLowerCase() + fit.desc.slice(1) + "."
+      : "Below the first usage tier, but it still comes off your bill before you pay anything.";
+
+    syncPersonas();
+    resizeFrame();
+  }
+
+  buildPersonas();
+
+  $("spend").addEventListener("input", function () {
+    S.spend = niceSpend(logMap(Number(this.value), 1, 10000));
+    render();
+  });
+  $("stake").addEventListener("input", function () {
+    S.stake = niceStake(logMap(Number(this.value), 100, 1000000));
+    $("stakeExact").value = S.stake;
+    render();
+  });
+  $("stakeExact").addEventListener("input", function () {
+    var v = Number(this.value);
+    if (!isFinite(v) || v < 0) return;
+    S.stake = v;
+    $("stake").value = logPos(Math.min(Math.max(v, 100), 1000000), 100, 1000000);
+    render();
+  });
+
+  function bindAssumption(id, key, transform) {
+    $(id).addEventListener("input", function () {
+      var v = Number(this.value);
+      if (!isFinite(v) || v <= 0) return;
+      S[key] = transform ? transform(v) : v;
+      if (key === "price") setPriceLabel(v, "manual");
+      render();
+    });
+  }
+  bindAssumption("aPrice", "price");
+  bindAssumption("aApy", "apy", function (v) { return v / 100; });
+  bindAssumption("aTokenPrice", "tokenPrice");
+  bindAssumption("aTpp", "tpp");
+
+  function setMode(m) {
+    S.mode = m;
+    $("tabA").setAttribute("aria-selected", m === "A" ? "true" : "false");
+    $("tabB").setAttribute("aria-selected", m === "B" ? "true" : "false");
+    $("paneA").hidden = m !== "A";
+    $("paneB").hidden = m !== "B";
+    resizeFrame();
+  }
+  $("tabA").addEventListener("click", function () { setMode("A"); });
+  $("tabB").addEventListener("click", function () { setMode("B"); });
+
+  var assumptionsDetails = document.querySelector("details.assumptions");
+  if (assumptionsDetails) {
+    assumptionsDetails.addEventListener("toggle", function () { resizeFrame(); });
+  }
+
+  function setPriceLabel(p, src) {
+    $("priceLabel").textContent = "$" + p.toFixed(2);
+    $("priceSrc").textContent = src === "live" ? "live" : (src === "manual" ? "manual" : "reference price");
+    $("priceDot").className = src === "live" ? "dot" : "dot stale";
+    $("priceNote").textContent = src === "live" ? "Live from market data, refreshed on load."
+      : (src === "manual" ? "Manually overridden." : "Live fetch unavailable — using a recent reference price.");
+  }
+
+  function fetchPrice() {
+    if (typeof fetch !== "function") return;
+    var opts;
+    try {
+      var ctl = new AbortController();
+      setTimeout(function () { ctl.abort(); }, 4000);
+      opts = { signal: ctl.signal };
+    } catch (e) { opts = undefined; }
+    fetch("https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd", opts)
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("bad status")); })
+      .then(function (d) {
+        var p = d && d.near && d.near.usd;
+        if (!p || !isFinite(p)) return;
+        S.price = p;
+        $("aPrice").value = p.toFixed(2);
+        setPriceLabel(p, "live");
+        render();
+      })
+      .catch(function () { /* keep the reference price */ });
+  }
+
+  $("spend").value = logPos(25, 1, 10000);
+  $("stake").value = logPos(10000, 100, 1000000);
+  setPriceLabel(S.price, "reference");
+  render();
+  fetchPrice();
+
+  // Self-resize the embedding iframe to fit content, since it lives in a
+  // docs page and has no fixed height of its own.
+  function resizeFrame() {
+    try {
+      var fe = window.frameElement;
+      if (!fe) return;
+      // Shrink first so a stale, too-tall iframe can't make body.scrollHeight
+      // (which is clamped to the viewport when content is shorter) report a
+      // false "no smaller" reading — the classic auto-resize growth-only bug.
+      fe.style.height = "0px";
+      fe.style.height = document.body.scrollHeight + "px";
+    } catch (e) { /* not embedded, or cross-origin — ignore */ }
+  }
+  window.addEventListener("load", resizeFrame);
+  window.addEventListener("resize", resizeFrame);
+  if (typeof ResizeObserver === "function") {
+    new ResizeObserver(resizeFrame).observe(document.body);
+  } else {
+    setInterval(resizeFrame, 400);
+  }
+  resizeFrame();
+})();
+</script>
+
+</body></html>
+`}
+/>
+
+<Note>
+  All figures — token pricing, staking APY, and the reference NEAR price — are illustrative defaults you can override in the calculator's "Assumptions" panel. They are not live quotes; check [cloud.near.ai](https://cloud.near.ai) for current pricing and your wallet for the live staking APY.
+</Note>

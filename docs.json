@@ -55,6 +55,14 @@
             "pages": [
               "cloud/private-inference",
               {
+                "group": "Staking for Inference",
+                "icon": "coins",
+                "pages": [
+                  "cloud/staking-for-inference/overview",
+                  "cloud/staking-for-inference/calculator"
+                ]
+              },
+              {
                 "group": "Verification",
                 "icon": "file-check",
                 "root": "cloud/verification/index",
