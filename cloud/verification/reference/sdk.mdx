@@ -1,0 +1,64 @@
+---
+title: "Verification SDK"
+description: "Use the NEAR AI verification SDK to verify attestation evidence in your application."
+---
+
+The NEAR AI verification SDK provides language-specific implementations for NEAR AI Cloud gateway attestation, NEAR model evidence returned through the gateway, and response signatures.
+
+The SDK supports TypeScript, Python, and Rust.
+
+## Installation
+
+<Tabs>
+<Tab title="TypeScript">
+
+Requires Node.js 24 or later.
+
+```bash
+npm install verifiable-ai-sdk
+```
+
+</Tab>
+<Tab title="Python">
+
+Requires Python 3.12 or later.
+
+```bash
+pip install verifiable-ai-sdk
+```
+
+Import it as `verifiable_ai_sdk`.
+
+</Tab>
+<Tab title="Rust">
+
+```bash
+cargo add verifiable-ai-sdk
+```
+
+Import it as `verifiable_ai_sdk`.
+
+</Tab>
+</Tabs>
+
+## Verification flow
+
+For each completion, first use the SDK to verify the NEAR AI Cloud gateway and, when your policy requires model evidence, every returned NEAR model-attestation candidate. Then send the completion with your HTTP client, retaining the exact request and response bytes. Finally, fetch the completion signature and verify it with the matching preflight result. For a `provider_tee` signature, select exactly one verified model result whose signer identity and algorithm match the signature.
+
+The SDK creates a fresh nonce for every evidence request. It retrieves and verifies evidence, but does not send the completion request or retain its bytes for you.
+
+Use one explicit `signing_algo` for the Gateway attestation request, model-attestation request, and completion-signature request in the same verification flow. The Gateway attestation and signature endpoints have different defaults.
+
+<Card title="NEAR AI Cloud Gateway" icon="cloud" href="/cloud/verification/cloud-api">
+  Learn the protocol requirements and trust decisions for gateway and NEAR model evidence.
+</Card>
+
+## Examples
+
+Runnable TypeScript, Python, and Rust examples follow this flow for non-streaming and streaming completions.
+
+<Note>
+  In TypeScript, import from `verifiable-ai-sdk/node` to bind Gateway evidence to the TLS peer observed for the Gateway attestation request. This does not automatically cover a later inference request. The generic `verifiable-ai-sdk` entry point verifies Gateway evidence without a TLS peer binding.
+</Note>
+
+The SDK currently covers the NEAR AI Cloud Gateway flow. For direct model endpoints, image provenance, and E2EE, use the corresponding endpoint guides.

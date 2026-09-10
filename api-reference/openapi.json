@@ -211,6 +211,433 @@
         ]
       }
     },
+    "/v1/admin/aml/allowlist": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List AML allowlist entries (Admin only)",
+        "operationId": "list_aml_allowlist",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of allowlist entries to return (default: 100)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of allowlist entries to skip (default: 0)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AML allowlist entries retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAdminAmlAllowlistResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Add or update an AML allowlist entry (Admin only)",
+        "operationId": "upsert_aml_allowlist_entry",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertAmlAllowlistEntryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "AML allowlist entry upserted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAmlAllowlistEntryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/aml/allowlist/{account_id}": {
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Remove an AML allowlist entry (Admin only)",
+        "operationId": "delete_aml_allowlist_entry",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "NEAR account ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "AML allowlist entry removed successfully"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "AML allowlist entry not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/aml/reports": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List AML reports (Admin only)",
+        "operationId": "list_aml_reports",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of reports to return (default: 100)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of reports to skip (default: 0)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AML reports retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAdminAmlReportsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/aml/reports/{report_id}/status": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update AML report active status (Admin only)",
+        "operationId": "update_aml_report_status",
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "description": "AML report UUID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAmlReportStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "AML report status updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAmlReportResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "AML report not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          }
+        ]
+      }
+    },
     "/v1/admin/feature-requests": {
       "get": {
         "tags": [
@@ -1591,6 +2018,130 @@
           },
           "500": {
             "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/organizations/{org_id}/fallback": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get an organization's effective fallback policy (Admin only).",
+        "operationId": "get_organization_fallback",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "description": "Organization ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fallback policy retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationFallbackResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organization not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update an organization's fallback policy (Admin only).",
+        "operationId": "update_organization_fallback",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "description": "Organization ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrganizationFallbackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Fallback policy updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationFallbackResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organization not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -3289,7 +3840,7 @@
           {
             "name": "include_tls_fingerprint",
             "in": "query",
-            "description": "Include TLS certificate fingerprint in the report data.\nDefaults to false; when true, report_data[..32] = SHA256(signing_address || cert_fingerprint).",
+            "description": "Include the TLS certificate SPKI fingerprint in the report-data binding.\nDefaults to false; when true, report_data[..32] = SHA256(signing_address || tls_cert_fingerprint).",
             "required": false,
             "schema": {
               "type": [
@@ -3750,6 +4301,895 @@
         ]
       }
     },
+    "/v1/conversations": {
+      "post": {
+        "tags": [
+          "Conversations"
+        ],
+        "summary": "Create conversation",
+        "description": "Create a new conversation to organize chat messages.",
+        "operationId": "create_conversation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateConversationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Conversation created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/v1/conversations/{conversation_id}": {
+      "get": {
+        "tags": [
+          "Conversations"
+        ],
+        "summary": "Get conversation",
+        "description": "Retrieve conversation details by ID.",
+        "operationId": "get_conversation",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "description": "Conversation ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Conversations"
+        ],
+        "summary": "Update conversation",
+        "description": "Update conversation metadata.",
+        "operationId": "update_conversation",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "description": "Conversation ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateConversationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Conversation updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Conversations"
+        ],
+        "summary": "Delete conversation",
+        "description": "Delete a conversation and all its messages.",
+        "operationId": "delete_conversation",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "description": "Conversation ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationDeleteResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/v1/conversations/{conversation_id}/archive": {
+      "post": {
+        "tags": [
+          "Conversations"
+        ],
+        "summary": "Archive a conversation",
+        "description": "Archives a conversation to hide it from the main list.",
+        "operationId": "archive_conversation",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "description": "Conversation ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation archived successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Conversations"
+        ],
+        "summary": "Unarchive a conversation",
+        "description": "Unarchives a conversation to show it in the main list again.",
+        "operationId": "unarchive_conversation",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "description": "Conversation ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation unarchived successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/v1/conversations/{conversation_id}/clone": {
+      "post": {
+        "tags": [
+          "Conversations"
+        ],
+        "summary": "Clone a conversation",
+        "description": "Creates a copy of an existing conversation with a new ID.",
+        "operationId": "clone_conversation",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "description": "Conversation ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Conversation cloned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/v1/conversations/{conversation_id}/items": {
+      "get": {
+        "tags": [
+          "Conversations"
+        ],
+        "summary": "List conversation messages",
+        "description": "Get all messages and responses in a conversation, sorted by creation time.",
+        "operationId": "list_conversation_items",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "description": "Conversation ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of conversation items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationItemList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Conversations"
+        ],
+        "summary": "Create items in a conversation (for backfilling)",
+        "description": "Adds items to a conversation, allowing API callers to backfill conversations.",
+        "operationId": "create_conversation_items",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "description": "Conversation ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Additional fields to include in the response",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateConversationItemsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Items created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationItemList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/v1/conversations/{conversation_id}/pin": {
+      "post": {
+        "tags": [
+          "Conversations"
+        ],
+        "summary": "Pin a conversation",
+        "description": "Pins a conversation to keep it at the top of the list.",
+        "operationId": "pin_conversation",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "description": "Conversation ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation pinned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Conversations"
+        ],
+        "summary": "Unpin a conversation",
+        "description": "Unpins a conversation.",
+        "operationId": "unpin_conversation",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "description": "Conversation ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation unpinned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
     "/v1/feature-requests": {
       "post": {
         "tags": [
@@ -3822,6 +5262,340 @@
         "security": [
           {
             "session_token": []
+          }
+        ]
+      }
+    },
+    "/v1/files": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "operationId": "list_files",
+        "parameters": [
+          {
+            "name": "after",
+            "in": "query",
+            "description": "A cursor for pagination. Pass the file ID to fetch files after this one.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of files to return (1-10000, default 10000)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort order by created_at timestamp: 'asc' or 'desc' (default 'desc')",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "purpose",
+            "in": "query",
+            "description": "Filter files by purpose",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of files retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "operationId": "upload_file",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {}
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "File uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "File too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/v1/files/{file_id}": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "operationId": "get_file",
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "description": "The ID of the file to retrieve",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Files"
+        ],
+        "operationId": "delete_file",
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "description": "The ID of the file to delete",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileDeleteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/v1/files/{file_id}/content": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "operationId": "get_file_content",
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "description": "The ID of the file to retrieve content from",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File content retrieved successfully",
+            "content": {
+              "application/octet-stream": {}
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
           }
         ]
       }
@@ -7211,13 +8985,13 @@
           "Responses"
         ],
         "summary": "Create response",
-        "description": "Generate a single-turn, stateless AI response with optional streaming.",
+        "description": "Generate an AI response for a conversation with tool calling and streaming support.",
         "operationId": "create_response",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/StatelessCreateResponseRequestSchema"
+                "$ref": "#/components/schemas/CreateResponseRequest"
               }
             }
           },
@@ -7256,6 +9030,279 @@
           },
           "402": {
             "description": "Insufficient credits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/v1/responses/{response_id}": {
+      "get": {
+        "tags": [
+          "Responses"
+        ],
+        "summary": "Get a response by ID",
+        "description": "Retrieve details of a specific response.",
+        "operationId": "get_response",
+        "parameters": [
+          {
+            "name": "response_id",
+            "in": "path",
+            "description": "Response ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Response not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not implemented",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Responses"
+        ],
+        "summary": "Delete a response",
+        "description": "Delete a specific response.",
+        "operationId": "delete_response",
+        "parameters": [
+          {
+            "name": "response_id",
+            "in": "path",
+            "description": "Response ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response deleted successfully"
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Response not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not implemented",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/v1/responses/{response_id}/cancel": {
+      "post": {
+        "tags": [
+          "Responses"
+        ],
+        "summary": "Cancel a response (for background responses)",
+        "description": "Cancel an in-progress background response.",
+        "operationId": "cancel_response",
+        "parameters": [
+          {
+            "name": "response_id",
+            "in": "path",
+            "description": "Response ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response cancelled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Response not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not implemented",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/v1/responses/{response_id}/input_items": {
+      "get": {
+        "tags": [
+          "Responses"
+        ],
+        "summary": "List input items for a response",
+        "description": "Retrieve all input items (user messages and files) for a specific response.",
+        "operationId": "list_input_items",
+        "parameters": [
+          {
+            "name": "response_id",
+            "in": "path",
+            "description": "Response ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of input items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseInputItemList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid response ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Response not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -7487,14 +9534,14 @@
         "tags": [
           "Attestation"
         ],
-        "summary": "Get completion or Responses API signature",
-        "description": "Get a cryptographic signature for a chat completion or completed stateless\n`resp_*` response. Returns signature data on success, or an unavailable\nresponse if a chat-completion stream was disconnected.",
+        "summary": "Get completion signature",
+        "description": "Get cryptographic signature for a chat completion for verification.\nReturns signature data on success, or an unavailable response if the stream was disconnected.",
         "operationId": "get_signature",
         "parameters": [
           {
             "name": "chat_id",
             "in": "path",
-            "description": "Chat completion ID or resp_* Responses API ID",
+            "description": "Chat completion ID",
             "required": true,
             "schema": {
               "type": "string"
@@ -9182,6 +11229,117 @@
           }
         }
       },
+      "AdminAmlAllowlistEntryResponse": {
+        "type": "object",
+        "description": "Admin AML allowlist entry response.",
+        "required": [
+          "account_id",
+          "address_type",
+          "created_at"
+        ],
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "address_type": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by_user_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "AdminAmlReportResponse": {
+        "type": "object",
+        "description": "Admin AML report audit entry.",
+        "required": [
+          "id",
+          "flow",
+          "provider",
+          "account_id",
+          "address_type",
+          "risk_level",
+          "active",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "address_type": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "flow": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "provider_report_time": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "report_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "risk_level": {
+            "type": "string"
+          },
+          "score": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
       "AdminFeatureRequestListResponse": {
         "type": "object",
         "required": [
@@ -9462,6 +11620,7 @@
           "outputCostPerToken": {
             "$ref": "#/components/schemas/DecimalPrice"
           },
+          "textPricing": {},
           "updatedAt": {
             "type": "string",
             "format": "date-time"
@@ -9868,7 +12027,7 @@
               "string",
               "null"
             ],
-            "description": "TLS certificate file (PEM) from TLS_CERT_PATH; report_data binds via SHA256 of these exact bytes"
+            "description": "PEM-encoded TLS certificate read from `TLS_CERT_PATH` when `include_tls_fingerprint=true`.\n`report_data` binds `tls_cert_fingerprint` (the SHA-256 hash of the TLS SPKI) together with\n`signing_address`, not the PEM bytes."
           }
         }
       },
@@ -10150,6 +12309,12 @@
               "null"
             ],
             "format": "float"
+          },
+          "service_tier": {
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "stop": {
             "oneOf": [
@@ -10477,6 +12642,789 @@
           }
         }
       },
+      "ConversationContent": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversationContentPart"
+            }
+          }
+        ],
+        "description": "Content for conversation items"
+      },
+      "ConversationContentPart": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "text",
+              "type"
+            ],
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "input_text"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "image_url",
+              "type"
+            ],
+            "properties": {
+              "detail": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "image_url": {
+                "$ref": "#/components/schemas/ResponseImageUrl"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "input_image"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "file_id",
+              "type"
+            ],
+            "properties": {
+              "detail": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file_id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "input_file"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "text",
+              "type"
+            ],
+            "properties": {
+              "annotations": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {}
+              },
+              "text": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "output_text"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Content part for conversations"
+      },
+      "ConversationDeleteResult": {
+        "type": "object",
+        "description": "Deleted conversation result",
+        "required": [
+          "id",
+          "object",
+          "deleted"
+        ],
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        }
+      },
+      "ConversationInputItem": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "role",
+              "content",
+              "type"
+            ],
+            "properties": {
+              "content": {
+                "$ref": "#/components/schemas/ConversationContent"
+              },
+              "metadata": {},
+              "model": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "role": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "message"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Input item for conversations"
+      },
+      "ConversationItem": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "status",
+              "role",
+              "content",
+              "model",
+              "type"
+            ],
+            "properties": {
+              "content": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ConversationContentPart"
+                }
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "id": {
+                "type": "string"
+              },
+              "metadata": {},
+              "model": {
+                "type": "string"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/components/schemas/ResponseItemStatus"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "message"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "status",
+              "tool_type",
+              "function",
+              "model",
+              "type"
+            ],
+            "properties": {
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "function": {
+                "$ref": "#/components/schemas/ConversationItemFunction"
+              },
+              "id": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/components/schemas/ResponseItemStatus"
+              },
+              "tool_type": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "tool_call"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "status",
+              "action",
+              "model",
+              "type"
+            ],
+            "properties": {
+              "action": {
+                "$ref": "#/components/schemas/ConversationItemWebSearchAction"
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "id": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/components/schemas/ResponseItemStatus"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "web_search_call"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "status",
+              "summary",
+              "content",
+              "model",
+              "type"
+            ],
+            "properties": {
+              "content": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "id": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/components/schemas/ResponseItemStatus"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "reasoning"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "server_label",
+              "tools",
+              "type"
+            ],
+            "properties": {
+              "error": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "type": "string"
+              },
+              "server_label": {
+                "type": "string"
+              },
+              "tools": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/McpDiscoveredTool"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "mcp_list_tools"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "server_label",
+              "name",
+              "arguments",
+              "model",
+              "type"
+            ],
+            "properties": {
+              "approval_request_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "arguments": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "error": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "output": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "server_label": {
+                "type": "string"
+              },
+              "status": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "mcp_call"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "server_label",
+              "name",
+              "arguments",
+              "model",
+              "type"
+            ],
+            "properties": {
+              "arguments": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "id": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "server_label": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "mcp_approval_request"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Function call requiring client execution",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "call_id",
+              "name",
+              "arguments",
+              "status",
+              "model",
+              "type"
+            ],
+            "properties": {
+              "arguments": {
+                "type": "string",
+                "description": "JSON-encoded arguments"
+              },
+              "call_id": {
+                "type": "string",
+                "description": "The LLM's tool_call_id for correlation"
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "id": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string",
+                "description": "Function name"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "description": "Status: \"in_progress\" when pending client execution"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "function_call"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Result of a client-executed function call",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "call_id",
+              "output",
+              "type"
+            ],
+            "properties": {
+              "call_id": {
+                "type": "string",
+                "description": "The call_id from the FunctionCall this is a response to"
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "id": {
+                "type": "string"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "output": {
+                "type": "string",
+                "description": "Result of the function execution"
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "function_call_output"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Conversation item (for responses)"
+      },
+      "ConversationItemFunction": {
+        "type": "object",
+        "required": [
+          "name",
+          "arguments"
+        ],
+        "properties": {
+          "arguments": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "ConversationItemList": {
+        "type": "object",
+        "description": "List of conversation items",
+        "required": [
+          "object",
+          "data",
+          "first_id",
+          "last_id",
+          "has_more"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversationItem"
+            }
+          },
+          "first_id": {
+            "type": "string"
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "last_id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        }
+      },
+      "ConversationItemWebSearchAction": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "query",
+              "type"
+            ],
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "search"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "ConversationObject": {
+        "type": "object",
+        "description": "Conversation object (follows OpenAI spec)",
+        "required": [
+          "id",
+          "object",
+          "created_at",
+          "metadata"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "type": "string"
+          },
+          "metadata": {},
+          "object": {
+            "type": "string"
+          }
+        }
+      },
+      "ConversationReference": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "metadata": {}
+            }
+          }
+        ],
+        "description": "Conversation reference"
+      },
       "ConversationResponseReference": {
         "type": "object",
         "description": "Conversation reference in response object",
@@ -10539,6 +13487,28 @@
               }
             ]
           }
+        }
+      },
+      "CreateConversationItemsRequest": {
+        "type": "object",
+        "description": "Request to create items in a conversation",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversationInputItem"
+            }
+          }
+        }
+      },
+      "CreateConversationRequest": {
+        "type": "object",
+        "description": "Request to create a conversation",
+        "properties": {
+          "metadata": {}
         }
       },
       "CreateOrganizationRequest": {
@@ -10638,6 +13608,160 @@
           "token_prefix": {
             "type": "string",
             "description": "Non-secret token prefix for display and audit correlation."
+          }
+        }
+      },
+      "CreateResponseRequest": {
+        "type": "object",
+        "description": "Request to create a response",
+        "required": [
+          "model"
+        ],
+        "properties": {
+          "background": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "conversation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ConversationReference"
+              }
+            ]
+          },
+          "include": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "input": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResponseInput"
+              }
+            ]
+          },
+          "instructions": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "max_output_tokens": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "max_tool_calls": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "metadata": {},
+          "model": {
+            "type": "string"
+          },
+          "parallel_tool_calls": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "previous_response_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "prompt_cache_key": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reasoning": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResponseReasoningConfig"
+              }
+            ]
+          },
+          "safety_identifier": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "service_tier": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Responses is Standard-only for now. `auto` is accepted but normalized\nto Standard before the internal Chat Completions call."
+          },
+          "store": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "stream": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "temperature": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "float"
+          },
+          "tool_choice": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResponseToolChoice"
+              }
+            ]
+          },
+          "tools": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ResponseTool"
+            }
+          },
+          "top_p": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "float"
           }
         }
       },
@@ -10880,7 +14004,7 @@
           },
           "report_data": {
             "type": "string",
-            "description": "The report data that contains signing address and nonce"
+            "description": "Value bound into the quote. Its final 32 bytes contain the request nonce.\nWith `include_tls_fingerprint=true`, its first 32 bytes are\nSHA-256(signing_address || tls_cert_fingerprint)."
           },
           "request_nonce": {
             "type": "string",
@@ -10961,6 +14085,23 @@
         "properties": {
           "certificate": {
             "type": "string"
+          }
+        }
+      },
+      "ExpiresAfter": {
+        "type": "object",
+        "description": "Expires after configuration",
+        "required": [
+          "anchor",
+          "seconds"
+        ],
+        "properties": {
+          "anchor": {
+            "type": "string"
+          },
+          "seconds": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -11058,6 +14199,102 @@
           "userId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "FileDeleteResponse": {
+        "type": "object",
+        "description": "File delete response",
+        "required": [
+          "id",
+          "object",
+          "deleted"
+        ],
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        }
+      },
+      "FileListResponse": {
+        "type": "object",
+        "description": "File list response",
+        "required": [
+          "object",
+          "data",
+          "has_more"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FileUploadResponse"
+            }
+          },
+          "first_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "last_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "object": {
+            "type": "string"
+          }
+        }
+      },
+      "FileUploadResponse": {
+        "type": "object",
+        "description": "File upload response",
+        "required": [
+          "id",
+          "object",
+          "bytes",
+          "created_at",
+          "filename",
+          "purpose"
+        ],
+        "properties": {
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "expires_at": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
           }
         }
       },
@@ -11334,6 +14571,13 @@
               },
               "description": "Sampling parameters accepted by the model (OpenRouter vocabulary)."
             },
+            "textPricing": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Exact, versioned USD-per-million text pricing profile.\nOmitted leaves it unchanged; null removes it."
+            },
             "verifiable": {
               "type": [
                 "boolean",
@@ -11540,6 +14784,11 @@
           "cost_per_host_usd_month",
           "monthly_burn_usd",
           "daily_burn_usd",
+          "cost_per_gpu_hour_usd",
+          "total_allocated_gpus",
+          "hourly_gpu_burn_usd",
+          "model_gpu_allocations",
+          "gpu_data_stale",
           "fetched_at",
           "stale"
         ],
@@ -11548,6 +14797,11 @@
             "type": "integer",
             "format": "int64",
             "description": "Hosts serving ≥1 model."
+          },
+          "cost_per_gpu_hour_usd": {
+            "type": "number",
+            "format": "double",
+            "description": "Planning rate for one allocated physical GPU-hour."
           },
           "cost_per_host_usd_month": {
             "type": "number",
@@ -11561,10 +14815,26 @@
             "type": "string",
             "format": "date-time"
           },
+          "gpu_data_stale": {
+            "type": "boolean",
+            "description": "True when current GPU allocation is unavailable or served from cache."
+          },
+          "hourly_gpu_burn_usd": {
+            "type": "number",
+            "format": "double",
+            "description": "Current projected fleet GPU burn per hour."
+          },
           "idle_hosts": {
             "type": "integer",
             "format": "int64",
             "description": "Hosts serving no models (idle capacity we still pay for)."
+          },
+          "model_gpu_allocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelGpuAllocation"
+            },
+            "description": "Current allocation grouped by the model label emitted by DCGM. A GPU\ncarrying multiple labels can appear in multiple groups; the fleet total\nremains separately deduplicated by physical UUID."
           },
           "monthly_burn_usd": {
             "type": "number",
@@ -11573,6 +14843,11 @@
           "stale": {
             "type": "boolean",
             "description": "True when this is last-known / fallback data because the live fetch failed."
+          },
+          "total_allocated_gpus": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Current distinct physical GPUs allocated to a model workload."
           },
           "total_hosts": {
             "type": "integer",
@@ -11838,6 +15113,66 @@
           }
         }
       },
+      "ListAdminAmlAllowlistResponse": {
+        "type": "object",
+        "description": "Admin AML allowlist response.",
+        "required": [
+          "accounts",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "properties": {
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAmlAllowlistEntryResponse"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ListAdminAmlReportsResponse": {
+        "type": "object",
+        "description": "Paginated admin AML reports response.",
+        "required": [
+          "reports",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAmlReportResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "ListAdminInvitationEmailDeliveriesResponse": {
         "type": "object",
         "description": "Paginated admin invitation email delivery response.",
@@ -12091,8 +15426,7 @@
         "enum": [
           "always",
           "never"
-        ],
-        "description": "Simple MCP approval mode"
+        ]
       },
       "McpApprovalRequirement": {
         "oneOf": [
@@ -12110,8 +15444,14 @@
               }
             }
           }
-        ],
-        "description": "Approval requirement for MCP tool calls"
+        ]
+      },
+      "McpApprovalResponseType": {
+        "type": "string",
+        "description": "Type marker for MCP approval response input",
+        "enum": [
+          "mcp_approval_response"
+        ]
       },
       "McpDiscoveredTool": {
         "type": "object",
@@ -12132,6 +15472,13 @@
           }
         }
       },
+      "McpListToolsType": {
+        "type": "string",
+        "description": "Type marker for MCP list tools input",
+        "enum": [
+          "mcp_list_tools"
+        ]
+      },
       "McpToolNameFilter": {
         "type": "object",
         "required": [
@@ -12145,8 +15492,7 @@
             },
             "uniqueItems": true
           }
-        },
-        "description": "Filter for tool names that don't require approval"
+        }
       },
       "MemberRole": {
         "type": "string",
@@ -12527,6 +15873,22 @@
           }
         }
       },
+      "ModelGpuAllocation": {
+        "type": "object",
+        "required": [
+          "model_name",
+          "allocated_gpus"
+        ],
+        "properties": {
+          "allocated_gpus": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "model_name": {
+            "type": "string"
+          }
+        }
+      },
       "ModelHistoryEntry": {
         "type": "object",
         "description": "Model history entry - includes pricing, context length, and other model attributes",
@@ -12720,6 +16082,7 @@
               "type": "string"
             }
           },
+          "textPricing": {},
           "verifiable": {
             "type": "boolean"
           }
@@ -12917,6 +16280,9 @@
               "type": "string"
             },
             "description": "Sampling parameters accepted by the model (OpenRouter `supported_sampling_parameters`)."
+          },
+          "textPricing": {
+            "description": "Exact, versioned USD-per-million text pricing. The legacy `pricing`\nprojection remains Standard-short for compatibility."
           },
           "top_provider": {
             "oneOf": [
@@ -13337,7 +16703,8 @@
           },
           "outputCostPerToken": {
             "$ref": "#/components/schemas/DecimalPrice"
-          }
+          },
+          "textPricing": {}
         }
       },
       "ModelsResponse": {
@@ -13686,6 +17053,23 @@
           },
           "updated_at": {
             "type": "string"
+          }
+        }
+      },
+      "OrganizationFallbackResponse": {
+        "type": "object",
+        "description": "Effective fallback policy returned by admin organization endpoints.",
+        "required": [
+          "organizationId",
+          "enabled"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "organizationId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -14284,6 +17668,12 @@
                 "$ref": "#/components/schemas/DecimalPriceRequest"
               }
             ]
+          },
+          "textPricing": {
+            "type": [
+              "object",
+              "null"
+            ]
           }
         }
       },
@@ -14397,7 +17787,8 @@
                 "$ref": "#/components/schemas/DecimalPrice"
               }
             ]
-          }
+          },
+          "textPricing": {}
         }
       },
       "PricingFields": {
@@ -14427,7 +17818,8 @@
           },
           "outputCostPerToken": {
             "$ref": "#/components/schemas/DecimalPrice"
-          }
+          },
+          "textPricing": {}
         }
       },
       "PrivacyClassifyRequestDoc": {
@@ -14747,6 +18139,7 @@
               "output_tokens",
               "total_tokens",
               "cache_read_tokens",
+              "cache_write_tokens",
               "input_cost",
               "output_cost",
               "total_cost",
@@ -14759,6 +18152,11 @@
                 "type": "integer",
                 "format": "int32",
                 "description": "Number of prompt tokens that were cache hits (subset of input_tokens)"
+              },
+              "cache_write_tokens": {
+                "type": "integer",
+                "format": "int32",
+                "description": "Number of prompt tokens written to provider cache (subset of input_tokens)"
               },
               "created_at": {
                 "type": "string",
@@ -15627,6 +19025,20 @@
           }
         }
       },
+      "ResponseContent": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseContentPart"
+            }
+          }
+        ],
+        "description": "Content can be text or array of content parts"
+      },
       "ResponseContentItem": {
         "oneOf": [
           {
@@ -15777,6 +19189,77 @@
         ],
         "description": "Unified content item that can represent both user inputs and assistant outputs\nThis replaces ResponseOutputContent and correctly represents semantic types"
       },
+      "ResponseContentPart": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "text",
+              "type"
+            ],
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "input_text"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "image_url",
+              "type"
+            ],
+            "properties": {
+              "detail": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "image_url": {
+                "$ref": "#/components/schemas/ResponseImageUrl"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "input_image"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "file_id",
+              "type"
+            ],
+            "properties": {
+              "detail": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file_id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "input_file"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Content part from user inputs (input-only variants).\n\nThis type is used for type-safe operations on user inputs only.\nIt cannot contain output variants, providing compile-time safety.\n\nUsed in:\n- ResponseContent::Parts (for input listing)\n- list_input_items endpoint\n- Input validation operations"
+      },
       "ResponseError": {
         "type": "object",
         "required": [
@@ -15829,6 +19312,68 @@
         ],
         "properties": {
           "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "ResponseInput": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseInputItem"
+            }
+          }
+        ],
+        "description": "Input for a response - can be text, array of items, or single item"
+      },
+      "ResponseInputItem": {
+        "type": "object",
+        "description": "Single input item",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "content": {
+            "$ref": "#/components/schemas/ResponseContent"
+          },
+          "metadata": {},
+          "role": {
+            "type": "string"
+          }
+        }
+      },
+      "ResponseInputItemList": {
+        "type": "object",
+        "description": "Input item list for responses",
+        "required": [
+          "object",
+          "data",
+          "first_id",
+          "last_id",
+          "has_more"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseInputItem"
+            }
+          },
+          "first_id": {
+            "type": "string"
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "last_id": {
+            "type": "string"
+          },
+          "object": {
             "type": "string"
           }
         }
@@ -15996,7 +19541,7 @@
           "tools": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ClientManagedResponseTool"
+              "$ref": "#/components/schemas/ResponseTool"
             }
           },
           "top_logprobs": {
@@ -16523,13 +20068,6 @@
                 "type": "string",
                 "description": "Status: \"in_progress\" when pending client execution"
               },
-              "thought_signature": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "description": "Provider-specific metadata that clients must echo unchanged when\nreplaying the function call (for example Gemini's thought signature)."
-              },
               "type": {
                 "type": "string",
                 "enum": [
@@ -16741,10 +20279,27 @@
               "type"
             ],
             "properties": {
+              "filters": {},
+              "search_context_size": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "type": {
                 "type": "string",
                 "enum": [
                   "web_search"
+                ]
+              },
+              "user_location": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/UserLocation"
+                  }
                 ]
               }
             }
@@ -16807,6 +20362,7 @@
           },
           {
             "type": "object",
+            "description": "Remote MCP server tool",
             "required": [
               "server_label",
               "server_url",
@@ -16822,14 +20378,9 @@
                   "type": "string"
                 }
               },
-              "authorization": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
               "require_approval": {
-                "$ref": "#/components/schemas/McpApprovalRequirement"
+                "$ref": "#/components/schemas/McpApprovalRequirement",
+                "description": "Tool approval requirement (default: \"always\")"
               },
               "server_description": {
                 "type": [
@@ -16841,7 +20392,8 @@
                 "type": "string"
               },
               "server_url": {
-                "type": "string"
+                "type": "string",
+                "description": "HTTPS endpoint for the remote MCP server"
               },
               "type": {
                 "type": "string",
@@ -17784,6 +21336,18 @@
           }
         }
       },
+      "UpdateAmlReportStatusRequest": {
+        "type": "object",
+        "description": "Admin AML report status update request.",
+        "required": [
+          "active"
+        ],
+        "properties": {
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
       "UpdateApiKeyRequest": {
         "type": "object",
         "description": "Request to update API key (general update for name, expires_at, and/or spend_limit)",
@@ -17833,6 +21397,13 @@
               }
             ]
           }
+        }
+      },
+      "UpdateConversationRequest": {
+        "type": "object",
+        "description": "Request to update a conversation",
+        "properties": {
+          "metadata": {}
         }
       },
       "UpdateModelApiRequest": {
@@ -18056,6 +21627,13 @@
             },
             "description": "Sampling parameters accepted by the model (OpenRouter vocabulary)."
           },
+          "textPricing": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Exact, versioned USD-per-million text pricing profile.\nOmitted leaves it unchanged; null removes it."
+          },
           "verifiable": {
             "type": [
               "boolean",
@@ -18101,6 +21679,18 @@
           },
           "updatedAt": {
             "type": "string"
+          }
+        }
+      },
+      "UpdateOrganizationFallbackRequest": {
+        "type": "object",
+        "description": "Admin request to update an organization's fallback policy.",
+        "required": [
+          "enabled"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
           }
         }
       },
@@ -18276,6 +21866,24 @@
           "settings": {}
         }
       },
+      "UpsertAmlAllowlistEntryRequest": {
+        "type": "object",
+        "description": "Admin AML allowlist upsert request.",
+        "required": [
+          "account_id"
+        ],
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
       "Usage": {
         "type": "object",
         "required": [
@@ -18393,6 +22001,7 @@
           "input_tokens",
           "output_tokens",
           "cache_read_tokens",
+          "cache_write_tokens",
           "total_tokens",
           "total_cost",
           "total_cost_display",
@@ -18403,10 +22012,22 @@
           "api_key_id": {
             "type": "string"
           },
+          "billingDetails": {},
           "cache_read_tokens": {
             "type": "integer",
             "format": "int32",
             "description": "Number of prompt tokens that were cache hits"
+          },
+          "cache_write_tokens": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Number of prompt tokens written to provider cache"
+          },
+          "contextBand": {
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "created_at": {
             "type": "string"
@@ -18456,6 +22077,12 @@
               "null"
             ],
             "description": "Response ID when called from Responses API"
+          },
+          "serviceTier": {
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "stop_reason": {
             "type": [
@@ -18507,6 +22134,42 @@
           "total": {
             "type": "integer",
             "minimum": 0
+          }
+        }
+      },
+      "UserLocation": {
+        "type": "object",
+        "description": "User location for web search",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "city": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "country": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "region": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timezone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": {
+            "type": "string"
           }
         }
       },
@@ -18969,362 +22632,6 @@
             "format": "date-time"
           }
         }
-      },
-      "ClientManagedResponseTool": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": [
-              "name",
-              "type"
-            ],
-            "properties": {
-              "description": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "name": {
-                "type": "string"
-              },
-              "parameters": {},
-              "type": {
-                "type": "string",
-                "enum": [
-                  "function"
-                ]
-              }
-            }
-          }
-        ],
-        "description": "The only tool shape accepted from a public Responses request.\n\n`ResponseTool` retains legacy variants for dormant/internal code paths, but\nthe `CreateResponseRequest::tools` deserializer first parses this enum. That\nmakes unsupported builtin types ordinary request-deserialization failures,\nbefore the route or a provider can do any work."
-      },
-      "StatelessResponseInputItemSchema": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": [
-              "type",
-              "call_id",
-              "name",
-              "arguments"
-            ],
-            "properties": {
-              "arguments": {
-                "type": "string"
-              },
-              "call_id": {
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              },
-              "thought_signature": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "type": {
-                "$ref": "#/components/schemas/FunctionCallType"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": [
-              "type",
-              "call_id",
-              "output"
-            ],
-            "properties": {
-              "call_id": {
-                "type": "string"
-              },
-              "output": {
-                "type": "string"
-              },
-              "type": {
-                "$ref": "#/components/schemas/FunctionCallOutputType"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": [
-              "role",
-              "content"
-            ],
-            "properties": {
-              "content": {
-                "$ref": "#/components/schemas/StatelessResponseContentSchema"
-              },
-              "metadata": {},
-              "role": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "StatelessResponseContentSchema": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/StatelessResponseContentPartSchema"
-            }
-          }
-        ]
-      },
-      "StatelessResponseInputSchema": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/StatelessResponseInputItemSchema"
-            }
-          }
-        ]
-      },
-      "FunctionCallType": {
-        "type": "string",
-        "description": "Type marker for a client-replayed function call input item.",
-        "enum": [
-          "function_call"
-        ]
-      },
-      "StatelessResponseToolSchema": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": [
-              "name",
-              "type"
-            ],
-            "properties": {
-              "description": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "name": {
-                "type": "string"
-              },
-              "parameters": {},
-              "type": {
-                "type": "string",
-                "enum": [
-                  "function"
-                ]
-              }
-            }
-          }
-        ]
-      },
-      "StatelessResponseContentPartSchema": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": [
-              "text",
-              "type"
-            ],
-            "properties": {
-              "text": {
-                "type": "string"
-              },
-              "type": {
-                "type": "string",
-                "enum": [
-                  "input_text"
-                ]
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": [
-              "text",
-              "type"
-            ],
-            "properties": {
-              "text": {
-                "type": "string"
-              },
-              "type": {
-                "type": "string",
-                "enum": [
-                  "output_text"
-                ]
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": [
-              "image_url",
-              "type"
-            ],
-            "properties": {
-              "detail": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "image_url": {
-                "$ref": "#/components/schemas/ResponseImageUrl"
-              },
-              "type": {
-                "type": "string",
-                "enum": [
-                  "input_image"
-                ]
-              }
-            }
-          }
-        ]
-      },
-      "StatelessCreateResponseRequestSchema": {
-        "type": "object",
-        "description": "OpenAPI-only view of the stateless Responses request contract.\n\nThe runtime request type keeps legacy variants so it can return a precise\n`invalid_request_error` for them. The public endpoint schema should instead\nshow only the items accepted by the stateless implementation.",
-        "required": [
-          "model"
-        ],
-        "properties": {
-          "include": {
-            "type": [
-              "array",
-              "null"
-            ],
-            "items": {
-              "type": "string"
-            }
-          },
-          "input": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/StatelessResponseInputSchema"
-              }
-            ]
-          },
-          "instructions": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "max_output_tokens": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64"
-          },
-          "max_tool_calls": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64"
-          },
-          "metadata": {},
-          "model": {
-            "type": "string"
-          },
-          "parallel_tool_calls": {
-            "type": [
-              "boolean",
-              "null"
-            ]
-          },
-          "prompt_cache_key": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "reasoning": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/ResponseReasoningConfig"
-              }
-            ]
-          },
-          "safety_identifier": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "service_tier": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "store": {
-            "type": "boolean",
-            "description": "Must be `false` when supplied; omitted is normalized to `false`.",
-            "default": false,
-            "example": false,
-            "const": false
-          },
-          "stream": {
-            "type": [
-              "boolean",
-              "null"
-            ]
-          },
-          "temperature": {
-            "type": [
-              "number",
-              "null"
-            ],
-            "format": "float"
-          },
-          "tool_choice": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/ResponseToolChoice"
-              }
-            ]
-          },
-          "tools": {
-            "type": [
-              "array",
-              "null"
-            ],
-            "items": {
-              "$ref": "#/components/schemas/StatelessResponseToolSchema"
-            }
-          },
-          "top_p": {
-            "type": [
-              "number",
-              "null"
-            ],
-            "format": "float"
-          }
-        }
       }
     },
     "securitySchemes": {
@@ -19392,8 +22699,12 @@
       "description": "Public model catalog and information"
     },
     {
+      "name": "Conversations",
+      "description": "Conversation management"
+    },
+    {
       "name": "Responses",
-      "description": "Stateless response inference (`store: false` only). Raw request/response content, response items, and history are not persisted. Clients must include any prior context in each request. Every successful Responses inference makes exactly one Chat Completions call. Only custom `function` tools are supported. They are client-managed: Cloud returns `function_call` items but never executes them; a later `store: false` request replays the individual call (the raw item from output is accepted) with its matching `function_call_output`, alongside caller-managed message history and the same function tool definitions. The minimal replay path also accepts assistant `message` text parts of type `output_text`, but not reasoning or arbitrary full `response.output` items. Server-executed tools (`web_search`, `web_context_search`, `file_search`, `code_interpreter`, `computer`, and remote `mcp`) and image-generation/editing models are rejected. The separate `POST /mcp` endpoint continues to expose its `web_search` tool independently of Responses; use `/v1/images/*` for image generation/editing. Existing completed-response gateway attestation is preserved best-effort: when the signature write succeeds, `GET /v1/signature/resp_*` retrieves signatures over SHA-256 request/response digests, never raw content. Interrupted streams create no `resp_*` attestation record or legacy disconnect fallback. Conversations, response history, and file input are rejected."
+      "description": "Response handling and streaming"
     },
     {
       "name": "Organizations",
@@ -19406,6 +22717,10 @@
     {
       "name": "Workspaces",
       "description": "Workspace and API key management"
+    },
+    {
+      "name": "Files",
+      "description": "File upload and management"
     },
     {
       "name": "Users",

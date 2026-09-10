@@ -1,0 +1,69 @@
+---
+title: "Quote, Nonce, and Signer Bindings"
+description: "Shared rules for reading verified quotes, checking freshness, and matching signing identities."
+---
+
+Every NEAR verification flow starts with a client-generated nonce and a verified quote. HTTP fields are inputs to compare with the quote. They are not a replacement for quote verification.
+
+## Use a client-generated nonce
+
+Generate 32 random bytes in the client and encode them as 64 hexadecimal characters. Retain the value until verification completes.
+
+```bash
+NONCE="$(openssl rand -hex 32)"
+```
+
+Send this value with the attestation request. Reject a report unless the verified quote contains the same nonce in its request-freshness binding.
+
+## Find the quote for your path
+
+| Request path | Quote location |
+| --- | --- |
+| NEAR AI Cloud gateway | `gateway_attestation.intel_quote` |
+| NEAR AI Cloud gateway model evidence (`provider=near`) | Each candidate report in `model_attestations[]` |
+| Direct model endpoint | Root `intel_quote` (and any applicable direct report entry) |
+
+## Verify the signer binding
+
+For a NEAR-operated report requested with `include_tls_fingerprint=true`, the verified quote binds the signer identity, TLS certificate fingerprint, and nonce.
+
+`signing_address` is algorithm-specific:
+
+| `signing_algo` | `signing_address` |
+| --- | --- |
+| `ecdsa` | An Ethereum-style address derived from the signing key. |
+| `ed25519` | Ed25519 public-key bytes encoded as hexadecimal. |
+
+Always compare both `signing_address` and `signing_algo`. Do not compare identities across algorithms.
+
+## Read NEAR report data
+
+For NEAR-operated reports, quote report data is 64 bytes. The final 32 bytes are the client nonce. The first 32 bytes bind the signing identity:
+
+- Without TLS binding, they are the decoded signing identity, zero-padded on the right to 32 bytes. An ECDSA address occupies 20 bytes; an Ed25519 public key occupies all 32 bytes.
+- With TLS binding, they are `SHA-256(decoded signing identity || TLS SPKI SHA-256)`. Compare the quote-bound fingerprint with the peer certificate observed on the same TLS connection.
+
+This layout applies only to NEAR-operated dstack reports; other providers have their own report-data contracts.
+
+## Verify GPU evidence when present
+
+`nvidia_payload`, when present, is a JSON string. Decode it and send the resulting JSON object unchanged to NVIDIA NRAS; do not wrap it in another JSON property. For a NEAR AI Cloud response, save each `model_attestations[]` candidate as a separate report file and run this check for every candidate before accepting it. For a direct response, save its root model report.
+
+```bash
+GPU_PAYLOAD="$(jq -er '.nvidia_payload | fromjson' report.json)"
+
+printf '%s\n' "$GPU_PAYLOAD" | jq -e --arg nonce "$NONCE" \
+  '(.nonce | type == "string") and ((.nonce | ascii_downcase) == ($nonce | ascii_downcase))'
+
+curl --fail-with-body -sS -X POST \
+  'https://nras.attestation.nvidia.com/v3/attest/gpu' \
+  -H 'Accept: application/json' \
+  -H 'Content-Type: application/json' \
+  --data-binary "$GPU_PAYLOAD"
+```
+
+NRAS returns a JSON array whose first entry is `["JWT", "<token>"]`. Decode that JWT's payload and require `x-nvidia-overall-att-result` to be boolean `true`. Reject missing or malformed GPU evidence, a nonce mismatch, or any other verdict. This minimal flow relies on the TLS-authenticated NRAS verdict; apply local JWT/EAT validation separately if your policy requires it. Define in advance whether missing GPU evidence is acceptable for your workload policy.
+
+## Verification SDK
+
+For a language-specific library, see the [Verification SDK](/cloud/verification/reference/sdk).

@@ -1,0 +1,36 @@
+---
+title: "Image Provenance"
+description: "Apply an image-provenance policy to configurations measured in NEAR AI Cloud gateway and model attestations."
+---
+
+Image provenance is separate from hardware attestation. A verified quote can bind a configuration measurement to a runtime. Provenance determines whether the image digests in that configuration were built by a source and build process your policy accepts.
+
+For model-level provenance through the gateway, this flow applies to every NEAR model report returned by a request with `provider=near`.
+
+For a NEAR AI Cloud gateway flow, decide separately whether your policy requires provenance for:
+
+- the configuration measured by `gateway_attestation`
+- each NEAR model report in `model_attestations[]`, requested with `provider=near`
+- both
+
+## Verification flow
+
+1. Verify the relevant Intel TDX quote first. For `model_attestations[]`, verify each candidate report separately before treating it as eligible evidence.
+2. For each eligible NEAR model report, use the raw `info.tcb_info.app_compose` string. Calculate its SHA-256 hash without parsing or reserializing it, and compare it with the configuration measurement in that report's verified quote.
+3. Extract every immutable image digest (`@sha256:…`) from the matched configuration.
+4. Cryptographically verify provenance for each required digest and confirm that the statement's subject equals the image digest exactly.
+5. Apply your policy for repository, build identity, workflow, ref, and source revision.
+
+<Warning>
+  A tag, search result, or HTTP `200` only locates a possible record. It does not cryptographically verify the provenance statement, its signer, or its subject digest.
+</Warning>
+
+## Missing evidence
+
+An unavailable provenance record, including an HTTP `404`, means the reported digest could not be verified under that policy. It does not by itself identify a security incident.
+
+Fetch a fresh report after a deployment change. If the current evidence still lacks provenance required by your policy, treat that image as unverified.
+
+<Note>
+  When requesting help, share only non-sensitive verification metadata: the endpoint, UTC time, requested model, signing address, `info.instance_id` when present, image name, and full digest. Never include API keys, prompts, or response content.
+</Note>

@@ -1,0 +1,44 @@
+---
+title: "Verification Policy"
+description: "Define required evidence, acceptable measurements, provenance requirements, and handling for unavailable verification results."
+---
+
+Attestation verifies particular cryptographic statements. Your application must decide which statements it requires and what software, hardware, and source provenance it accepts.
+
+## Define acceptance before verification
+
+At minimum, specify:
+
+- acceptable Intel TDX verification status and advisory policy
+- rejection of quotes with TDX debug mode enabled
+- required signer algorithm and identity matching rules
+- whether GPU evidence is required and the accepted verdict
+- accepted workload measurements and configuration rules
+- trusted image repositories, build identities, workflows, refs, and source revisions
+- maximum acceptable evidence age
+- whether TLS endpoint binding and response signatures are required
+
+## Treat required checks as fail-closed
+
+When a required check is missing, unavailable, malformed, mismatched, or fails verification, the result is unverified. Do not replace it with a report for a different signer, certificate, request, or model instance.
+
+| Condition | Recommended result |
+| --- | --- |
+| Quote or nonce mismatch | Reject the evidence and request a fresh report. |
+| Quote has TDX debug mode enabled | Reject the evidence. |
+| TLS report or peer SPKI unavailable | Treat endpoint binding as unverified. |
+| Response signature unavailable after a bounded retry | Treat the response as unverified when signatures are required. |
+| Image-provenance record is missing or returns `404` | Treat that digest as unverified when provenance is required. |
+| A required NEAR model candidate is unavailable, malformed, or fails verification | Treat the model property as unverified. |
+
+## Load balancing and rotations
+
+The same hostname can be served by more than one attested instance. A report is not evidence for a later request merely because it came from the same hostname.
+
+- For TLS, obtain the peer certificate and report on the same connection.
+- For a `provider_tee` response signature, verify and retain every returned model-attestation candidate before the completion. Accept the signature only when its signer identity and algorithm match exactly one verified candidate. A report fetched after the completion cannot replace that preflight check.
+- Refresh preflight evidence before a later request after a signer, certificate, configuration, deployment, or policy-age change.
+
+## What attestation does not establish by itself
+
+Attestation does not validate the quality of a model response, secure a compromised client device, or establish image provenance without a separate cryptographic provenance check. It also does not turn a reachable build record into a verified provenance statement.
