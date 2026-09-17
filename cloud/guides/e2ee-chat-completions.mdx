@@ -8,12 +8,14 @@ icon: "message-square-lock"
 
 NEAR AI Cloud runs both the gateway and model inference inside Trusted Execution Environments (TEEs), providing strong hardware-level isolation. End-to-end encryption (E2EE) adds an additional layer of protection by encrypting your messages with the model's public key before they leave your machine.
 
+This guide uses the NEAR model E2EE protocol. The gateway sends client-E2EE requests only to a compatible NEAR-serving path; if none is available, the request is unsupported rather than routed through a different E2EE protocol.
+
 ## Why Use E2EE?
 
 With E2EE enabled, your messages are encrypted client-side using the model's public key, which is cryptographically bound to its TEE attestation. This provides:
 
 - **Defense in depth** — Multiple independent encryption layers on top of TLS
-- **Model-specific encryption** — Only the specific attested model instance can decrypt your messages
+- **Model-specific encryption** — Only model environments holding the attested model key can decrypt your messages
 - **Cryptographic binding** — Messages are tied to a verified TEE through attestation
 - **Forward secrecy** — Each request uses ephemeral keys
 
@@ -28,11 +30,12 @@ sequenceDiagram
     Client->>GatewayTEE: GET /attestation/report?model=X
     GatewayTEE->>ModelTEE: Forward attestation request
     Note over ModelTEE: Generate attestation report<br/>with model's public key
-    ModelTEE->>GatewayTEE: Attestation report
-    GatewayTEE->>Client: Model public key (from Model TEE)
+    ModelTEE->>GatewayTEE: Attestation reports
+    GatewayTEE->>Client: Model attestation candidates
 
+    Note over Client: Verify candidates and select a key<br/>under the application's acceptance policy
     Note over Client: Generate ephemeral key pair
-    Note over Client: Encrypt messages with model's public key
+    Note over Client: Encrypt messages with the selected model key
 
     Client->>GatewayTEE: POST /chat/completions<br/>with encryption headers
     GatewayTEE->>ModelTEE: Forward encrypted request
@@ -82,7 +85,7 @@ Wire format for all encrypted fields: `[ephemeral_pubkey (32 bytes)][nonce (24 b
 
 ## Quick Start
 
-A self-contained Python script that performs the full E2EE flow: fetch the model's key, generate a client key pair, encrypt, send, and decrypt.
+A Python script that demonstrates the E2EE encryption flow after you have obtained a verified model public key: generate a client key pair, encrypt, send, and decrypt. For a gateway report, verify every returned model-attestation candidate before applying your acceptance policy to select a key; the endpoint-specific attestation guides describe those checks.
 
 **Requirements:** `pip install requests PyNaCl cryptography`
 
@@ -90,7 +93,7 @@ A self-contained Python script that performs the full E2EE flow: fetch the model
 - **cryptography** — X25519 ECDH key exchange and HKDF-SHA256 key derivation
 
 ```python
-import secrets, requests
+import os, secrets, requests
 from nacl.signing import SigningKey
 from nacl.bindings import (
     crypto_sign_ed25519_pk_to_curve25519,
@@ -104,8 +107,11 @@ from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import hashes
 
 ENDPOINT = "https://cloud-api.near.ai"
-API_KEY  = "sk-..."
-MODEL    = "zai-org/GLM-5.1-FP8"
+API_KEY = os.environ["NEAR_AI_CLOUD_API_KEY"]
+MODEL = "zai-org/GLM-5.1-FP8"
+# Obtain this from `signing_public_key` only after verifying the attestation
+# candidates and selecting one report under your application's policy.
+MODEL_ED25519_PUBLIC_KEY_HEX = os.environ["MODEL_ED25519_PUBLIC_KEY_HEX"]
 
 # ── Helpers ─────────────────────────────────────────────────────────
 
@@ -124,14 +130,11 @@ def v2_decrypt(data: bytes, secret_x25519: bytes) -> bytes:
     key = HKDF(hashes.SHA256(), 32, None, b"ed25519_encryption").derive(shared)
     return crypto_aead_xchacha20poly1305_ietf_decrypt(ct, None, nonce, key)
 
-# ── 1. Fetch model's Ed25519 public key ─────────────────────────────
+# ── 1. Use the model's verified Ed25519 public key ──────────────────
 
-attestation = requests.get(
-    f"{ENDPOINT}/v1/attestation/report",
-    headers={"Authorization": f"Bearer {API_KEY}"},
-    params={"model": MODEL, "signing_algo": "ed25519"},
-).json()
-model_ed25519_pub = bytes.fromhex(attestation["model_attestations"][0]["signing_public_key"])
+model_ed25519_pub = bytes.fromhex(MODEL_ED25519_PUBLIC_KEY_HEX)
+if len(model_ed25519_pub) != 32:
+    raise ValueError("MODEL_ED25519_PUBLIC_KEY_HEX must encode 32 bytes")
 model_x25519_pub = crypto_sign_ed25519_pk_to_curve25519(model_ed25519_pub)
 
 # ── 2. Generate client Ed25519 key pair ──────────────────────────────
@@ -153,7 +156,9 @@ resp = requests.post(
         "Content-Type": "application/json",
         "X-Signing-Algo": "ed25519",
         "X-Client-Pub-Key": client_pub_hex,
+        "X-Model-Pub-Key": model_ed25519_pub.hex(),
         "X-Encryption-Version": "2",
+        "x-no-aliasing": "true",
     },
     json={
         "model": MODEL,
@@ -169,6 +174,9 @@ msg = resp.json()["choices"][0]["message"]
 if msg.get("reasoning_content"):
     print("Reasoning:", v2_decrypt(bytes.fromhex(msg["reasoning_content"]), client_x25519_secret).decode())
 
+if msg.get("reasoning"):
+    print("Reasoning:", v2_decrypt(bytes.fromhex(msg["reasoning"]), client_x25519_secret).decode())
+
 if msg.get("content"):
     print("Content:", v2_decrypt(bytes.fromhex(msg["content"]), client_x25519_secret).decode())
 ```
@@ -179,7 +187,7 @@ if msg.get("content"):
 
 ### Step 1: Get the Model's Public Key
 
-Fetch the model's Ed25519 public key from its TEE attestation report. The public key is generated inside the Model TEE and cryptographically bound to its hardware attestation.
+Fetch the model's Ed25519 public key from its TEE attestation report. The public key is generated inside the Model TEE and cryptographically bound to its hardware attestation. For a gateway request, reject an empty `model_attestations[]` array, verify every returned candidate and its fresh nonce, then choose one verified report under your application's acceptance policy. Use that report's `signing_public_key` as the `X-Model-Pub-Key` routing pin. For a direct request, verify the root model report before using its key. See [NEAR model attestations](/cloud/verification/cloud-api/model-attestations) or [direct model attestation](/cloud/verification/direct/model-attestation).
 
 The gateway endpoint requires an API key (`Authorization: Bearer <api-key>`); report retrieval is free and never counts against your usage. The direct completions endpoint is served by the model TEE itself and needs no API key.
 
@@ -187,7 +195,15 @@ The gateway endpoint requires an API key (`Authorization: Bearer <api-key>`); re
 <Tab title="curl (Gateway)">
 
 ```bash
-curl "https://cloud-api.near.ai/v1/attestation/report?model=zai-org/GLM-5.1-FP8&signing_algo=ed25519" \
+NONCE="$(openssl rand -hex 32)"
+
+curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
+  --data-urlencode 'model=zai-org/GLM-5.1-FP8' \
+  --data-urlencode 'provider=near' \
+  --data-urlencode 'signing_algo=ed25519' \
+  --data-urlencode 'include_tls_fingerprint=false' \
+  --data-urlencode "nonce=${NONCE}" \
+  -H 'x-no-aliasing: true' \
   -H 'Authorization: Bearer <YOUR-NEAR-AI-CLOUD-API-KEY>'
 ```
 
@@ -196,7 +212,11 @@ curl "https://cloud-api.near.ai/v1/attestation/report?model=zai-org/GLM-5.1-FP8&
 
 ```bash
 # Direct completions — no model parameter needed, the endpoint serves one model
-curl "https://qwen35-122b.completions.near.ai/v1/attestation/report?signing_algo=ed25519"
+NONCE="$(openssl rand -hex 32)"
+
+curl -G 'https://qwen35-122b.completions.near.ai/v1/attestation/report' \
+  --data-urlencode 'signing_algo=ed25519' \
+  --data-urlencode "nonce=${NONCE}"
 ```
 
 </Tab>
@@ -204,54 +224,84 @@ curl "https://qwen35-122b.completions.near.ai/v1/attestation/report?signing_algo
 
 ```python
 import os
+import secrets
 import requests
 
+nonce = secrets.token_hex(32)
 response = requests.get(
     "https://cloud-api.near.ai/v1/attestation/report",
-    headers={"Authorization": f"Bearer {os.environ['NEAR_AI_CLOUD_API_KEY']}"},
+    headers={
+        "Authorization": f"Bearer {os.environ['NEAR_AI_CLOUD_API_KEY']}",
+        "x-no-aliasing": "true",
+    },
     params={
         "model": "zai-org/GLM-5.1-FP8",
-        "signing_algo": "ed25519"
+        "provider": "near",
+        "signing_algo": "ed25519",
+        "include_tls_fingerprint": "false",
+        "nonce": nonce,
     }
 )
+response.raise_for_status()
 
 # For direct completions:
 # response = requests.get(
 #     "https://qwen35-122b.completions.near.ai/v1/attestation/report",
-#     params={"signing_algo": "ed25519"}
+#     params={"signing_algo": "ed25519", "nonce": nonce}
 # )
 
 attestation = response.json()
-model_public_key_hex = attestation["model_attestations"][0]["signing_public_key"]
-print(f"Model Ed25519 public key: {model_public_key_hex}")
+# NEAR AI Cloud gateway:
+model_reports = attestation.get("model_attestations", [])
+if not model_reports:
+    raise ValueError("No NEAR model attestations returned")
+# Do not read a key from a raw candidate. Verify every candidate and `nonce`
+# using the model-attestation flow, then select a verified report under your
+# E2EE acceptance policy and read its `signing_public_key`.
+print(f"Retrieved {len(model_reports)} NEAR model-attestation candidate(s)")
+# Direct completions use the root model report instead:
+# model_public_key_hex = attestation["signing_public_key"]
 ```
 
 </Tab>
 <Tab title="JavaScript">
 
 ```javascript
+const nonce = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) =>
+  byte.toString(16).padStart(2, '0')
+).join('');
+
 const response = await fetch(
   'https://cloud-api.near.ai/v1/attestation/report?' +
-  new URLSearchParams({
-    model: 'zai-org/GLM-5.1-FP8',
-    signing_algo: 'ed25519'
-  }),
+    new URLSearchParams({
+      model: 'zai-org/GLM-5.1-FP8',
+      provider: 'near',
+      signing_algo: 'ed25519',
+      include_tls_fingerprint: 'false',
+      nonce,
+    }),
   {
     headers: {
       'Authorization': `Bearer ${process.env.NEAR_AI_CLOUD_API_KEY}`,
+      'x-no-aliasing': 'true',
     },
   }
 );
 
+if (!response.ok) throw new Error(`Attestation request failed: ${response.status}`);
 const attestation = await response.json();
-const modelPublicKeyHex = attestation.model_attestations[0].signing_public_key;
-console.log('Model Ed25519 public key:', modelPublicKeyHex);
+const modelReports = attestation.model_attestations ?? [];
+if (modelReports.length === 0) throw new Error('No NEAR model attestations returned');
+// Do not read a key from a raw candidate. Verify every candidate and `nonce`
+// using the model-attestation flow, then select a verified report under your
+// E2EE acceptance policy and read its `signing_public_key`.
+console.log(`Retrieved ${modelReports.length} NEAR model-attestation candidate(s)`);
 ```
 
 </Tab>
 </Tabs>
 
-The response contains `model_attestations` with the model's `signing_public_key` in hex format.
+For the NEAR AI Cloud gateway, request `provider=near` with a canonical model ID and `x-no-aliasing: true`. Reject an empty response, verify every returned model-report candidate with the nonce you generated, and retain only reports your application accepts. Select a key only from that verified set, then send its `signing_public_key` in `X-Model-Pub-Key`. For a direct completions endpoint, the key is in the root report's `signing_public_key`.
 
 ---
 
@@ -421,6 +471,7 @@ curl https://cloud-api.near.ai/v1/chat/completions \
   -H "X-Client-Pub-Key: YOUR_ED25519_PUBLIC_KEY_HEX" \
   -H "X-Model-Pub-Key: MODEL_ED25519_PUBLIC_KEY_HEX" \
   -H "X-Encryption-Version: 2" \
+  -H "x-no-aliasing: true" \
   -d '{
     "model": "zai-org/GLM-5.1-FP8",
     "messages": [{
@@ -465,7 +516,9 @@ response = requests.post(
         "Content-Type": "application/json",
         "X-Signing-Algo": "ed25519",
         "X-Client-Pub-Key": client_public_key_hex,
+        "X-Model-Pub-Key": model_public_key_hex,
         "X-Encryption-Version": "2",
+        "x-no-aliasing": "true",
     },
     json={
         "model": "zai-org/GLM-5.1-FP8",
@@ -491,7 +544,9 @@ const response = await fetch('https://cloud-api.near.ai/v1/chat/completions', {
     'Content-Type': 'application/json',
     'X-Signing-Algo': 'ed25519',
     'X-Client-Pub-Key': clientPublicKeyHex,
+    'X-Model-Pub-Key': modelPublicKeyHex,
     'X-Encryption-Version': '2',
+    'x-no-aliasing': 'true',
   },
   body: JSON.stringify({
     model: 'zai-org/GLM-5.1-FP8',
@@ -516,14 +571,15 @@ const data = await response.json();
 | `X-Signing-Algo` | Set to `ed25519` |
 | `X-Client-Pub-Key` | Your Ed25519 public key in hex format (32 bytes / 64 hex chars) |
 | `X-Encryption-Version` | Set to `2` |
-| `X-Model-Pub-Key` | Model's Ed25519 public key from attestation (required when using the gateway for routing) |
+| `X-Model-Pub-Key` | Ed25519 public key from the selected, verified model report; required as the gateway routing pin |
+| `x-no-aliasing` | Set to `true` for gateway requests so the model ID and attested model key cannot be silently redirected. |
 | `X-Encrypt-All-Fields` | Optional. Set to `true` to extend encryption beyond message content to tool definitions, tool calls, and other sensitive fields — see [Encrypting All Fields](#encrypting-all-fields-tool-calling) |
 
 ---
 
 ### Step 5: Decrypt the Response
 
-The response `content` and `reasoning_content` fields will contain hex-encoded encrypted data. Decrypt using your private key.
+The response `content`, `reasoning_content`, and `reasoning` fields can contain hex-encoded encrypted data. Decrypt each field that is present using your private key.
 
 <Tabs>
 <Tab title="Python">
@@ -572,6 +628,9 @@ if msg.get("content"):
 
 if msg.get("reasoning_content"):
     print("Reasoning:", decrypt_response(msg["reasoning_content"], client_x25519_secret))
+
+if msg.get("reasoning"):
+    print("Reasoning:", decrypt_response(msg["reasoning"], client_x25519_secret))
 ```
 
 </Tab>
@@ -613,6 +672,9 @@ if (msg.content) {
 if (msg.reasoning_content) {
   console.log('Reasoning:', decryptResponse(msg.reasoning_content, clientX25519Secret));
 }
+if (msg.reasoning) {
+  console.log('Reasoning:', decryptResponse(msg.reasoning, clientX25519Secret));
+}
 ```
 
 </Tab>
@@ -652,7 +714,9 @@ resp = requests.post(
         "Content-Type": "application/json",
         "X-Signing-Algo": "ed25519",
         "X-Client-Pub-Key": client_pub_hex,
+        "X-Model-Pub-Key": model_ed25519_pub.hex(),
         "X-Encryption-Version": "2",
+        "x-no-aliasing": "true",
         "X-Encrypt-All-Fields": "true",
     },
     json={
@@ -686,12 +750,12 @@ E2EE is supported on the **Chat Completions API** (`/v1/chat/completions`), **Co
 ### Message Format
 
 - Encrypted message content must be hex-encoded
-- The `content` and `reasoning_content` fields in responses will be hex-encoded encrypted data
+- The `content`, `reasoning_content`, and `reasoning` fields in responses can be hex-encoded encrypted data
 - Each streaming chunk's content is independently encrypted
 
 ### Verification
 
-You can verify the model's public key is authentic by checking the attestation report against hardware attestation. See [Model Verification](/cloud/verification/model) for details.
+Before using a model public key for encryption, verify the attestation report and its fresh client nonce against hardware attestation. For a gateway response, verify every returned model-attestation candidate and choose a key only from reports accepted by your policy. Choose the matching endpoint flow in [Verification](/cloud/verification).
 
 ---
 
@@ -700,8 +764,18 @@ You can verify the model's public key is authentic by checking the attestation r
 <Accordion title="ECDSA encryption uses SECP256K1 ECDH + HKDF-SHA256 + AES-256-GCM with 64-byte (128 hex) public keys.">
   ### Get the Model's ECDSA Public Key
 
+  Verify every returned model-attestation candidate and its fresh nonce before applying your acceptance policy and using a selected public key, as described in [NEAR model attestations](/cloud/verification/cloud-api/model-attestations).
+
   ```bash
-  curl "https://cloud-api.near.ai/v1/attestation/report?model=zai-org/GLM-5.1-FP8&signing_algo=ecdsa" \
+  NONCE="$(openssl rand -hex 32)"
+
+  curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
+    --data-urlencode 'model=zai-org/GLM-5.1-FP8' \
+    --data-urlencode 'provider=near' \
+    --data-urlencode 'signing_algo=ecdsa' \
+    --data-urlencode 'include_tls_fingerprint=false' \
+    --data-urlencode "nonce=${NONCE}" \
+    -H 'x-no-aliasing: true' \
     -H 'Authorization: Bearer <YOUR-NEAR-AI-CLOUD-API-KEY>'
   ```
 
@@ -770,6 +844,7 @@ You can verify the model's public key is authentic by checking the attestation r
     -H "X-Signing-Algo: ecdsa" \
     -H "X-Client-Pub-Key: YOUR_ECDSA_PUBLIC_KEY_HEX" \
     -H "X-Model-Pub-Key: MODEL_ECDSA_PUBLIC_KEY_HEX" \
+    -H "x-no-aliasing: true" \
     -d '{
       "model": "zai-org/GLM-5.1-FP8",
       "messages": [{"role": "user", "content": "ENCRYPTED_CONTENT_HEX"}],
@@ -810,5 +885,5 @@ You can verify the model's public key is authentic by checking the attestation r
 ## See Also
 
 - [Private Inference](/cloud/private-inference) — How TEE isolation protects your data
-- [Model Verification](/cloud/verification/model) — Verify the model's TEE attestation
-- [Chat Verification](/cloud/verification/chat) — Verify chat signatures
+- [Verification](/cloud/verification) — Select NEAR AI Cloud gateway or direct model attestation verification
+- [Verification Policy](/cloud/verification/reference/verification-policy) — Define the evidence your application requires

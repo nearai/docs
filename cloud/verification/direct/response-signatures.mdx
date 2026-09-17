@@ -1,0 +1,54 @@
+---
+title: "Response Signatures"
+description: "Verify an available direct-model response signature against exact bytes and the matching model report."
+---
+
+Use this flow for a completion sent directly to a model endpoint. When a signature is available, it lets you verify that the exact response bytes came from the attested model environment.
+
+<Note>
+  A response without an available signature is not a successfully verified response. If response verification is required by your policy, treat it as unverified after a short, bounded retry interval.
+</Note>
+
+## Preserve exact request and response bytes
+
+Build the request body once and retain the exact bytes sent by the client. Retain the raw response bytes before parsing JSON or Server-Sent Events.
+
+```text
+request_hash  = SHA-256(exact request-body bytes)
+response_hash = SHA-256(exact response-body bytes)
+```
+
+Do not parse and re-serialize JSON, normalize whitespace or line endings, omit stream delimiters, or reconstruct a streamed response from parsed events. Configure the HTTP client to retain the entity bytes it received; requesting `Accept-Encoding: identity` is the simplest way to avoid transparent decompression changing those bytes.
+
+## Fetch and verify the signature
+
+Set `<CHAT_ID>` to the `id` in the completion response whose exact bytes you retained.
+
+```bash
+curl --fail-with-body -G 'https://<MODEL_SLUG>.completions.near.ai/v1/signature/<CHAT_ID>' \
+  --data-urlencode 'signing_algo=<SIGNING_ALGO>' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
+```
+
+Set `<SIGNING_ALGO>` to the explicit algorithm used for the matching model attestation.
+
+For `ecdsa`, recover the Ethereum EIP-191 signer from `text` and `signature`, then compare it with `signing_address`. For `ed25519`, verify the UTF-8 bytes of `text` using `signing_address` as the public key. Reject unsupported algorithms.
+
+Then require that `text` is exactly:
+
+```text
+<MODEL_NAME>:<request_hash>:<response_hash>
+```
+
+Use the `model_name` reported by the direct model attestation. A different string, even if it resembles the hostname or a NEAR AI Cloud gateway model ID, does not satisfy this check. If the report has no non-empty `model_name`, this direct response-signature format cannot be verified.
+
+Use the [manual response-signature helpers](/cloud/verification/reference/response-signature-verification) with the exact request and response bytes, this `model_name`, and the signer from the verified direct model attestation.
+
+## Match the model signer
+
+Request or select a direct model attestation whose `signing_address` and `signing_algo` exactly match the signature. Verify its quote, client-generated nonce, signer binding, and required workload policy as described in [direct model attestation](/cloud/verification/direct/model-attestation).
+
+Do not infer a gateway or model classification from the format of the signed text, and do not substitute a report for a different signer.
+
+`ecdsa` identities are Ethereum-style signing addresses. `ed25519` identities are Ed25519 public-key bytes encoded as hexadecimal. Always compare the identity together with `signing_algo`.

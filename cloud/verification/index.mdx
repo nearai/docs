@@ -1,57 +1,36 @@
 ---
 title: "Verification"
+description: "Choose the verification guide that matches the inference endpoint your application calls."
 ---
 
-[NEAR AI Cloud](https://cloud.near.ai) operates in Trusted Execution Environments (TEEs) which use cryptographic proofs to verify that your private AI conversations actually happened in secure, isolated environments that are not on compromised systems or with unauthorized access.
+Use these guides to verify the evidence returned for your AI requests. Start with the inference endpoint your application calls.
 
-This section will show you step-by-step processes for checking these proofs, validating digital signatures, and confirming that your AI interactions haven't been tampered with.
-
-<Tip>
-  See an easy-to-follow example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo.
-
-  A more complete verifier implementation is available in the [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) repo.
-</Tip>
-<Tip>
-  **Simplified Verification with Direct Completions**
-
-  When using [direct completions endpoints](/cloud/private-inference#direct-completions) (e.g., `https://qwen35-122b.completions.near.ai`), your requests go straight to the model's TEE. This means only **model verification** is needed — there is no gateway in the path, so [gateway verification](/cloud/verification/gateway) can be skipped entirely.
-</Tip>
-<Tip>
-  **TLS Termination Inside the TEE**
-
-  If you also need to prove that your HTTPS connection terminates inside the same TEE, request attestation with `include_tls_fingerprint=true`. That opt-in flag changes the attested `report_data` from `signing_address || nonce` to `SHA256(signing_address || tls_cert_fingerprint) || nonce`. See [TLS Attestation Verification](/cloud/verification/tls).
-</Tip>
-## How NEAR AI Cloud Verification Works
-
-1. **Secure Key Generation:** When NEAR AI Cloud initializes, it generates a unique cryptographic signing key pair inside the Trusted Execution Environment (TEE). The private key never leaves the secure hardware.
-
-2. **Hardware Attestation:** The system generates attestation reports that cryptographically prove it's running on genuine NVIDIA H100/H200 hardware in TEE mode within a confidential VM.
-
-3. **Key Binding:** These attestation reports include the public key from step 1, creating a verifiable link between the secure hardware and the signing capability.
-
-4. **Message Signing:** Every AI inference request and response is digitally signed using the private key that remains secured within the TEE.
-
-5. **End-to-End Verification:** You can verify that your AI interactions were genuinely processed in the secure environment by:
-
-    - Checking the hardware attestation reports
-    - Validating the digital signatures on your messages
-    - Confirming the signing key matches the attested hardware
-
----
-
-## What You Can Verify
+## Choose your request path
 
 <CardGroup cols={2}>
-  <Card title="Model Verification" icon="brain-circuit" href="/cloud/verification/model">
-    Verify that AI models are running in secure TEE environments using NVIDIA and Intel attestation
+  <Card title="NEAR AI Cloud Gateway" icon="cloud" href="/cloud/verification/cloud-api">
+    Use this when your application sends requests through `cloud-api.near.ai`. Verify the gateway and, when your policy requires it, every returned NEAR model-attestation candidate.
   </Card>
-  <Card title="Gateway Verification" icon="router" href="/cloud/verification/gateway">
-    Verify that the private inference gateway is running in secure TEE environments using Intel attestation
+  <Card title="Direct model endpoints" icon="server" href="/cloud/verification/direct">
+    Use this when your application connects directly to a model's `completions.near.ai` endpoint. Verify the model environment reported by that endpoint.
   </Card>
-  <Card title="TLS Attestation Verification" icon="shield-check" href="/cloud/verification/tls">
-    Verify that your HTTPS connection terminates inside the attested TEE by binding the TLS certificate into report_data
+</CardGroup>
+
+<Note>
+  Choose the guide from the inference endpoint in your application configuration. If your application uses both request paths, verify each request with the guide for the endpoint it used.
+</Note>
+
+## What happens next
+
+After you choose a path, its guide walks you through verifying fresh deployment evidence before a completion and, when present, a response signature against its reported signer. Depending on your application's policy, you can also verify the TLS connection and software-image provenance.
+
+## Common verification concepts
+
+<CardGroup cols={2}>
+  <Card title="Quote, nonce, and signer bindings" icon="fingerprint" href="/cloud/verification/reference/quote-nonce-signer">
+    Learn how fresh attestation evidence is tied to your request and to a signing identity.
   </Card>
-  <Card title="Chat Verification" icon="message-square-check" href="/cloud/verification/chat">
-    Verify individual chat messages and responses through cryptographic signatures
+  <Card title="Verification policy" icon="list-checks" href="/cloud/verification/reference/verification-policy">
+    Decide which checks, measurements, and source-provenance requirements your application accepts.
   </Card>
 </CardGroup>

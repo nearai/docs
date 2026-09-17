@@ -1,0 +1,40 @@
+---
+title: "TLS Connection Binding"
+description: "Bind a live direct-model TLS connection to the direct model attestation report."
+---
+
+Use this flow to establish that the HTTPS connection to a direct model endpoint terminates at the endpoint bound to its model attestation.
+
+<Warning>
+  Obtain the peer certificate and direct attestation report over the **same TLS connection**. Separate connections can reach different instances or observe a rotated certificate, so they cannot establish this connection-specific conclusion.
+</Warning>
+
+## What this checks
+
+With `include_tls_fingerprint=true`, the direct report includes `tls_cert_fingerprint`: the SHA-256 hash of the direct endpoint certificate's SubjectPublicKeyInfo (SPKI). The verified model quote binds that fingerprint, the model signing identity, and the nonce.
+
+This check applies to the direct model connection. It does not verify a connection to `cloud-api.near.ai`.
+
+## Verification flow
+
+1. Generate a fresh 32-byte nonce in the client.
+2. Open a TLS connection to `https://<MODEL_SLUG>.completions.near.ai` using the trust configuration required by your application.
+3. Read the peer certificate from that connection and calculate `SHA-256(SPKI_DER)`.
+4. Reuse the same open connection to request `/v1/attestation/report` with `include_tls_fingerprint=true`, the nonce, and the signing algorithm you require.
+5. Verify the direct report's Intel TDX quote, then check the nonce, model signer, and TLS-fingerprint binding in the verified quote.
+6. Compare the calculated peer SPKI hash with `tls_cert_fingerprint`.
+
+A command-line request can retrieve a report, but cannot by itself demonstrate that the report and peer certificate came from one TLS connection.
+
+This result applies only to that open TLS connection. Send the inference request on it. If the client reconnects, repeat this flow before treating the new connection as bound.
+
+## Required handling
+
+| Result | Action when TLS endpoint binding is required |
+| --- | --- |
+| `tls_cert_fingerprint` is absent | Treat the TLS binding as unavailable. Request a new report with `include_tls_fingerprint=true`. |
+| Peer SPKI hash differs | Reject the connection and repeat the flow with one TLS connection. |
+| Quote, nonce, or signer binding fails | Reject the report and fetch fresh evidence. |
+| Certificate and report came from different connections | Treat the result as inconclusive. |
+
+Do not use a cached fingerprint as evidence for a new connection. Fetch new evidence after a certificate, signer, measurement, or accepted-attestation-age change.

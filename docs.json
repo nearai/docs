@@ -67,10 +67,36 @@
                 "icon": "file-check",
                 "root": "cloud/verification/index",
                 "pages": [
-                  "cloud/verification/model",
-                  "cloud/verification/gateway",
-                  "cloud/verification/tls",
-                  "cloud/verification/chat"
+                  {
+                    "group": "NEAR AI Cloud Gateway",
+                    "root": "cloud/verification/cloud-api/index",
+                    "pages": [
+                      "cloud/verification/cloud-api/gateway-attestation",
+                      "cloud/verification/cloud-api/model-attestations",
+                      "cloud/verification/cloud-api/tls",
+                      "cloud/verification/cloud-api/response-signatures",
+                      "cloud/verification/cloud-api/image-provenance"
+                    ]
+                  },
+                  {
+                    "group": "Direct Model Endpoints",
+                    "root": "cloud/verification/direct/index",
+                    "pages": [
+                      "cloud/verification/direct/model-attestation",
+                      "cloud/verification/direct/tls",
+                      "cloud/verification/direct/response-signatures",
+                      "cloud/verification/direct/image-provenance"
+                    ]
+                  },
+                  {
+                    "group": "Reference",
+                    "pages": [
+                      "cloud/verification/reference/sdk",
+                      "cloud/verification/reference/quote-nonce-signer",
+                      "cloud/verification/reference/response-signature-verification",
+                      "cloud/verification/reference/verification-policy"
+                    ]
+                  }
                 ]
               }
             ]
@@ -139,7 +165,11 @@
           {
             "group": "Responses",
             "pages": [
-              "POST /v1/responses"
+              "POST /v1/responses",
+              "GET /v1/responses/{response_id}",
+              "DELETE /v1/responses/{response_id}",
+              "POST /v1/responses/{response_id}/cancel",
+              "GET /v1/responses/{response_id}/input_items"
             ]
           },
           {
@@ -316,6 +346,11 @@
               "GET /v1/admin/access-tokens",
               "POST /v1/admin/access-tokens",
               "DELETE /v1/admin/access-tokens/{token_id}",
+              "GET /v1/admin/aml/allowlist",
+              "POST /v1/admin/aml/allowlist",
+              "DELETE /v1/admin/aml/allowlist/{account_id}",
+              "GET /v1/admin/aml/reports",
+              "PATCH /v1/admin/aml/reports/{report_id}/status",
               "GET /v1/admin/invitation-email-deliveries",
               "POST /v1/admin/invitation-email-deliveries/{invitation_id}/resend",
               "GET /v1/admin/models",
@@ -332,6 +367,8 @@
               "GET /v1/admin/organizations/{org_id}",
               "GET /v1/admin/organizations/{org_id}/concurrent-limit",
               "PATCH /v1/admin/organizations/{org_id}/concurrent-limit",
+              "GET /v1/admin/organizations/{org_id}/fallback",
+              "PATCH /v1/admin/organizations/{org_id}/fallback",
               "PATCH /v1/admin/organizations/{org_id}/limits",
               "GET /v1/admin/organizations/{org_id}/limits/history",
               "GET /v1/admin/organizations/{org_id}/members",
@@ -349,6 +386,32 @@
               "POST /v1/admin/services",
               "PATCH /v1/admin/services/{id}",
               "GET /v1/admin/users"
+            ]
+          },
+          {
+            "group": "Conversations",
+            "pages": [
+              "POST /v1/conversations",
+              "GET /v1/conversations/{conversation_id}",
+              "POST /v1/conversations/{conversation_id}",
+              "DELETE /v1/conversations/{conversation_id}",
+              "POST /v1/conversations/{conversation_id}/archive",
+              "DELETE /v1/conversations/{conversation_id}/archive",
+              "POST /v1/conversations/{conversation_id}/clone",
+              "GET /v1/conversations/{conversation_id}/items",
+              "POST /v1/conversations/{conversation_id}/items",
+              "POST /v1/conversations/{conversation_id}/pin",
+              "DELETE /v1/conversations/{conversation_id}/pin"
+            ]
+          },
+          {
+            "group": "Files",
+            "pages": [
+              "GET /v1/files",
+              "POST /v1/files",
+              "GET /v1/files/{file_id}",
+              "DELETE /v1/files/{file_id}",
+              "GET /v1/files/{file_id}/content"
             ]
           }
         ]
@@ -447,6 +510,26 @@
     {
       "source": "/api",
       "destination": "/api-reference/introduction"
+    },
+    {
+      "source": "/cloud/verification/chat",
+      "destination": "/cloud/verification"
+    },
+    {
+      "source": "/cloud/verification/gateway",
+      "destination": "/cloud/verification/cloud-api/gateway-attestation"
+    },
+    {
+      "source": "/cloud/verification/model",
+      "destination": "/cloud/verification"
+    },
+    {
+      "source": "/cloud/verification/tls",
+      "destination": "/cloud/verification"
+    },
+    {
+      "source": "/cloud/verification/provenance",
+      "destination": "/cloud/verification"
     }
   ]
 }

@@ -1,0 +1,58 @@
+---
+title: "NEAR AI Inference SDK"
+description: "Use the NEAR AI Inference SDK to verify attestation evidence in your application."
+---
+
+The NEAR AI Inference SDK provides language-specific implementations for NEAR AI Cloud gateway attestation, NEAR model evidence returned through the gateway, and response signatures.
+
+The SDK supports TypeScript, Python, and Rust. The TypeScript package also provides `InferenceClient` for NEAR AI Cloud Gateway Chat Completions with E2EE.
+
+## Installation
+
+<Tabs>
+<Tab title="TypeScript">
+
+Requires Node.js 24 or later.
+
+```bash
+npm install @nearai/inference-sdk@next
+```
+
+</Tab>
+<Tab title="Python">
+
+Requires Python 3.12 or later.
+
+The `nearai-inference-sdk` distribution is not published to PyPI yet. It will import as `nearai_inference_sdk` when released.
+
+</Tab>
+<Tab title="Rust">
+
+The `nearai-inference-sdk` crate is not published to crates.io yet. It will import as `nearai_inference_sdk` when released.
+
+</Tab>
+</Tabs>
+
+## Verification flow
+
+For each completion, first use the SDK to verify the NEAR AI Cloud gateway and, when your policy requires model evidence, every returned NEAR model-attestation candidate. Then send the completion with your HTTP client, retaining the exact request and response bytes. Finally, fetch the completion signature and verify it with the matching preflight result. For a `provider_tee` signature, select exactly one verified model result whose signer identity and algorithm match the signature.
+
+`AttestationClient` creates a fresh nonce for every evidence request. It retrieves and verifies evidence, but does not send the completion request or retain its bytes for you.
+
+In TypeScript, `InferenceClient` can instead verify Gateway and model evidence before sending a Gateway Chat Completion. It enables E2EE by default, retains the exact request and response bytes, and can verify the completion response afterward.
+
+Use one explicit `signing_algo` for the Gateway attestation request, model-attestation request, and completion-signature request in the same verification flow. The Gateway attestation and signature endpoints have different defaults.
+
+<Card title="NEAR AI Cloud Gateway" icon="cloud" href="/cloud/verification/cloud-api">
+  Learn the protocol requirements and trust decisions for gateway and NEAR model evidence.
+</Card>
+
+## Examples
+
+Runnable TypeScript, Python, and Rust examples follow this flow for non-streaming and streaming completions.
+
+<Note>
+  In TypeScript, import from `@nearai/inference-sdk/node` to bind Gateway evidence to the TLS peer observed for the Gateway attestation request. This does not automatically cover a later inference request. The generic `@nearai/inference-sdk` entry point verifies Gateway evidence without a TLS peer binding.
+</Note>
+
+The SDK currently covers the NEAR AI Cloud Gateway flow. For direct model endpoints, use the corresponding endpoint guides.

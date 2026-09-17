@@ -1,0 +1,32 @@
+---
+title: "Verify Direct Model Endpoints"
+description: "Verify the model, connection, response, and software evidence for direct completions endpoints."
+---
+
+Use this guide when your application sends inference requests directly to `https://<MODEL_SLUG>.completions.near.ai`. The NEAR AI Cloud gateway is not in this request path. If your application sends requests to `cloud-api.near.ai`, use the [NEAR AI Cloud gateway guide](/cloud/verification/cloud-api) instead.
+
+## What you can verify
+
+<CardGroup cols={2}>
+  <Card title="Model attestation report" icon="brain-circuit" href="/cloud/verification/direct/model-attestation">
+    Verify the trusted model environment reported by the direct endpoint.
+  </Card>
+  <Card title="TLS connection binding" icon="shield-check" href="/cloud/verification/direct/tls">
+    Verify that your live HTTPS connection terminates at the attested model endpoint.
+  </Card>
+  <Card title="Response signatures" icon="message-square-check" href="/cloud/verification/direct/response-signatures">
+    Verify that a signed response came from the attested model environment.
+  </Card>
+  <Card title="Image provenance" icon="package-check" href="/cloud/verification/direct/image-provenance">
+    Check that the software images in the attested environment meet your source and build policy.
+  </Card>
+</CardGroup>
+
+## Start with model attestation
+
+1. Generate a fresh nonce for this verification attempt.
+2. Request a fresh report from the same direct endpoint your application uses for inference.
+3. Verify the model's hardware attestation and apply your acceptance policy.
+4. Add TLS, response-signature, or image-provenance checks when your application requires them.
+
+Start with [Model attestation report](/cloud/verification/direct/model-attestation). That guide shows how to request fresh evidence. The other guides explain the additional checks.

@@ -1,0 +1,74 @@
+---
+title: "Response Signatures"
+description: "Verify available response signatures from the NEAR AI Cloud gateway against exact bytes and matching preflight evidence."
+---
+
+Response signatures returned through the NEAR AI Cloud gateway can be produced by either a model-serving TEE or the gateway itself. Before sending a completion, verify the gateway and, when your policy requires model evidence, every returned NEAR model-attestation candidate. When present, `signature_kind` determines which verified preflight result must match the signer.
+
+<Note>
+  A response without an available signature is not a successfully verified response. If response verification is required by your policy, treat it as unverified after a short, bounded retry interval.
+</Note>
+
+## Preserve exact request and response bytes
+
+Build the request body once and retain the exact bytes sent by the client. Retain the raw response bytes before parsing JSON or Server-Sent Events.
+
+To verify a `provider_tee` signature, send the original completion with the canonical model ID and `x-no-aliasing: true`. Do not send an alias and replace it after receiving the response: the model ID in the original request is part of the signed text.
+
+```text
+request_hash  = SHA-256(exact request-body bytes)
+response_hash = SHA-256(exact response-body bytes)
+```
+
+Do not parse and re-serialize JSON, normalize whitespace or line endings, omit stream delimiters, or reconstruct a streamed response from parsed events. Configure the HTTP client to retain the entity bytes it received; requesting `Accept-Encoding: identity` is the simplest way to avoid transparent decompression changing those bytes.
+
+## Fetch and verify the signature
+
+Set `<CHAT_ID>` to the `id` in the completion response whose exact bytes you retained. For the Responses API, use its returned `resp_…` ID.
+
+```bash
+curl --fail-with-body -G 'https://cloud-api.near.ai/v1/signature/<CHAT_ID>' \
+  --data-urlencode 'signing_algo=<SIGNING_ALGO>' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
+```
+
+A successful (`2xx`) response containing `error_code` and `message` is an unavailable result, not a signature. A `404` means no matching signature was found; it can be retried for a short, bounded interval when the signature may still be recorded. Treat either result as unverified if a signature is required.
+
+Use the same explicit `signing_algo` as both preflight attestation requests. These endpoints have different defaults.
+
+For `ecdsa`, recover the Ethereum EIP-191 signer from `text` and `signature`, then compare it with `signing_address`. For `ed25519`, verify the UTF-8 bytes of `text` using `signing_address` as the public key. Reject unsupported algorithms.
+
+Then compare `text` with the expected payload:
+
+| `signature_kind` | Expected `text` | Required preflight match |
+| --- | --- | --- |
+| `provider_tee` | `<MODEL_ID>:<request_hash>:<response_hash>` | Exactly one verified NEAR model report with the same `signing_address` and `signing_algo`. |
+| `gateway` | `<request_hash>:<response_hash>` | A verified `gateway_attestation` with the same `signing_address` and `signing_algo`. |
+
+Only `provider_tee` binds a response to a model-serving TEE. A `gateway` signature binds the response to the gateway, not to a model report. If a model signature is unavailable, model-level response binding is unavailable.
+
+The Gateway can rewrite client-visible streaming bytes, so a `gateway` signature covers the exact bytes received from the Gateway, including stream framing and terminal events.
+
+If `signature_kind` is absent or unfamiliar, do not infer it from the shape of `text`. Treat the signer classification as unavailable unless your endpoint contract gives a rule for that response.
+
+For `provider_tee`, `<MODEL_ID>` is the canonical model identifier in the signed payload.
+
+Use the [manual response-signature helpers](/cloud/verification/reference/response-signature-verification) with the exact request and response bytes. For `provider_tee`, pass the canonical model ID from the original request to build the expected text and use the signer from the uniquely matching verified model report. For `gateway`, omit the model ID and use the verified Gateway report's signer.
+
+## Match preflight evidence
+
+Before sending the completion, request and verify gateway evidence with a client-generated nonce. To support `provider_tee`, also request NEAR model evidence with `model=<MODEL_ID>` and `provider=near`. Reject an empty `model_attestations[]` array; verify every returned candidate and retain the verified results.
+
+After fetching the signature, use `signature_kind` to select the matching preflight result:
+
+- For `provider_tee`, require the signature signer and algorithm to match exactly one verified NEAR model report. If the match is absent or ambiguous, the response is unverified.
+- For `gateway`, require them to match the verified gateway report.
+
+Do not use a report obtained after the completion as a substitute for preflight evidence. If the signature's signer or algorithm differs from the required preflight evidence, the response is unverified under this flow.
+
+`ecdsa` identities are Ethereum-style signing addresses. `ed25519` identities are Ed25519 public-key bytes encoded as hexadecimal. Always compare the identity together with `signing_algo`.
+
+<Note>
+  Preflight Gateway and model evidence plus one response signature do not yet form a complete model-to-Gateway-to-final-response chain. A `gateway` signature proves that the verified Gateway signed the final client-visible bytes, not that the verified model produced an upstream response. A `provider_tee` signature does not bind its model-signed bytes to the preflight Gateway or TLS evidence.
+</Note>
