@@ -1,0 +1,68 @@
+---
+title: "NEAR AI Inference SDK"
+description: "Send a verified, end-to-end encrypted Chat Completion with the NEAR AI Inference SDK."
+icon: "braces"
+---
+
+Use the TypeScript SDK to verify deployment evidence before a NEAR AI Cloud Chat Completion and verify its response signature afterward. This tutorial uses the NEAR AI Cloud gateway.
+
+## Install
+
+The package requires Node.js 24 or later.
+
+```bash
+npm install @nearai/inference-sdk@next
+```
+
+## Send and verify a Chat Completion
+
+Import the Node entry point when your application connects directly to NEAR AI Cloud.
+
+```ts
+import { InferenceClient } from '@nearai/inference-sdk/node';
+
+const apiKey = process.env.NEARAI_API_KEY;
+if (!apiKey) throw new Error('NEARAI_API_KEY is required');
+
+const client = new InferenceClient({ apiKey });
+
+const completion = await client.chat.completions.create({
+  model: 'z-ai/glm-5.3-flash',
+  messages: [{ role: 'user', content: 'Reply with the word ok.' }],
+});
+
+console.log(completion.choices[0]?.message.content);
+
+const receipt = await client.verifyResponse(completion.id);
+console.log(`Verified ${receipt.signatureKind} response.`);
+```
+
+The SDK verifies the Gateway and every returned NEAR model-attestation candidate before sending the request. E2EE is enabled by default. `verifyResponse()` verifies the response signature using the request and response bytes captured by the client.
+
+<Note>
+  `verifyResponse()` is explicit. For a streaming completion, consume the entire stream first, then call it with the completion ID so the SDK can verify the exact response bytes.
+</Note>
+
+## Use the right entry point
+
+- Use `@nearai/inference-sdk/node` for a server-side integration that connects directly to `cloud-api.near.ai`. It verifies the Gateway TLS peer and pins later requests to the verified Gateway identity.
+- Use `@nearai/inference-sdk` in a browser or behind an application proxy. Browser Fetch cannot read the Gateway TLS peer certificate, so this entry point does not perform Gateway TLS binding.
+
+For direct model endpoints or a manual verification flow, use the corresponding [direct endpoint](/cloud/verification/direct) or [gateway](/cloud/verification/cloud-api) guide.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Gateway verification" icon="cloud" href="/cloud/verification/cloud-api">
+    Learn the evidence and response-signature checks behind the Gateway flow.
+  </Card>
+  <Card title="E2EE Chat" icon="message-square-lock" href="/cloud/guides/e2ee-chat-completions">
+    Learn the protocol when you need to manage encryption yourself.
+  </Card>
+  <Card title="Verification policy" icon="list-checks" href="/cloud/verification/reference/verification-policy">
+    Define the measurements, provenance, and freshness rules your application accepts.
+  </Card>
+  <Card title="Direct model endpoints" icon="server" href="/cloud/verification/direct">
+    Verify a request sent directly to a model endpoint.
+  </Card>
+</CardGroup>

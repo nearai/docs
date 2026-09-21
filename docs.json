@@ -89,9 +89,14 @@
                     ]
                   },
                   {
+                    "group": "NEAR AI Inference SDK",
+                    "pages": [
+                      "cloud/verification/sdk"
+                    ]
+                  },
+                  {
                     "group": "Reference",
                     "pages": [
-                      "cloud/verification/reference/sdk",
                       "cloud/verification/reference/quote-nonce-signer",
                       "cloud/verification/reference/response-signature-verification",
                       "cloud/verification/reference/verification-policy"
@@ -531,6 +536,10 @@
     {
       "source": "/cloud/verification/provenance",
       "destination": "/cloud/verification"
+    },
+    {
+      "source": "/cloud/verification/reference/sdk",
+      "destination": "/cloud/verification/sdk"
     }
   ]
 }
