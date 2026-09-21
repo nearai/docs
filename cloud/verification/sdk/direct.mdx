@@ -13,9 +13,9 @@ The package requires Node.js 24 or later.
 npm install @nearai/inference-sdk@next
 ```
 
-## Send and verify a Chat Completion
+## Send and verify an E2EE Chat Completion
 
-Set `baseUrl` to the direct model endpoint, including `/v1`.
+Set `baseUrl` to the direct model endpoint, including `/v1`. E2EE is enabled by default; it is set explicitly below.
 
 ```ts
 import { DirectInferenceClient } from '@nearai/inference-sdk/node';
@@ -25,7 +25,11 @@ const model = 'z-ai/glm-5.3-flash';
 const apiKey = process.env.NEARAI_API_KEY;
 if (!apiKey) throw new Error('NEARAI_API_KEY is required');
 
-const client = new DirectInferenceClient({ baseUrl, apiKey });
+const client = new DirectInferenceClient({
+  baseUrl,
+  apiKey,
+  e2ee: true,
+});
 
 const completion = await client.chat.completions.create({
   model,
@@ -38,17 +42,37 @@ const receipt = await client.verifyResponse(completion.id);
 console.log(`Verified ${receipt.signatureKind} response.`);
 ```
 
-Before sending the completion, the SDK verifies the complete model-attestation set reported by that endpoint. It does not request Gateway evidence. E2EE is enabled by default. A direct endpoint can require credentials different from your NEAR AI Cloud API key.
+Before sending the completion, the SDK verifies the complete model-attestation set reported by that endpoint. It does not request Gateway evidence. It encrypts supported Chat fields to a key from the verified model evidence and decrypts the response automatically. A direct endpoint can require credentials different from your NEAR AI Cloud API key.
 
 <Note>
   `verifyResponse()` is explicit. For a streaming completion, consume the entire stream first, then call it with the completion ID so the SDK can verify the exact response bytes.
 </Note>
 
+## Add OHTTP
+
+Set `ohttp: true` to encapsulate Chat requests and responses with OHTTP. OHTTP requires Ed25519, so set `signingAlgo` explicitly.
+
+```ts
+const client = new DirectInferenceClient({
+  baseUrl,
+  apiKey,
+  signingAlgo: 'ed25519',
+  e2ee: true,
+  ohttp: true,
+});
+```
+
+The Chat and `verifyResponse()` calls stay the same. The SDK verifies the direct endpoint's signed OHTTP configuration before sending Chat; a missing or invalid configuration blocks the request. For a direct endpoint, both OHTTP and E2EE are scoped to the model service.
+
+<Note>
+  OHTTP applies only to Chat. Attestation and signature requests remain regular HTTPS. The configured endpoint or proxy must expose `/ohttp` at the same origin. Authorization and custom headers sent on the outer request, along with the client's network address, are not hidden by OHTTP.
+</Note>
+
 ## Node, browser, and proxy integrations
 
-The example uses `@nearai/inference-sdk/node`. In Node, the SDK verifies the direct endpoint TLS peer and pins later requests to the verified model identity.
+The example uses `@nearai/inference-sdk/node`. Direct endpoint TLS binding is not currently enabled; normal HTTPS certificate validation still applies.
 
-For a browser or an application proxy, import from `@nearai/inference-sdk`. Browser Fetch cannot read the TLS peer certificate, so this entry point does not perform direct-endpoint TLS binding. Configure the same explicit `baseUrl` for the endpoint your application uses.
+For a browser or an application proxy, import from `@nearai/inference-sdk`. Configure the same explicit `baseUrl` for the endpoint your application uses.
 
 ## Next steps
 
