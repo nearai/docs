@@ -1,0 +1,66 @@
+---
+title: "NEAR AI Cloud"
+description: "Send a verified, end-to-end encrypted Chat Completion through NEAR AI Cloud."
+icon: "cloud"
+---
+
+Use `InferenceClient` when your application sends requests through NEAR AI Cloud.
+
+## Install
+
+The package requires Node.js 24 or later.
+
+```bash
+npm install @nearai/inference-sdk@next
+```
+
+## Send and verify a Chat Completion
+
+Set `baseUrl` to the NEAR AI Cloud endpoint your application uses.
+
+```ts
+import { InferenceClient } from '@nearai/inference-sdk/node';
+
+const baseUrl = 'https://cloud-api.near.ai/v1';
+const model = 'z-ai/glm-5.3-flash';
+const apiKey = process.env.NEARAI_API_KEY;
+if (!apiKey) throw new Error('NEARAI_API_KEY is required');
+
+const client = new InferenceClient({ baseUrl, apiKey });
+
+const completion = await client.chat.completions.create({
+  model,
+  messages: [{ role: 'user', content: 'Reply with the word ok.' }],
+});
+
+console.log(completion.choices[0]?.message.content);
+
+const receipt = await client.verifyResponse(completion.id);
+console.log(`Verified ${receipt.signatureKind} response.`);
+```
+
+Before sending the completion, the SDK verifies the Gateway and every returned NEAR model-attestation candidate. E2EE is enabled by default. `verifyResponse()` verifies the response signature using the request and response bytes captured by the client.
+
+<Note>
+  `verifyResponse()` is explicit. For a streaming completion, consume the entire stream first, then call it with the completion ID so the SDK can verify the exact response bytes.
+</Note>
+
+## Node, browser, and proxy integrations
+
+The example uses `@nearai/inference-sdk/node`. In Node, the SDK verifies the Gateway TLS peer and pins later requests to the verified Gateway identity.
+
+For a browser or an application proxy, import from `@nearai/inference-sdk`. Browser Fetch cannot read the TLS peer certificate, so this entry point does not perform Gateway TLS binding. Configure the same explicit `baseUrl` for the endpoint your application uses.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Gateway verification" icon="cloud" href="/cloud/verification/cloud-api">
+    Learn the evidence and response-signature checks behind the Gateway flow.
+  </Card>
+  <Card title="E2EE Chat" icon="message-square-lock" href="/cloud/guides/e2ee-chat-completions">
+    Learn the protocol when you need to manage encryption yourself.
+  </Card>
+  <Card title="Verification policy" icon="list-checks" href="/cloud/verification/reference/verification-policy">
+    Define the measurements, provenance, and freshness rules your application accepts.
+  </Card>
+</CardGroup>
