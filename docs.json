@@ -90,6 +90,7 @@
               },
               {
                 "group": "NEAR AI Inference SDK",
+                "icon": "braces",
                 "root": "cloud/inference-sdk/index",
                 "pages": [
                   "cloud/inference-sdk/cloud-gateway",
