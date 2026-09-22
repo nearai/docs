@@ -41,8 +41,6 @@ OpenCode addresses a model as `<provider>/<model-id>`. Because NEAR AI model IDs
 
 ```text
 nearai/z-ai/glm-5.3-flash
-nearai/anthropic/claude-opus-5
-nearai/openai/gpt-5.4-mini
 ```
 
 This is expected. The provider is `nearai`; everything after the first slash is the NEAR AI model ID.
@@ -58,11 +56,13 @@ For any model already in the models.dev catalog, a `model` line is the whole con
 ```json opencode.json
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "nearai/openai/gpt-5.4-mini"
+  "model": "nearai/anthropic/claude-haiku-4-5"
 }
 ```
 
 With `NEARAI_API_KEY` exported, `opencode` starts against NEAR AI Cloud. You can also skip the config file entirely and pick the model with `/models` in the TUI.
+
+`z-ai/glm-5.3-flash` is not in the catalog yet, so it needs the extra step in the next section. Use the check under [Refresh models](#refresh-models) to see which side of the line a given model falls on.
 
 ### Models newer than the catalog
 
@@ -133,7 +133,7 @@ NEAR AI Cloud exposes 50+ models. OpenCode's documented `whitelist` and `blackli
   "$schema": "https://opencode.ai/config.json",
   "provider": {
     "nearai": {
-      "whitelist": ["z-ai/glm-5.3-flash", "anthropic/claude-opus-5"]
+      "whitelist": ["z-ai/glm-5.3-flash"]
     }
   }
 }

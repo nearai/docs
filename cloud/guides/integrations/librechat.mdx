@@ -54,9 +54,8 @@ endpoints:
       models:
         default:
           - 'z-ai/glm-5.3-flash'
-          - 'google/gemini-2.5-flash-lite'
       titleConvo: true
-      titleModel: 'google/gemini-2.5-flash-lite'
+      titleModel: 'z-ai/glm-5.3-flash'
       modelDisplayLabel: 'NEAR AI Cloud'
       customParams:
         reasoningFormat: reasoning_object
@@ -71,7 +70,7 @@ GLM 5.3 Flash is a reasoning model. It returns its thinking in a `reasoning_cont
 
 ### Title generation
 
-`titleModel` is called once per conversation. Pointing it at a reasoning model means paying for a reasoning pass on every title, so this config uses `google/gemini-2.5-flash-lite` — a cheap non-reasoning model — and lists it under `models.default` so LibreChat can select it. Set `titleModel: 'current_model'` instead if you would rather not add a second model.
+`titleModel` is called once per conversation. Because GLM 5.3 Flash is a reasoning model, each title costs a short reasoning pass. Set `titleModel: 'current_model'` to follow whichever model the conversation uses, or point it at a cheaper non-reasoning model from `/v1/models` if title cost matters at your volume.
 
 Add the key to `.env` in the same project root:
 
@@ -120,7 +119,6 @@ LibreChat's custom endpoint reference also documents `models.fetch: true` for Op
 models:
   default:
     - 'z-ai/glm-5.3-flash'
-    - 'google/gemini-2.5-flash-lite'
   fetch: true
 ```
 
