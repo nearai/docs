@@ -63,7 +63,3 @@ curl --fail-with-body -sS -X POST \
 ```
 
 NRAS returns a JSON array whose first entry is `["JWT", "<token>"]`. Decode that JWT's payload and require `x-nvidia-overall-att-result` to be boolean `true`. Reject missing or malformed GPU evidence, a nonce mismatch, or any other verdict. This minimal flow relies on the TLS-authenticated NRAS verdict; apply local JWT/EAT validation separately if your policy requires it. Define in advance whether missing GPU evidence is acceptable for your workload policy.
-
-## NEAR AI Inference SDK
-
-For a TypeScript SDK integration, choose the [NEAR AI Cloud Gateway](/cloud/verification/sdk/cloud-api) or a [direct model endpoint](/cloud/verification/sdk/direct).
