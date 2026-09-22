@@ -87,6 +87,14 @@
                     ]
                   }
                 ]
+              },
+              {
+                "group": "NEAR AI Inference SDK",
+                "root": "cloud/inference-sdk/index",
+                "pages": [
+                  "cloud/inference-sdk/cloud-gateway",
+                  "cloud/inference-sdk/direct"
+                ]
               }
             ]
           },
@@ -489,6 +497,22 @@
     {
       "source": "/cloud/verification/provenance",
       "destination": "/cloud/verification"
+    },
+    {
+      "source": "/cloud/verification/reference/sdk",
+      "destination": "/cloud/inference-sdk/cloud-gateway"
+    },
+    {
+      "source": "/cloud/verification/sdk",
+      "destination": "/cloud/inference-sdk"
+    },
+    {
+      "source": "/cloud/verification/sdk/cloud-api",
+      "destination": "/cloud/inference-sdk/cloud-gateway"
+    },
+    {
+      "source": "/cloud/verification/sdk/direct",
+      "destination": "/cloud/inference-sdk/direct"
     }
   ]
 }

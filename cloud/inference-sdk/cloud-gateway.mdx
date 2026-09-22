@@ -1,0 +1,86 @@
+---
+title: "NEAR AI Cloud Gateway"
+description: "Send a verified, end-to-end encrypted Chat Completion through the NEAR AI Cloud Gateway."
+---
+
+Use `InferenceClient` when your application sends requests through the NEAR AI Cloud Gateway.
+
+## Install
+
+The package requires Node.js 24 or later.
+
+```bash
+npm install @nearai/inference-sdk@next
+```
+
+## Send and verify an E2EE Chat Completion
+
+Set `baseUrl` to the NEAR AI Cloud Gateway endpoint your application uses. E2EE is enabled by default; it is set explicitly below.
+
+```ts
+import { InferenceClient } from '@nearai/inference-sdk/node';
+
+const baseUrl = 'https://cloud-api.near.ai/v1';
+const model = 'z-ai/glm-5.3-flash';
+const apiKey = process.env.NEARAI_API_KEY;
+if (!apiKey) throw new Error('NEARAI_API_KEY is required');
+
+const client = new InferenceClient({
+  baseUrl,
+  apiKey,
+  e2ee: true,
+});
+
+const completion = await client.chat.completions.create({
+  model,
+  messages: [{ role: 'user', content: 'Reply with the word ok.' }],
+});
+
+console.log(completion.choices[0]?.message.content);
+
+const receipt = await client.verifyResponse(completion.id);
+console.log(`Verified ${receipt.signatureKind} response.`);
+```
+
+Before sending the completion, the SDK verifies the Gateway and every returned NEAR model-attestation candidate. It encrypts supported Chat fields to a key from the verified model evidence and decrypts the response automatically. `verifyResponse()` verifies the response signature using the request and response bytes captured by the client.
+
+<Note>
+  `verifyResponse()` is explicit. For a streaming completion, consume the entire stream first, then call it with the completion ID so the SDK can verify the exact response bytes.
+</Note>
+
+## Add OHTTP
+
+Set `ohttp: true` to encapsulate Chat requests and responses with OHTTP. OHTTP requires Ed25519, so set `signingAlgo` explicitly.
+
+```ts
+const client = new InferenceClient({
+  baseUrl,
+  apiKey,
+  signingAlgo: 'ed25519',
+  e2ee: true,
+  ohttp: true,
+});
+```
+
+The Chat and `verifyResponse()` calls stay the same. The SDK verifies the Gateway's signed OHTTP configuration before sending Chat; a missing or invalid configuration blocks the request. OHTTP encapsulates the exchange to the Gateway, while E2EE encrypts supported Chat fields to the verified model key.
+
+<Note>
+  OHTTP applies only to Chat. Attestation and signature requests remain regular HTTPS. The configured endpoint or proxy must expose `/ohttp` at the same origin. Authorization and custom headers sent on the outer request, along with the client's network address, are not hidden by OHTTP.
+</Note>
+
+## Node, browser, and proxy integrations
+
+The example uses `@nearai/inference-sdk/node`. In Node, the SDK verifies the Gateway TLS peer and pins later requests to the verified Gateway identity.
+
+For a browser or an application proxy, import from `@nearai/inference-sdk`. Browser Fetch cannot read the TLS peer certificate, so this entry point does not perform Gateway TLS binding. Configure the same explicit `baseUrl` for the endpoint your application uses.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Verification" icon="file-check" href="/cloud/verification">
+    Understand the attestation and response-signature checks behind this flow.
+  </Card>
+  <Card title="E2EE Chat" icon="message-square-lock" href="/cloud/guides/e2ee-chat-completions">
+    Learn the protocol when you need to manage encryption yourself.
+  </Card>
+</CardGroup>
