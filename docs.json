@@ -89,6 +89,7 @@
                   {
                     "group": "Coding Agents and IDEs",
                     "pages": [
+                      "cloud/guides/integrations/opencode",
                       "cloud/guides/integrations/cursor",
                       "cloud/guides/integrations/continue",
                       "cloud/guides/integrations/cline-roo-kilo",
