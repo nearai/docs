@@ -1,0 +1,109 @@
+---
+title: "Direct Completions"
+description: "Experimental: send requests straight to one self-hosted model's TEE endpoint, without the NEAR AI Cloud Gateway."
+icon: "flask-conical"
+tag: "Experimental"
+---
+
+<Warning>
+  **Experimental.** Direct completions endpoints are not recommended for new integrations or production verification workflows. Use the NEAR AI Cloud Gateway (`https://cloud-api.near.ai/v1`) instead.
+
+  Current verification limitations:
+
+  - **An attestation report covers one instance.** Several instances can serve the same direct hostname, and separate connections can reach different ones. `GET /v1/attestation/report` returns the report of the instance that answered, and `all_attestations` contains only that report. You can't verify every serving instance before a completion, so a TLS key pinned from one report fails when a later connection reaches another instance, even a legitimate one. Tracked in [cloud-api#1087](https://github.com/nearai/cloud-api/issues/1087).
+  - **Signature lookups can return `404`.** Each instance keeps response signatures in its own memory. `GET /v1/signature/{chat_id}` can reach a different instance than the one that served the completion, and clients can't choose the instance.
+</Warning>
+
+A direct completions endpoint sends your request straight to one model's TEE at its own hostname, without the Gateway in between. It accepts the same API key as the Gateway. Use it only when you maintain an existing direct integration.
+
+## Endpoint format
+
+```
+https://{slug}.completions.near.ai/v1
+```
+
+Each hostname serves one model. The endpoint registry lists every hostname and the model it serves:
+
+```bash
+curl -s https://completions.near.ai/endpoints | jq '.endpoints[]'
+```
+
+```json
+{ "domain": "glm-5-3-flash.completions.near.ai", "models": ["z-ai/glm-5.3-flash"] }
+```
+
+The registry can list endpoints for models that aren't in the public catalog. Only build on an endpoint whose model appears on the [Models](/cloud/models) page.
+
+## Send a request
+
+<Tabs>
+<Tab title="curl">
+
+```bash
+curl https://glm-5-3-flash.completions.near.ai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "z-ai/glm-5.3-flash",
+    "messages": [{"role": "user", "content": "Hello, NEAR AI!"}]
+  }'
+```
+
+</Tab>
+<Tab title="Python">
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://glm-5-3-flash.completions.near.ai/v1",
+    api_key="YOUR_API_KEY",
+)
+
+response = client.chat.completions.create(
+    model="z-ai/glm-5.3-flash",
+    messages=[{"role": "user", "content": "Hello, NEAR AI!"}],
+)
+
+print(response.choices[0].message.content)
+```
+
+</Tab>
+</Tabs>
+
+## Routes
+
+Each hostname exposes the routes its model supports:
+
+- `POST /v1/chat/completions`: chat completions
+- `POST /v1/completions`: text completions
+- `POST /v1/tokenize`: tokenization
+- `POST /v1/embeddings`: embeddings
+- `POST /v1/rerank`: reranking
+- `POST /v1/score`: scoring
+- `POST /v1/images/generations`: image generation
+- `POST /v1/images/edits`: image editing
+- `POST /v1/audio/transcriptions`: audio transcription
+- `POST /v1/privacy/classify`: privacy classification, on privacy-filter endpoints
+- `GET /v1/models`: the model served by this hostname
+- `GET /v1/attestation/report`: attestation report for the instance that answers
+- `GET /v1/signature/{chat_id}`: response signature, if the answering instance has it
+
+## Verify a direct endpoint
+
+Direct verification is experimental. Each check applies only to the request or connection you inspect. It doesn't establish evidence for later requests to the same hostname.
+
+- [Model attestation report](/cloud/verification/direct/model-attestation)
+- [TLS connection binding](/cloud/verification/direct/tls)
+- [Response signatures](/cloud/verification/direct/response-signatures)
+- [Image provenance](/cloud/verification/direct/image-provenance)
+
+## Move to the Gateway
+
+To switch an existing direct integration to the Gateway:
+
+1. Change the base URL to `https://cloud-api.near.ai/v1`.
+2. Set `model` to the Gateway model ID from `GET https://cloud-api.near.ai/v1/model/list`, for example `z-ai/glm-5.3-flash`.
+3. Keep your API key. It works on both.
+
+Then follow [Verification](/cloud/verification) to check Gateway requests.

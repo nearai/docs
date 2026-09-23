@@ -79,6 +79,10 @@ Here's why this works:
 
 This gives you the same OpenAI-compatible development flow while allowing your application to verify the properties it requires.
 
+### Direct Completions
+
+Self-hosted models also have direct completions endpoints at `https://{slug}.completions.near.ai/v1`, which skip the Gateway. They are experimental and have known verification limitations, so we don't recommend them for new integrations or production verification. See [Direct Completions](/cloud/experimental/direct-completions).
+
 ### The Inference Process
 
 When you make a request to NEAR AI Cloud through the Gateway, your data flows through a secure pipeline designed to maintain privacy at every step.

@@ -130,6 +130,12 @@
               "cloud/guides/specialized-endpoints",
               "cloud/guides/e2ee-chat-completions"
             ]
+          },
+          {
+            "group": "Experimental",
+            "pages": [
+              "cloud/experimental/direct-completions"
+            ]
           }
         ]
       },
