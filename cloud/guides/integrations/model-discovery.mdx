@@ -5,7 +5,7 @@ description: "Discover current NEAR AI Cloud models and refresh stale client mod
 ---
 
 
-Use this guide when a client does not show a newly released NEAR AI Cloud model, or when you need to decide between the gateway model ID and a direct completions endpoint.
+Use this guide when a client does not show a newly released NEAR AI Cloud model.
 
 Most tools should use:
 
@@ -48,46 +48,13 @@ The response uses OpenAI-style model objects plus NEAR AI Cloud metadata. Import
 
 As checked on 2026-06-23, the live GLM 5.2 gateway record reports `top_provider.context_length: 500000`, `top_provider.max_completion_tokens: 131072`, and `max_output_length: 131072`.
 
-## Discover direct completions endpoints
-
-Direct completions endpoints are listed at:
-
-```bash
-curl https://completions.near.ai/endpoints
-```
-
-To find the GLM 5.2 direct completions endpoint:
-
-```bash
-curl -fsSL https://completions.near.ai/endpoints \
-  | jq '.endpoints[] | select(.domain == "glm-5-2.completions.near.ai")'
-```
-
-As checked on 2026-06-23, that endpoint is:
-
-```text
-https://glm-5-2.completions.near.ai/v1
-```
-
-The endpoints registry (`GET https://completions.near.ai/endpoints`) lists both `z-ai/glm-5.2` and `zai-org/GLM-5.2-FP8` for this domain, but the endpoint's own `GET https://glm-5-2.completions.near.ai/v1/models` currently returns only `z-ai/glm-5.2`. Use `z-ai/glm-5.2`. The `zai-org/GLM-5.2-FP8` served name still resolves at the direct endpoint, but treat it as a fallback only when your client needs that exact served model name.
-
-## Gateway vs direct completions
-
-Use the gateway by default:
+## Use the Gateway
 
 ```text
 https://cloud-api.near.ai/v1
 ```
 
 The gateway is the best fit for most third-party clients because one base URL can reach the full NEAR AI Cloud model catalog, and clients that auto-fetch models can use `GET /v1/models`.
-
-Use direct completions only when you intentionally want one model's TEE endpoint:
-
-```text
-https://glm-5-2.completions.near.ai/v1
-```
-
-Direct completions can reduce routing hops and exposes the model-specific route set described in [Private Inference - Direct Completions](/cloud/private-inference#direct-completions). It is not a replacement for the gateway model catalog in clients that expect one provider to list every model.
 
 ## Why client model lists go stale
 
@@ -102,8 +69,6 @@ When NEAR releases a new model, check `https://cloud-api.near.ai/v1/models`, cop
 ```text
 z-ai/glm-5.2
 ```
-
-If you are configuring a direct completions endpoint, also check `https://completions.near.ai/endpoints` and confirm the endpoint's `models` array includes the model name you plan to send.
 
 ## Tool behavior matrix
 
@@ -137,34 +102,18 @@ curl https://cloud-api.near.ai/v1/chat/completions \
   }'
 ```
 
-Use the direct completions endpoint only after confirming it lists the model:
-
-```bash
-curl -fsS https://glm-5-2.completions.near.ai/v1/chat/completions \
-  -H "Authorization: Bearer $NEARAI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "z-ai/glm-5.2",
-    "messages": [
-      {"role": "user", "content": "Reply with only: near-ai-ok"}
-    ],
-    "max_tokens": 20
-  }'
-```
-
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
 | model not listed | The client cached an older model list, uses a catalog that has not updated, or requires manual config. | Run the `/v1/models` curl check, copy `z-ai/glm-5.2`, and paste it into the client's custom model field. Re-save, reconnect, or restart the client. |
 | `401` | Missing, invalid, or expired NEAR AI Cloud API key. | Generate or copy a NEAR AI Cloud API key, store it in the client's secret field or environment variable, and retry without logging the key. |
-| Wrong base URL includes `/chat/completions` | The client expects a base URL, but the full request endpoint was pasted. | Use `https://cloud-api.near.ai/v1` for gateway config, or `https://glm-5-2.completions.near.ai/v1` for direct completions config. Do not append `/chat/completions` to a base URL field. |
+| Wrong base URL includes `/chat/completions` | The client expects a base URL, but the full request endpoint was pasted. | Use `https://cloud-api.near.ai/v1`. Do not append `/chat/completions` to a base URL field. |
 
 ## Related guides
 
 - [OpenAI Compatibility](/cloud/guides/openai-compatibility)
 - [Available Models](/cloud/models)
-- [Private Inference - Direct Completions](/cloud/private-inference#direct-completions)
 - [Integrations Overview](/cloud/guides/integrations)
 
 ## Sources Checked
@@ -172,5 +121,4 @@ curl -fsS https://glm-5-2.completions.near.ai/v1/chat/completions \
 Sources checked on 2026-06-23:
 
 - [NEAR AI Cloud models API](https://cloud-api.near.ai/v1/models)
-- [NEAR AI Cloud direct completions endpoints](https://completions.near.ai/endpoints)
 - [models.dev catalog](https://models.dev/)

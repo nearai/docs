@@ -89,7 +89,7 @@ Use `tool_choice: "required"` when you want Fusion to run immediately. If you om
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `analysis_models` | Yes* | Panel models to ask before synthesis. Required unless the deployment configures `FUSION_DEFAULT_ANALYSIS_MODELS`. Model names may include or omit a leading `~`; NEAR AI strips it before direct endpoint lookup. |
+| `analysis_models` | Yes* | Panel models to ask before synthesis. Required unless the deployment configures `FUSION_DEFAULT_ANALYSIS_MODELS`. Model names may include or omit a leading `~`; NEAR AI ignores the prefix when resolving the model. |
 | `model` | No | Judge model. Defaults to the request `model` when omitted. |
 | `max_tool_calls` | No | Maximum inner web-search tool calls for panel and judge requests. |
 | `max_completion_tokens` | No | Token cap for panel and judge completions. |

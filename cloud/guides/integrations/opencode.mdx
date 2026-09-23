@@ -6,7 +6,7 @@ description: "Configure OpenCode to use NEAR AI Cloud as an OpenAI-compatible pr
 
 [OpenCode](https://opencode.ai/) is a terminal coding agent that resolves its providers from the public [models.dev](https://models.dev/) catalog. NEAR AI Cloud is already in that catalog as the `nearai` provider, so in the common case you do not write a provider block at all: set an API key, point `model` at a NEAR AI model, and OpenCode handles the rest.
 
-You only need a manual provider entry in two cases: the model you want is newer than the catalog, or you want to reach a model's TEE directly instead of going through the gateway. Both are covered below.
+You only need a manual provider entry when the model you want is newer than the catalog or your OpenCode version predates the catalog's `nearai` entry. Both cases use the Gateway configuration below.
 
 ## Prerequisites
 
@@ -33,7 +33,7 @@ The catalog already sets the gateway base URL for the `nearai` provider:
 https://cloud-api.near.ai/v1
 ```
 
-You only set `options.baseURL` yourself when overriding it, for example to use a direct completions endpoint. Do not append `/chat/completions`; OpenCode adds the path when it calls the API.
+You only set `options.baseURL` yourself in a full provider block. Do not append `/chat/completions`; OpenCode adds the path when it calls the API.
 
 ## Model ID
 
@@ -139,26 +139,6 @@ NEAR AI Cloud exposes 50+ models. OpenCode's documented `whitelist` and `blackli
 }
 ```
 
-### Direct completions
-
-To bypass the gateway and connect straight to a model's TEE, override `baseURL` with that model's direct endpoint:
-
-```json opencode.json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "model": "nearai/z-ai/glm-5.3-flash",
-  "provider": {
-    "nearai": {
-      "options": {
-        "baseURL": "https://glm-5-3-flash.completions.near.ai/v1"
-      }
-    }
-  }
-}
-```
-
-A direct endpoint serves exactly one model, so this override applies to the whole `nearai` provider. If you switch between models, keep the gateway base URL instead. See [Direct Completions](/cloud/private-inference#direct-completions).
-
 ## Refresh models
 
 OpenCode does not call NEAR AI Cloud's `/v1/models`. Its picker comes from the models.dev catalog, so a newly released NEAR AI model appears only after the catalog updates.
@@ -216,14 +196,12 @@ opencode run "Reply with only: near-ai-ok"
 | OpenCode reports an unknown provider or model | The provider key must be `nearai`, and `model` must be `nearai/<model-id>` — including the slash inside the model ID, as in `nearai/z-ai/glm-5.3-flash`. |
 | The model replies but never calls tools | The manual model entry is missing `tool_call: true`. Catalog entries set this; hand-written ones default to off. |
 | Replies are empty or truncated mid-thought | A reasoning model hit the output limit. Raise `limit.output` in the model entry to match `max_output_length` from `/v1/models`. |
-| A direct completions base URL rejects the model | Each `*.completions.near.ai` endpoint serves one model. Confirm with `curl https://<endpoint>/v1/models` that it advertises the ID you configured. |
 
 ## Related guides
 
 - [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)
 - [OpenAI Compatibility](/cloud/guides/openai-compatibility)
 - [Available Models](/cloud/models)
-- [Private Inference - Direct Completions](/cloud/private-inference#direct-completions)
 - [Goose](/cloud/guides/opencode-goose)
 - [Cline, Roo Code, and Kilo Code](/cloud/guides/integrations/cline-roo-kilo)
 

@@ -8,7 +8,7 @@ NEAR AI Cloud provides access to leading AI models, each optimized for different
 
 The catalog contains two kinds of models:
 
-- **TEE-hosted models** (marked <span className="doc-badge">TEE</span>) run on NEAR AI's own GPU fleet inside [Trusted Execution Environments](/cloud/private-inference). They support [attestation, signatures, and verification](/cloud/verification), are reachable through [direct completions endpoints](/cloud/private-inference#direct-completions), and nobody — not even NEAR — can see your prompts or outputs.
+- **TEE-hosted models** (marked <span className="doc-badge">TEE</span>) run on NEAR AI's own GPU fleet inside [Trusted Execution Environments](/cloud/private-inference). They support [attestation, signatures, and verification](/cloud/verification), and nobody — not even NEAR — can see your prompts or outputs.
 - **Third-party models** (OpenAI, Anthropic, Gemini, and others) are proxied to their providers through the NEAR AI gateway for convenience. They offer the same unified API and billing, but the TEE privacy and verifiability guarantees do not extend to the upstream provider.
 
 <div className="doc-lead">

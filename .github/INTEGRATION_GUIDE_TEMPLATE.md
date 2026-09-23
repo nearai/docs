@@ -60,8 +60,9 @@ Use the gateway base URL by default:
 https://cloud-api.near.ai/v1
 ```
 
-Only mention direct completions when the tool accepts arbitrary per-model base
-URLs. Otherwise, link to Direct Completions instead of adding unverified config.
+Use the Gateway in new integration guides. Do not add direct-completions
+configuration or links; direct endpoints are experimental and are not
+recommended for new integrations.
 
 ### Model ID
 
@@ -109,7 +110,6 @@ Link to canonical NEAR AI Cloud docs instead of repeating long explanations:
 
 - OpenAI Compatibility: `/cloud/guides/openai-compatibility`
 - Model Discovery: `/cloud/guides/integrations/model-discovery`
-- Direct Completions: `/cloud/private-inference#direct-completions`
 - Available Models: `/cloud/models`
 
 ### Sources Checked

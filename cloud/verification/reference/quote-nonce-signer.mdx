@@ -1,0 +1,322 @@
+---
+title: "Quote, Nonce, and Signer Bindings"
+description: "Shared rules for reading verified quotes, checking freshness, and matching signing identities."
+---
+
+Every NEAR verification flow starts with a client-generated nonce and a verified quote. HTTP fields are inputs to compare with the quote. They are not a replacement for quote verification.
+
+## Use a client-generated nonce
+
+Generate 32 random bytes in the client and encode them as 64 hexadecimal characters. Retain the value until verification completes.
+
+```bash
+NONCE="$(openssl rand -hex 32)"
+```
+
+Send this value with the attestation request. Reject a report unless the verified quote contains the same nonce in its request-freshness binding.
+
+## Find the quote for your path
+
+| Request path | Quote location |
+| --- | --- |
+| NEAR AI Cloud gateway | `gateway_attestation.intel_quote` |
+| NEAR AI Cloud gateway model evidence (`provider=near`) | Each candidate report in `model_attestations[]` |
+
+## Verify the signer binding
+
+For a NEAR-operated report requested with `include_tls_fingerprint=true`, the verified quote binds the signer identity, TLS certificate fingerprint, and nonce.
+
+`signing_address` is algorithm-specific:
+
+| `signing_algo` | `signing_address` |
+| --- | --- |
+| `ecdsa` | An Ethereum-style address derived from the signing key. |
+| `ed25519` | Ed25519 public-key bytes encoded as hexadecimal. |
+
+Always compare both `signing_address` and `signing_algo`. Do not compare identities across algorithms.
+
+## Read NEAR report data
+
+For NEAR-operated reports, quote report data is 64 bytes. The final 32 bytes are the client nonce. The first 32 bytes bind the signing identity:
+
+- Without TLS binding, they are the decoded signing identity, zero-padded on the right to 32 bytes. Decode `signing_address` from hex after removing any `0x` prefix. An ECDSA address occupies 20 bytes; an Ed25519 public key occupies all 32 bytes.
+- With TLS binding, they are `SHA-256(decoded signing identity || decoded tls_cert_fingerprint)`, where the fingerprint is the raw 32-byte SHA-256 of the certificate's SPKI, not its hex text. Compare the quote-bound fingerprint with the peer certificate observed on the same TLS connection.
+
+This layout applies only to NEAR-operated dstack reports; other providers have their own report-data contracts.
+
+## Check the configuration measurement
+
+`info.tcb_info.app_compose` is the measured configuration. Hash its exact UTF-8 bytes without parsing or reserializing it. The verified quote's MRCONFIGID is 48 bytes: `01`, then that SHA-256 hash, then 15 zero bytes.
+
+```bash
+jq -j '.info.tcb_info.app_compose' report.json | sha256sum
+```
+
+Use `jq -j`: `jq -r` appends a newline and produces a different hash. For a gateway report, read `.gateway_attestation.info.tcb_info.app_compose`.
+
+## Replay the RTMR3 event log
+
+`event_log` is a list of events. The gateway returns it as a JSON string; decode it first. Replay only the events whose `imr` is `3`, in order:
+
+1. Compute each event's digest as `SHA-384(event_type as 4 little-endian bytes || ":" || event as UTF-8 || ":" || hex-decoded event_payload)`.
+2. If the event carries a non-empty `digest`, require it to equal the computed digest. Some reports return an empty `digest`; use the computed one.
+3. Start from 48 zero bytes and extend once per event: `RTMR3 = SHA-384(RTMR3 || digest)`.
+
+Require the result to equal RTMR3 in the verified quote. Recomputing each digest also authenticates the event payloads, such as `app-id` and `compose-hash`.
+
+## Verify GPU evidence when present
+
+`nvidia_payload`, when present, is a JSON string. Decode it and send the resulting JSON object unchanged to NVIDIA NRAS; do not wrap it in another JSON property. For a NEAR AI Cloud response, save each `model_attestations[]` candidate as a separate report file and run this check for every candidate before accepting it.
+
+```bash
+GPU_PAYLOAD="$(jq -er '.nvidia_payload | fromjson' report.json)"
+
+printf '%s' "$GPU_PAYLOAD" | jq -e --arg nonce "$NONCE" \
+  '(.nonce | type == "string") and ((.nonce | ascii_downcase) == ($nonce | ascii_downcase))' >/dev/null &&
+printf '%s' "$GPU_PAYLOAD" | curl --fail-with-body -sS -X POST \
+  'https://nras.attestation.nvidia.com/v3/attest/gpu' \
+  -H 'Accept: application/json' \
+  -H 'Content-Type: application/json' \
+  --data-binary @-
+```
+
+The request is sent only when the payload nonce matches. The payload goes on standard input because an eight-GPU payload is close to the shell's argument-size limit.
+
+NRAS returns a JSON array whose first entry is `["JWT", "<token>"]`. Decode that JWT's payload and require `x-nvidia-overall-att-result` to be boolean `true`. Reject missing or malformed GPU evidence, a nonce mismatch, or any other verdict. This minimal flow relies on the TLS-authenticated NRAS verdict; apply local JWT/EAT validation separately if your policy requires it. Define in advance whether missing GPU evidence is acceptable for your workload policy.
+
+## Check a report in code
+
+These helpers run the quote, debug-mode, nonce, signer, configuration, and RTMR3 checks described above on one NEAR report. They use [`dcap-qvl`](https://github.com/Phala-Network/dcap-qvl) to verify the quote and read report data and measurements from the verified quote. Run them on `gateway_attestation`, on every `model_attestations[]` candidate, or on a direct model report. Pass `peer_spki_sha256` only when you observed the peer certificate on the same TLS connection that returned the report. GPU evidence is checked separately, as described above.
+
+<Tabs>
+<Tab title="Python">
+
+Requires Python 3.9 or later.
+
+```bash
+pip install dcap-qvl requests
+```
+
+```python
+import hashlib
+import json
+import struct
+
+import dcap_qvl
+
+
+def _json(value):
+    return json.loads(value) if isinstance(value, str) else value
+
+
+def _signing_identity(report):
+    algorithm = report["signing_algo"]
+    identity = bytes.fromhex(report["signing_address"].removeprefix("0x"))
+    if {"ecdsa": 20, "ed25519": 32}.get(algorithm) != len(identity):
+        raise ValueError("unsupported signing identity")
+    return identity
+
+
+def replay_rtmr3(event_log):
+    rtmr3 = bytes(48)
+    for event in _json(event_log):
+        if event.get("imr") != 3:
+            continue
+        digest = hashlib.sha384(
+            struct.pack("<I", event["event_type"]) + b":"
+            + event["event"].encode("utf-8") + b":"
+            + bytes.fromhex(event.get("event_payload") or "")
+        ).digest()
+        if event.get("digest") and bytes.fromhex(event["digest"]) != digest:
+            raise ValueError(f"digest mismatch for event {event['event']}")
+        rtmr3 = hashlib.sha384(rtmr3 + digest).digest()
+    return rtmr3
+
+
+async def check_near_report(report, nonce_hex, accepted_tcb_statuses, peer_spki_sha256=None):
+    verified = await dcap_qvl.get_collateral_and_verify(bytes.fromhex(report["intel_quote"]))
+    if verified.status not in accepted_tcb_statuses:
+        raise ValueError(f"TCB status {verified.status} not accepted: {verified.advisory_ids}")
+    quote = json.loads(verified.to_json())["report"]["TD10"]
+
+    if bytes.fromhex(quote["td_attributes"])[0] & 1:
+        raise ValueError("TDX debug mode is enabled")
+
+    identity = _signing_identity(report)
+    fingerprint = report.get("tls_cert_fingerprint")
+    if peer_spki_sha256 is not None and (fingerprint or "").lower() != peer_spki_sha256.lower():
+        raise ValueError("TLS fingerprint does not match the peer certificate")
+    if fingerprint:
+        bound_identity = hashlib.sha256(identity + bytes.fromhex(fingerprint)).digest()
+    else:
+        bound_identity = identity.ljust(32, b"\0")
+    if bytes.fromhex(quote["report_data"]) != bound_identity + bytes.fromhex(nonce_hex):
+        raise ValueError("report data does not bind the signer and nonce")
+    if report["request_nonce"].lower() != nonce_hex.lower():
+        raise ValueError("echoed nonce does not match")
+
+    app_compose = _json(report["info"]["tcb_info"])["app_compose"]
+    compose_hash = hashlib.sha256(app_compose.encode("utf-8")).digest()
+    if bytes.fromhex(quote["mr_config_id"]) != b"\x01" + compose_hash + bytes(15):
+        raise ValueError("MRCONFIGID does not match app_compose")
+
+    if replay_rtmr3(report["event_log"]) != bytes.fromhex(quote["rt_mr3"]):
+        raise ValueError("event log does not match RTMR3")
+    return verified.status
+```
+
+```python
+import asyncio
+import os
+import secrets
+
+import requests
+
+ACCEPTED_TCB_STATUSES = {"UpToDate"}  # Set by your verification policy.
+
+
+async def main():
+    nonce = secrets.token_hex(32)
+    response = requests.get(
+        "https://cloud-api.near.ai/v1/attestation/report",
+        params={
+            "model": "z-ai/glm-5.3-flash",
+            "provider": "near",
+            "signing_algo": "ecdsa",
+            "nonce": nonce,
+        },
+        headers={
+            "Authorization": f"Bearer {os.environ['NEAR_AI_CLOUD_API_KEY']}",
+            "x-no-aliasing": "true",
+        },
+        timeout=60,
+    )
+    response.raise_for_status()
+    body = response.json()
+
+    print("gateway:", await check_near_report(body["gateway_attestation"], nonce, ACCEPTED_TCB_STATUSES))
+    candidates = body.get("model_attestations") or []
+    if not candidates:
+        raise ValueError("no NEAR model evidence returned")
+    for candidate in candidates:
+        print("model:", await check_near_report(candidate, nonce, ACCEPTED_TCB_STATUSES))
+
+
+asyncio.run(main())
+```
+
+</Tab>
+<Tab title="Node.js">
+
+Save the code as an ES module (a `.mjs` file, or set `"type": "module"` in `package.json`).
+
+```bash
+npm install @phala/dcap-qvl
+```
+
+```javascript
+import { createHash } from 'node:crypto';
+import { getCollateralAndVerify } from '@phala/dcap-qvl';
+
+const hexBytes = (value) => Buffer.from(value.replace(/^0x/i, ''), 'hex');
+const parse = (value) => (typeof value === 'string' ? JSON.parse(value) : value);
+const hash = (algorithm, ...parts) => {
+  const h = createHash(algorithm);
+  for (const part of parts) h.update(part);
+  return h.digest();
+};
+
+export function replayRtmr3(eventLog) {
+  let rtmr3 = Buffer.alloc(48);
+  for (const event of parse(eventLog)) {
+    if (event.imr !== 3) continue;
+    const eventType = Buffer.alloc(4);
+    eventType.writeUInt32LE(event.event_type);
+    const digest = hash('sha384', eventType, ':', Buffer.from(event.event, 'utf8'), ':',
+      hexBytes(event.event_payload ?? ''));
+    if (event.digest && !hexBytes(event.digest).equals(digest)) {
+      throw new Error(`digest mismatch for event ${event.event}`);
+    }
+    rtmr3 = hash('sha384', rtmr3, digest);
+  }
+  return rtmr3;
+}
+
+export async function checkNearReport(report, nonceHex, acceptedTcbStatuses, peerSpkiSha256) {
+  const verified = await getCollateralAndVerify(hexBytes(report.intel_quote));
+  if (!acceptedTcbStatuses.includes(verified.status)) {
+    throw new Error(`TCB status ${verified.status} not accepted: ${verified.advisory_ids}`);
+  }
+  if (verified.report.type !== 'td10') throw new Error('expected a TDX quote');
+  const quote = verified.report.data;
+
+  if (quote.tdAttributes[0] & 1) throw new Error('TDX debug mode is enabled');
+
+  const identity = hexBytes(report.signing_address);
+  if ({ ecdsa: 20, ed25519: 32 }[report.signing_algo] !== identity.length) {
+    throw new Error('unsupported signing identity');
+  }
+  const fingerprint = report.tls_cert_fingerprint;
+  if (peerSpkiSha256 !== undefined && (fingerprint ?? '').toLowerCase() !== peerSpkiSha256.toLowerCase()) {
+    throw new Error('TLS fingerprint does not match the peer certificate');
+  }
+  const boundIdentity = fingerprint
+    ? hash('sha256', identity, hexBytes(fingerprint))
+    : Buffer.concat([identity, Buffer.alloc(32 - identity.length)]);
+  if (!Buffer.from(quote.reportData).equals(Buffer.concat([boundIdentity, hexBytes(nonceHex)]))) {
+    throw new Error('report data does not bind the signer and nonce');
+  }
+  if (report.request_nonce.toLowerCase() !== nonceHex.toLowerCase()) {
+    throw new Error('echoed nonce does not match');
+  }
+
+  const appCompose = parse(report.info.tcb_info).app_compose;
+  const expectedConfig = Buffer.concat([Buffer.from([1]), hash('sha256', Buffer.from(appCompose, 'utf8')), Buffer.alloc(15)]);
+  if (!Buffer.from(quote.mrConfigId).equals(expectedConfig)) {
+    throw new Error('MRCONFIGID does not match app_compose');
+  }
+
+  if (!replayRtmr3(report.event_log).equals(Buffer.from(quote.rtMr3))) {
+    throw new Error('event log does not match RTMR3');
+  }
+  return verified.status;
+}
+```
+
+```javascript
+import { randomBytes } from 'node:crypto';
+const ACCEPTED_TCB_STATUSES = ['UpToDate']; // Set by your verification policy.
+
+const nonce = randomBytes(32).toString('hex');
+const response = await fetch(
+  'https://cloud-api.near.ai/v1/attestation/report?' +
+    new URLSearchParams({
+      model: 'z-ai/glm-5.3-flash',
+      provider: 'near',
+      signing_algo: 'ecdsa',
+      nonce,
+    }),
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.NEAR_AI_CLOUD_API_KEY}`,
+      'x-no-aliasing': 'true',
+    },
+  },
+);
+if (!response.ok) throw new Error(`Attestation request failed: ${response.status}`);
+const body = await response.json();
+
+console.log('gateway:', await checkNearReport(body.gateway_attestation, nonce, ACCEPTED_TCB_STATUSES));
+const candidates = body.model_attestations ?? [];
+if (candidates.length === 0) throw new Error('No NEAR model evidence returned');
+for (const candidate of candidates) {
+  console.log('model:', await checkNearReport(candidate, nonce, ACCEPTED_TCB_STATUSES));
+}
+```
+
+</Tab>
+</Tabs>
+
+The helpers raise when the quote's TCB status is not in your accepted set; the error lists Intel's advisory IDs. Decide which statuses your [verification policy](/cloud/verification/reference/verification-policy) accepts.
+
+`dcap-qvl` fetches quote collateral from Phala's PCCS by default. To use Intel's PCS instead, pass `INTEL_PCS_URL` from the same package as the second argument to `get_collateral_and_verify` or `getCollateralAndVerify`.
