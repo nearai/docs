@@ -46,7 +46,7 @@ const receipt = await client.verifyResponse(completion.id);
 console.log(`Verified ${receipt.signatureKind} response.`);
 ```
 
-Before sending the completion, the SDK verifies each model-attestation report returned by that endpoint. It does not request Gateway evidence. It encrypts supported Chat fields to a key from the verified model evidence and decrypts the response automatically. A direct endpoint can require credentials different from your NEAR AI Cloud API key.
+Before sending the completion, the SDK verifies each model-attestation report returned by that endpoint. It does not request Gateway evidence. It encrypts supported Chat fields to a key from the verified model evidence and decrypts the response automatically.
 
 <Note>
   `verifyResponse()` is explicit. For a streaming completion, consume the entire stream first, then call it with the completion ID so the SDK can verify the exact response bytes.

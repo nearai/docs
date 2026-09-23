@@ -42,6 +42,22 @@ console.log(`Verified ${receipt.signatureKind} response.`);
 
 Before sending the completion, the SDK verifies the Gateway and every returned NEAR model-attestation candidate. It encrypts supported Chat fields to a key from the verified model evidence and decrypts the response automatically. `verifyResponse()` verifies the response signature using the request and response bytes captured by the client.
 
+By default, the SDK accepts the Intel TCB statuses `UpToDate` and `OutOfDate`. To require `UpToDate`, apply a policy to both the Gateway and model evidence:
+
+```ts
+const strict = {
+  policy: { acceptedTcbStatuses: ['UpToDate'] as const },
+};
+
+const client = new InferenceClient({
+  baseUrl,
+  apiKey,
+  e2ee: true,
+  gatewayVerification: strict,
+  modelVerification: strict,
+});
+```
+
 <Note>
   `verifyResponse()` is explicit. For a streaming completion, consume the entire stream first, then call it with the completion ID so the SDK can verify the exact response bytes.
 </Note>
