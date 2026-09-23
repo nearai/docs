@@ -1,7 +1,11 @@
 ---
-title: "Image Provenance"
-description: "Apply an image-provenance policy to the configuration measured by a direct model attestation."
+title: "Experimental Image Provenance"
+description: "Apply an image-provenance policy to configuration measured by a direct model attestation."
 ---
+
+<Warning>
+  This experimental check applies to the direct report under inspection. It does not establish deployment evidence for a separate inference request to the same hostname.
+</Warning>
 
 Image provenance is separate from hardware attestation. A verified direct model quote can bind a configuration measurement to a runtime. Provenance determines whether the image digests in that configuration were built by a source and build process your policy accepts.
 

@@ -1,9 +1,13 @@
 ---
-title: "Model Attestation Report"
-description: "Verify the root model report returned by a direct completions endpoint."
+title: "Experimental Model Attestation Report"
+description: "Inspect the root model report returned by a direct completions endpoint."
 ---
 
-Use this page to verify the model environment serving a direct `https://<MODEL_SLUG>.completions.near.ai` endpoint.
+<Warning>
+  This experimental report is evidence for the request that returned it. It does not establish deployment evidence for a separate inference request to the same hostname.
+</Warning>
+
+Use this page to inspect the model environment reported by a direct `https://<MODEL_SLUG>.completions.near.ai` endpoint.
 
 ## Request a fresh report
 
@@ -35,7 +39,7 @@ The root response is the model report. Relevant fields include:
 | `nvidia_payload` | GPU evidence, when present. |
 | `info.tcb_info.app_compose` | Raw measured configuration string. Hash it and match it to the quote's MRCONFIGID. `tcb_info` can itself be JSON text. |
 | `tls_cert_fingerprint` | The direct endpoint TLS binding, when requested. |
-| `all_attestations[]` | Model-report entries in this direct response envelope. It can include the root report and is not a fleet inventory. |
+| `all_attestations[]` | Model-report entries in this direct response envelope. It is not a complete list of instances that can serve later requests. |
 
 ## Verify the report
 
@@ -51,4 +55,4 @@ When a response signature is being verified, match both `signing_address` and `s
 
 ## Load balancing and freshness
 
-The same direct model hostname can serve more than one instance. Do not assume two independent HTTP requests reached the same instance. Fetch fresh evidence when the signer, certificate, measured configuration, or accepted-attestation-age policy changes.
+The same direct model hostname can serve more than one instance. Do not assume two independent HTTP requests reached the same instance, or use a report as evidence for a separate completion sent later. Fetch fresh evidence when the signer, certificate, measured configuration, or accepted-attestation-age policy changes.

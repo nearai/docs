@@ -54,7 +54,7 @@ NEAR AI Cloud combines Intel TDX and NVIDIA TEE technologies to create isolated,
 
 If you're using a standard OpenAI SDK or curl, your prompts are automatically protected by TLS encryption—no additional setup required.
 
-NEAR AI Cloud supports two connection modes. Each has its own TLS-attestation flow when your application requires evidence for the TLS endpoint of a particular connection:
+For new integrations, use the NEAR AI Cloud Gateway. Its verification flow can establish the evidence required for a particular request path.
 
 **Gateway mode** routes through `cloud-api.near.ai`, which runs in its own TEE before forwarding to the model TEE:
 
@@ -67,83 +67,29 @@ flowchart LR
     style C fill:#2e7d32,stroke:#81c784,stroke-width:2px,color:#fff
 ```
 
-**Direct completions mode** connects you straight to the model's TEE — one hop, one TEE to verify:
-
-```mermaid
-flowchart LR
-    A["Your Machine"] -->|"🔒 HTTPS"| C["Model endpoint → LLM"]
-
-    style A fill:#1a1a2e,stroke:#4fc3f7,stroke-width:2px,color:#fff
-    style C fill:#2e7d32,stroke:#81c784,stroke-width:2px,color:#fff
-```
-
-**Key insight:** TLS protects traffic in transit. When the route-specific TLS attestation flow passes for a particular connection, it binds that connection's endpoint to verified attestation evidence.
+**Key insight:** TLS protects traffic in transit. When the Gateway TLS attestation flow passes for a particular connection, it binds that connection's endpoint to verified attestation evidence.
 
 Here's why this works:
 
 1. **Standard HTTPS = TLS encryption**: When you make API calls using the OpenAI SDK or curl, you're connecting via HTTPS. This means TLS encryption is applied automatically by your client before any data leaves your machine.
 
-2. **TLS endpoint verification**: Use TLS attestation when your application needs to verify the endpoint for a particular connection. The same TLS connection must supply both the peer certificate and attestation report.
+2. **TLS endpoint verification**: Use Gateway TLS attestation when your application needs to verify the endpoint for a particular connection. The same TLS connection must supply both the peer certificate and attestation report.
 
 3. **Evidence-driven trust**: Use attestation and the workload policy appropriate for your application to decide which environment properties are required.
 
 This gives you the same OpenAI-compatible development flow while allowing your application to verify the properties it requires.
 
-### Direct Completions
+### Direct Completions (experimental)
 
-With direct completions, each model is available at its own subdomain under `completions.near.ai`. Your request goes straight to the model's TEE — no gateway hop needed.
+<Warning>
+  Direct model endpoints are experimental. Do not use them for new integrations or production workflows that require verifiable deployment evidence or reliable response signatures. Use the NEAR AI Cloud Gateway instead.
+</Warning>
 
-**Base URL format:**
-```
-https://{slug}.completions.near.ai/v1
-```
-
-**Available endpoints** (see [completions.near.ai/endpoints](https://completions.near.ai/endpoints) for the full list):
-
-| Subdomain | Model | Input | Output |
-|-----------|-------|-------|--------|
-| `glm-5-1.completions.near.ai` | GLM-5.1 | Text | Text |
-| `glm-5-2.completions.near.ai` | GLM-5.2 (`z-ai/glm-5.2`, `zai-org/GLM-5.2-FP8`) | Text | Text |
-| `qwen35-122b.completions.near.ai` | Qwen3.5-122B | Text | Text |
-| `qwen3-6-35b.completions.near.ai` | Qwen3.6-35B | Text | Text |
-| `qwen3-30b.completions.near.ai` | Qwen3-30B | Text | Text |
-| `gpt-oss-120b.completions.near.ai` | GPT-OSS-120B | Text | Text |
-| `gemma-4-31b.completions.near.ai` | Gemma 4 31B | Text | Text |
-| `qwen3-vl-30b.completions.near.ai` | Qwen3-VL-30B | Text, Image | Text |
-| `flux2-klein.completions.near.ai` | FLUX.2-klein-4B | Text | Image |
-| `whisper-large-v3.completions.near.ai` | Whisper Large V3 | Audio | Text |
-| `qwen3-embedding.completions.near.ai` | Qwen3-Embedding-0.6B | Text | Embedding |
-| `qwen3-reranker.completions.near.ai` | Qwen3-Reranker-0.6B | Text | Score |
-| `privacy-filter.completions.near.ai` | Privacy Filter | Text | Classification |
-
-Each subdomain exposes the served direct route set for that model:
-
-- `POST /v1/chat/completions` — Chat completions (with signing)
-- `POST /v1/completions` — Text completions
-- `POST /v1/tokenize` — Tokenization
-- `POST /v1/embeddings` — Embeddings
-- `POST /v1/rerank` — Reranking
-- `POST /v1/score` — Scoring
-- `POST /v1/images/generations` — Image generation
-- `POST /v1/images/edits` — Image editing
-- `POST /v1/audio/transcriptions` — Audio transcription
-- `POST /v1/privacy/classify` — Privacy classification on privacy-filter deployments
-- `GET /v1/models` — Available models
-- `GET /v1/attestation/report` — TEE attestation (TDX + GPU)
-- `GET /v1/signature/{chat_id}` — Retrieve cached signatures
-
-`/v1/privacy/classify` is also forwarded by direct completions endpoints when the selected privacy-filter backend serves it. `/v1/privacy/redact` remains a gateway privacy endpoint on `https://cloud-api.near.ai/v1`.
-
-Gateway and direct completions responses include an `X-Request-Id` response header. Support may ask you for that opaque value when debugging a request. It is support/debugging metadata, not W3C `traceparent` or distributed trace context. If you send your own `X-Request-Id`, use a non-sensitive UUID value; `X-Request-Id` values must not contain secrets or PII. `X-Org-Id` and `X-Workspace-Id` are internal tenant headers; public clients cannot set or override them.
-
-**Benefits of direct completions:**
-- **Fewer hops** — Your request reaches the model TEE directly, reducing latency
-- **Simpler trust model** — Only the model TEE needs to be verified (no [NEAR AI Cloud gateway attestation](/cloud/verification/cloud-api/gateway-attestation) required)
-- **TLS binds to attestation** — The `include_tls_fingerprint=true` parameter can bind the direct endpoint TLS certificate to its attestation report when the [direct TLS flow](/cloud/verification/direct/tls) is completed
+Existing users can find endpoint names at [completions.near.ai/endpoints](https://completions.near.ai/endpoints). Independent requests to the same direct hostname can reach different serving instances. An attestation response, including `all_attestations[]`, applies only to the request that returned it and does not establish evidence for a later completion. A later signature lookup can return `404`; do not use direct response signatures as a production verification gate.
 
 ### The Inference Process
 
-When you make a request to NEAR AI Cloud, your data flows through a secure pipeline designed to maintain privacy at every step. The exact flow depends on whether you use the gateway or a direct completions endpoint.
+When you make a request to NEAR AI Cloud through the Gateway, your data flows through a secure pipeline designed to maintain privacy at every step.
 
 **Via Gateway (`cloud-api.near.ai`):**
 
@@ -164,20 +110,6 @@ When you make a request to NEAR AI Cloud, your data flows through a secure pipel
 
     6. **Verifiable Response:**
     Use [verification](/cloud/verification) to check the evidence required by your application. A response without an available signature is not response-verified.
-
-**Via Direct Completions (`{slug}.completions.near.ai`):**
-
-    1. **Direct Request:**
-    You send chat completion requests via HTTPS directly to the model's subdomain, with no intermediate NEAR AI Cloud gateway in the request path. Use [direct TLS connection binding](/cloud/verification/direct/tls) when endpoint verification is required.
-
-    2. **Secure Inference:**
-    The model processes your request entirely within its TEE, where all data and model weights are protected by hardware-enforced isolation.
-
-    3. **Attestation & Signing:**
-    Attestation reports provide environment evidence; supported flows can make response signatures available for integrity verification.
-
-    4. **Verifiable Response:**
-    Use [direct model attestation](/cloud/verification/direct/model-attestation) for the direct endpoint. If response verification is required, also check that a signature is available and valid.
 
 ---
 

@@ -1,21 +1,25 @@
 ---
-title: "Verify Direct Model Endpoints"
-description: "Verify the model, connection, response, and software evidence for direct completions endpoints."
+title: "Experimental Direct Model Endpoints"
+description: "Experimental verification notes for direct completions endpoints."
 ---
 
-Use this guide when your application sends inference requests directly to `https://<MODEL_SLUG>.completions.near.ai`. The NEAR AI Cloud gateway is not in this request path. If your application sends requests to `cloud-api.near.ai`, use the [NEAR AI Cloud gateway guide](/cloud/verification/cloud-api) instead.
+<Warning>
+  Direct model endpoint verification is experimental and is not recommended for new integrations or production verification workflows. Use the [NEAR AI Cloud Gateway](/cloud/verification/cloud-api) instead.
+</Warning>
 
-## What you can verify
+Independent requests to the same direct hostname can reach different serving instances. An attestation report, including `all_attestations[]`, is evidence for the request that returned it; it does not establish deployment evidence for a later completion. A later response-signature request can return `404`, so do not use direct response signatures as a production verification gate.
+
+## Available experimental checks
 
 <CardGroup cols={2}>
   <Card title="Model attestation report" icon="brain-circuit" href="/cloud/verification/direct/model-attestation">
-    Verify the trusted model environment reported by the direct endpoint.
+    Inspect the model environment reported by a direct endpoint.
   </Card>
   <Card title="TLS connection binding" icon="shield-check" href="/cloud/verification/direct/tls">
-    Verify that your live HTTPS connection terminates at the attested model endpoint.
+    Bind one live HTTPS connection to a direct report.
   </Card>
   <Card title="Response signatures" icon="message-square-check" href="/cloud/verification/direct/response-signatures">
-    Verify that a signed response came from the attested model environment.
+    Inspect an available signature for exact response bytes.
   </Card>
   <Card title="Image provenance" icon="package-check" href="/cloud/verification/direct/image-provenance">
     Check that the software images in the attested environment meet your source and build policy.
@@ -27,6 +31,6 @@ Use this guide when your application sends inference requests directly to `https
 1. Generate a fresh nonce for this verification attempt.
 2. Request a fresh report from the same direct endpoint your application uses for inference.
 3. Verify the model's hardware attestation and apply your acceptance policy.
-4. Add TLS, response-signature, or image-provenance checks when your application requires them.
+4. Add TLS, response-signature, or image-provenance checks only for the direct request under inspection.
 
-Start with [Model attestation report](/cloud/verification/direct/model-attestation). That guide shows how to request fresh evidence. The other guides explain the additional checks.
+Start with [Model attestation report](/cloud/verification/direct/model-attestation). Do not combine these experimental checks into a production deployment-verification conclusion for later independent requests.

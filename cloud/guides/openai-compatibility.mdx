@@ -14,28 +14,17 @@ To use the OpenAI SDKs with NEAR AI Cloud, you simply need to override the `base
 
 ### Base URL
 
-NEAR AI Cloud offers two base URL options:
-
-**Gateway** (routes to any model):
+Use the NEAR AI Cloud Gateway base URL:
 ```
 https://cloud-api.near.ai/v1
 ```
-
-**Direct Completions** (connects straight to a model's TEE):
-```
-https://{slug}.completions.near.ai/v1
-```
-
-For example, `https://qwen35-122b.completions.near.ai/v1` connects directly to Qwen3.5-122B. See [completions.near.ai/endpoints](https://completions.near.ai/endpoints) for all available endpoints.
-
-Both URLs use the same API key. Direct completions offer lower latency and a simpler trust model since TLS terminates directly in the model's TEE. See [Private Inference — Direct Completions](/cloud/private-inference#direct-completions) for details.
 
 ### API Key
 You can generate your API key in the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations).
 
 ### Request IDs
 
-Gateway responses from `https://cloud-api.near.ai/v1` and direct completions responses from `https://{slug}.completions.near.ai/v1` include an `X-Request-Id` response header. Support may ask you for this value when debugging a request.
+Gateway responses from `https://cloud-api.near.ai/v1` include an `X-Request-Id` response header. Support may ask you for this value when debugging a request.
 
 `X-Request-Id` is opaque support/debugging metadata; it is not W3C `traceparent` or distributed trace context. If you send your own `X-Request-Id`, use a non-sensitive UUID value. `X-Request-Id` values must not contain secrets or PII. `X-Org-Id` and `X-Workspace-Id` are internal tenant headers; public clients cannot set or override them.
 
@@ -177,7 +166,7 @@ NEAR AI Cloud supports the following core OpenAI API features:
 NEAR AI Cloud also provides non-OpenAI extensions:
 
 - **Reranking** (`/v1/rerank`) - Score documents against a query
-- **Privacy classification** (`/v1/privacy/classify`) - Detect personally identifiable information through the gateway, or through a privacy-filter direct completions backend when that backend is selected and available
+- **Privacy classification** (`/v1/privacy/classify`) - Detect personally identifiable information through the gateway
 - **Privacy redaction** (`/v1/privacy/redact`) - Gateway-only endpoint for redacting personally identifiable information
 - **Attestation & Signatures** (`/v1/attestation/report`, `/v1/signature/{chat_id}`) - See [Verification](/cloud/verification)
 

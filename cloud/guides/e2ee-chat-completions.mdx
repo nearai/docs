@@ -46,29 +46,6 @@ sequenceDiagram
     Note over Client: Decrypt with private key
 ```
 
-### Via Direct Completions
-
-With [direct completions](/cloud/private-inference#direct-completions), E2EE is simpler — encrypted data goes straight to the model's TEE with no intermediate gateway.
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant ModelTEE as Model TEE (qwen35-122b.completions.near.ai)
-
-    Client->>ModelTEE: GET /v1/attestation/report
-    Note over ModelTEE: Generate attestation report<br/>with model's public key
-    ModelTEE->>Client: Model public key + attestation
-
-    Note over Client: Generate ephemeral key pair
-    Note over Client: Encrypt messages with model's public key
-
-    Client->>ModelTEE: POST /v1/chat/completions<br/>with encryption headers
-    Note over ModelTEE: Decrypt with private key<br/>Process with LLM<br/>Encrypt response with client's public key
-    ModelTEE->>Client: Encrypted response
-
-    Note over Client: Decrypt with private key
-```
-
 ---
 
 ## Encryption Protocol
@@ -187,9 +164,9 @@ if msg.get("content"):
 
 ### Step 1: Get the Model's Public Key
 
-Fetch the model's Ed25519 public key from its TEE attestation report. The public key is generated inside the Model TEE and cryptographically bound to its hardware attestation. For a gateway request, reject an empty `model_attestations[]` array, verify every returned candidate and its fresh nonce, then choose one verified report under your application's acceptance policy. Use that report's `signing_public_key` as the `X-Model-Pub-Key` routing pin. For a direct request, verify the root model report before using its key. See [NEAR model attestations](/cloud/verification/cloud-api/model-attestations) or [direct model attestation](/cloud/verification/direct/model-attestation).
+Fetch the model's Ed25519 public key from its TEE attestation report. The public key is generated inside the Model TEE and cryptographically bound to its hardware attestation. Reject an empty `model_attestations[]` array, verify every returned candidate and its fresh nonce, then choose one verified report under your application's acceptance policy. Use that report's `signing_public_key` as the `X-Model-Pub-Key` routing pin. See [NEAR model attestations](/cloud/verification/cloud-api/model-attestations).
 
-The gateway endpoint requires an API key (`Authorization: Bearer <api-key>`); report retrieval is free and never counts against your usage. The direct completions endpoint is served by the model TEE itself and needs no API key.
+The gateway endpoint requires an API key (`Authorization: Bearer <api-key>`); report retrieval is free and never counts against your usage.
 
 <Tabs>
 <Tab title="curl (Gateway)">
@@ -205,18 +182,6 @@ curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
   --data-urlencode "nonce=${NONCE}" \
   -H 'x-no-aliasing: true' \
   -H 'Authorization: Bearer <YOUR-NEAR-AI-CLOUD-API-KEY>'
-```
-
-</Tab>
-<Tab title="curl (Direct)">
-
-```bash
-# Direct completions — no model parameter needed, the endpoint serves one model
-NONCE="$(openssl rand -hex 32)"
-
-curl -G 'https://qwen35-122b.completions.near.ai/v1/attestation/report' \
-  --data-urlencode 'signing_algo=ed25519' \
-  --data-urlencode "nonce=${NONCE}"
 ```
 
 </Tab>
@@ -244,12 +209,6 @@ response = requests.get(
 )
 response.raise_for_status()
 
-# For direct completions:
-# response = requests.get(
-#     "https://qwen35-122b.completions.near.ai/v1/attestation/report",
-#     params={"signing_algo": "ed25519", "nonce": nonce}
-# )
-
 attestation = response.json()
 # NEAR AI Cloud gateway:
 model_reports = attestation.get("model_attestations", [])
@@ -259,8 +218,6 @@ if not model_reports:
 # using the model-attestation flow, then select a verified report under your
 # E2EE acceptance policy and read its `signing_public_key`.
 print(f"Retrieved {len(model_reports)} NEAR model-attestation candidate(s)")
-# Direct completions use the root model report instead:
-# model_public_key_hex = attestation["signing_public_key"]
 ```
 
 </Tab>
@@ -301,7 +258,7 @@ console.log(`Retrieved ${modelReports.length} NEAR model-attestation candidate(s
 </Tab>
 </Tabs>
 
-For the NEAR AI Cloud gateway, request `provider=near` with a canonical model ID and `x-no-aliasing: true`. Reject an empty response, verify every returned model-report candidate with the nonce you generated, and retain only reports your application accepts. Select a key only from that verified set, then send its `signing_public_key` in `X-Model-Pub-Key`. For a direct completions endpoint, the key is in the root report's `signing_public_key`.
+Request `provider=near` with a canonical model ID and `x-no-aliasing: true`. Reject an empty response, verify every returned model-report candidate with the nonce you generated, and retain only reports your application accepts. Select a key only from that verified set, then send its `signing_public_key` in `X-Model-Pub-Key`.
 
 ---
 
@@ -474,27 +431,6 @@ curl https://cloud-api.near.ai/v1/chat/completions \
   -H "x-no-aliasing: true" \
   -d '{
     "model": "zai-org/GLM-5.1-FP8",
-    "messages": [{
-      "role": "user",
-      "content": "ENCRYPTED_CONTENT_HEX"
-    }],
-    "stream": false
-  }'
-```
-
-</Tab>
-<Tab title="curl (Direct)">
-
-```bash
-# Direct completions — no X-Model-Pub-Key needed
-curl https://qwen35-122b.completions.near.ai/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "X-Signing-Algo: ed25519" \
-  -H "X-Client-Pub-Key: YOUR_ED25519_PUBLIC_KEY_HEX" \
-  -H "X-Encryption-Version: 2" \
-  -d '{
-    "model": "Qwen/Qwen3.5-122B-A10B",
     "messages": [{
       "role": "user",
       "content": "ENCRYPTED_CONTENT_HEX"
@@ -755,7 +691,7 @@ E2EE is supported on the **Chat Completions API** (`/v1/chat/completions`), **Co
 
 ### Verification
 
-Before using a model public key for encryption, verify the attestation report and its fresh client nonce against hardware attestation. For a gateway response, verify every returned model-attestation candidate and choose a key only from reports accepted by your policy. Choose the matching endpoint flow in [Verification](/cloud/verification).
+Before using a model public key for encryption, verify the attestation report and its fresh client nonce against hardware attestation. For a gateway response, verify every returned model-attestation candidate and choose a key only from reports accepted by your policy. See [Verification](/cloud/verification) for the Gateway verification flow.
 
 ---
 
@@ -885,5 +821,5 @@ Before using a model public key for encryption, verify the attestation report an
 ## See Also
 
 - [Private Inference](/cloud/private-inference) — How TEE isolation protects your data
-- [Verification](/cloud/verification) — Select NEAR AI Cloud gateway or direct model attestation verification
+- [Verification](/cloud/verification) — Verify NEAR AI Cloud Gateway requests
 - [Verification Policy](/cloud/verification/reference/verification-policy) — Define the evidence your application requires

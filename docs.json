@@ -79,16 +79,6 @@
                     ]
                   },
                   {
-                    "group": "Direct Model Endpoints",
-                    "root": "cloud/verification/direct/index",
-                    "pages": [
-                      "cloud/verification/direct/model-attestation",
-                      "cloud/verification/direct/tls",
-                      "cloud/verification/direct/response-signatures",
-                      "cloud/verification/direct/image-provenance"
-                    ]
-                  },
-                  {
                     "group": "Reference",
                     "pages": [
                       "cloud/verification/reference/quote-nonce-signer",

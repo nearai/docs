@@ -1,12 +1,12 @@
 ---
-title: "TLS Connection Binding"
-description: "Bind a live direct-model TLS connection to the direct model attestation report."
+title: "Experimental TLS Connection Binding"
+description: "Bind one live direct-model TLS connection to a direct model attestation report."
 ---
 
-Use this flow to establish that the HTTPS connection to a direct model endpoint terminates at the endpoint bound to its model attestation.
+Use this experimental flow to bind one HTTPS connection to the direct model attestation report it returns.
 
 <Warning>
-  Obtain the peer certificate and direct attestation report over the **same TLS connection**. Separate connections can reach different instances or observe a rotated certificate, so they cannot establish this connection-specific conclusion.
+  Obtain the peer certificate and direct attestation report over the **same TLS connection**. This result does not establish deployment evidence for later independent completion or signature requests. Use the NEAR AI Cloud Gateway for production verification workflows.
 </Warning>
 
 ## What this checks

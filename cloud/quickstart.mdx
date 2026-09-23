@@ -21,7 +21,7 @@ icon: "rocket"
 
 ## Make Your First API Call
 
-NEAR AI Cloud uses an OpenAI-compatible API, making it easy to integrate with existing tools and libraries. You can connect through the **gateway** (`cloud-api.near.ai`) or **directly** to a model's own endpoint (`{slug}.completions.near.ai`).
+NEAR AI Cloud uses an OpenAI-compatible API, making it easy to integrate with existing tools and libraries. Connect through the NEAR AI Cloud Gateway at `cloud-api.near.ai`.
 
 <Note>
   Replace `YOUR_API_KEY` with the API key you generated in the setup steps above.
@@ -29,10 +29,8 @@ NEAR AI Cloud uses an OpenAI-compatible API, making it easy to integrate with ex
 <Tip>
   **Request IDs**
 
-  Gateway and direct completions responses include an `X-Request-Id` response header. Support may ask you for it when debugging a request. The value is opaque support/debugging metadata, not W3C `traceparent` or distributed trace context. If you send your own `X-Request-Id`, use a non-sensitive UUID value; `X-Request-Id` values must not contain secrets or PII. `X-Org-Id` and `X-Workspace-Id` are internal tenant headers; public clients cannot set or override them.
+  Gateway responses include an `X-Request-Id` response header. Support may ask you for it when debugging a request. The value is opaque support/debugging metadata, not W3C `traceparent` or distributed trace context. If you send your own `X-Request-Id`, use a non-sensitive UUID value; `X-Request-Id` values must not contain secrets or PII. `X-Org-Id` and `X-Workspace-Id` are internal tenant headers; public clients cannot set or override them.
 </Tip>
-<Tabs>
-<Tab title="Gateway">
 
 The gateway routes your request to the appropriate model TEE:
 
@@ -94,82 +92,6 @@ const completion = await openai.chat.completions.create({
 console.log(completion.choices[0].message.content);
 ```
 
-</Tab>
-</Tabs>
-
-</Tab>
-<Tab title="Direct Completions">
-
-Direct completions connect you straight to the model's TEE — TLS terminates inside the model enclave with no intermediate gateway hop.
-
-Each model has its own subdomain. For example, Qwen3.5-122B is available at `qwen35-122b.completions.near.ai`:
-
-<Tabs>
-<Tab title="curl">
-
-```bash
-curl https://qwen35-122b.completions.near.ai/v1/chat/completions \
--H "Content-Type: application/json" \
--H "Authorization: Bearer YOUR_API_KEY" \
--d '{
-    "model": "Qwen/Qwen3.5-122B-A10B",
-    "messages": [{
-        "role": "user",
-        "content": "Hello, NEAR AI!"
-    }]
-}'
-```
-
-</Tab>
-<Tab title="Python">
-
-```python
-import openai
-
-client = openai.OpenAI(
-    base_url="https://qwen35-122b.completions.near.ai/v1",
-    api_key="YOUR_API_KEY"
-)
-
-response = client.chat.completions.create(
-    model="Qwen/Qwen3.5-122B-A10B",
-    messages=[{
-        "role": "user", "content": "Hello, NEAR AI!"
-    }]
-)
-
-print(response.choices[0].message.content)
-```
-
-</Tab>
-<Tab title="JavaScript">
-
-```javascript
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-    baseURL: 'https://qwen35-122b.completions.near.ai/v1',
-    apiKey: 'YOUR_API_KEY',
-});
-
-const completion = await openai.chat.completions.create({
-    model: 'Qwen/Qwen3.5-122B-A10B',
-    messages: [{
-        role: 'user', content: 'Hello, NEAR AI!'
-    }]
-});
-
-console.log(completion.choices[0].message.content);
-```
-
-</Tab>
-</Tabs>
-
-<Tip>
-  **Available Endpoints**
-
-  See the full list of available direct completions endpoints at [completions.near.ai/endpoints](https://completions.near.ai/endpoints). Examples include `qwen35-122b.completions.near.ai`, `qwen3-30b.completions.near.ai`, `gpt-oss-120b.completions.near.ai`, and more.
-</Tip>
 </Tab>
 </Tabs>
 

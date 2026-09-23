@@ -1,13 +1,13 @@
 ---
-title: "Response Signatures"
-description: "Verify an available direct-model response signature against exact bytes and the matching model report."
+title: "Experimental Response Signatures"
+description: "Inspect an available direct-model response signature against exact bytes and a matching model report."
 ---
 
-Use this flow for a completion sent directly to a model endpoint. When a signature is available, it lets you verify that the exact response bytes came from the attested model environment.
+<Warning>
+  A signature lookup can return `404` after a direct completion. Treat a missing signature as unavailable; direct response signatures are not a production verification gate.
+</Warning>
 
-<Note>
-  A response without an available signature is not a successfully verified response. If response verification is required by your policy, treat it as unverified after a short, bounded retry interval.
-</Note>
+Use this experimental flow to inspect the signature over exact bytes for a completion sent directly to a model endpoint.
 
 ## Preserve exact request and response bytes
 
@@ -47,7 +47,7 @@ Use the [manual response-signature helpers](/cloud/verification/reference/respon
 
 ## Match the model signer
 
-Request or select a direct model attestation whose `signing_address` and `signing_algo` exactly match the signature. Verify its quote, client-generated nonce, signer binding, and required workload policy as described in [direct model attestation](/cloud/verification/direct/model-attestation).
+Request or select a direct model attestation whose `signing_address` and `signing_algo` exactly match the signature. Verify its quote, client-generated nonce, signer binding, and required workload policy as described in [direct model attestation](/cloud/verification/direct/model-attestation). A matching signer does not establish that the report and completion came from the same serving instance.
 
 Do not infer a gateway or model classification from the format of the signed text, and do not substitute a report for a different signer.
 
