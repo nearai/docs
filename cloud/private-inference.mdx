@@ -60,7 +60,7 @@ For new integrations, use the NEAR AI Cloud Gateway. Its verification flow can e
 
 ```mermaid
 flowchart LR
-    A["Your Machine"] -->|"🔒 HTTPS"| B["NEAR AI Cloud gateway"] -->|"🔒 HTTPS"| C["Model endpoint → LLM"]
+    A["Your Machine"] -->|"🔒 HTTPS"| B["NEAR AI Cloud gateway"] -->|"🔒 HTTPS"| C["Model TEE → LLM"]
 
     style A fill:#1a1a2e,stroke:#4fc3f7,stroke-width:2px,color:#fff
     style B fill:#1b5e20,stroke:#66bb6a,stroke-width:2px,color:#fff
@@ -78,14 +78,6 @@ Here's why this works:
 3. **Evidence-driven trust**: Use attestation and the workload policy appropriate for your application to decide which environment properties are required.
 
 This gives you the same OpenAI-compatible development flow while allowing your application to verify the properties it requires.
-
-### Direct Completions (experimental)
-
-<Warning>
-  Direct model endpoints are experimental. Do not use them for new integrations or production workflows that require verifiable deployment evidence or reliable response signatures. Use the NEAR AI Cloud Gateway instead.
-</Warning>
-
-Existing users can find endpoint names at [completions.near.ai/endpoints](https://completions.near.ai/endpoints). Independent requests to the same direct hostname can reach different serving instances. An attestation response, including `all_attestations[]`, applies only to the request that returned it and does not establish evidence for a later completion. A later signature lookup can return `404`; do not use direct response signatures as a production verification gate.
 
 ### The Inference Process
 
