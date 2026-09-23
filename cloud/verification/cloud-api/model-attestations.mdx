@@ -23,7 +23,7 @@ curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
   -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
 ```
 
-The response includes gateway evidence and zero or more NEAR model-report candidates in `model_attestations[]`. If your policy requires NEAR model evidence, reject an empty array. Before sending a completion, verify every candidate and retain the verified results; do not choose a raw entry yourself.
+The response includes gateway evidence and NEAR model-report candidates in `model_attestations[]`. The field is omitted when no candidate is available. If your policy requires NEAR model evidence, reject a missing or empty `model_attestations[]`. Before sending a completion, verify every candidate and retain the verified results; do not choose a raw entry yourself.
 
 For a later `provider_tee` response signature, select exactly one retained verified report whose `signing_address` and `signing_algo` match the signature. If no report or more than one report matches, the response is unverified. A report fetched after the completion cannot replace this preflight evidence.
 
@@ -40,9 +40,9 @@ The NEAR report uses these fields:
 | `intel_quote` | Intel TDX evidence. |
 | `event_log` | Runtime measurement log. Replay it and match the result to the quote's RTMR3. |
 | `request_nonce` | Echoed request nonce. Require it to match the client nonce, then confirm the nonce binding from the verified quote. |
-| `report_data` | Optional HTTP copy of quote report data. The verified quote is the source of truth; when this field is present, compare it with the verified quote. |
+| `report_data` | Not currently returned in model reports. Read report data from the verified quote. |
 | `signing_address` and `signing_algo` | Model signing identity and its algorithm. |
-| `signing_public_key` | Model public key needed by the E2EE flow. Other model-attestation flows do not require it. Request `signing_algo=ed25519` for E2EE. |
+| `signing_public_key` | Model public key used by the E2EE flow; other flows do not need it. With `signing_algo=ed25519` it is the Ed25519 key for the default E2EE flow; with `ecdsa` it is the secp256k1 key for ECDSA E2EE. |
 | `nvidia_payload` | NVIDIA GPU evidence, when present. |
 | `info.tcb_info.app_compose` | Raw measured configuration string. Hash it and match it to the quote's MRCONFIGID. `tcb_info` can itself be JSON text. |
 
@@ -50,17 +50,17 @@ The NEAR report uses these fields:
 
 Perform these checks on every returned candidate before sending a completion:
 
-1. Verify `intel_quote` with an Intel DCAP verifier and apply your TCB and advisory policy.
+1. Verify `intel_quote` with an Intel DCAP quote verifier, such as [`dcap-qvl`](https://github.com/Phala-Network/dcap-qvl), and apply your TCB and advisory policy.
 2. Read report data from the verified quote. Require it to bind the client-generated nonce and `signing_address`; require `request_nonce` to match the client nonce. When `report_data` is present, require it to match the verified quote. Interpret the address using `signing_algo`.
-3. Replay `event_log` and require the resulting RTMR3 to equal the RTMR3 in the verified quote.
-4. If `tcb_info` is JSON text, decode it to obtain `app_compose`. Hash the raw `app_compose` string without parsing or reserializing it. Require the quote's MRCONFIGID to begin with `01` followed by that SHA-256 hash.
+3. Replay `event_log` as described in [Replay the RTMR3 event log](/cloud/verification/reference/quote-nonce-signer#replay-the-rtmr3-event-log) and require the resulting RTMR3 to equal the RTMR3 in the verified quote.
+4. If `tcb_info` is JSON text, decode it to obtain `app_compose`. Hash the raw `app_compose` string without parsing or reserializing it. Require the quote's 48-byte MRCONFIGID to equal `01`, then that SHA-256 hash, then 15 zero bytes. See [Check the configuration measurement](/cloud/verification/reference/quote-nonce-signer#check-the-configuration-measurement).
 5. When GPU evidence is present, follow [GPU evidence verification](/cloud/verification/reference/quote-nonce-signer#verify-gpu-evidence-when-present).
 6. Apply your own allowlist and provenance policy to the verified measurements.
 
 After receiving a `provider_tee` response signature, select the one retained report whose signer identity and algorithm match the signature. If the match is absent or ambiguous, reject the response as unverified.
 
 <Warning>
-  `model_attestations[]` is not an inventory of every model instance behind a URL. Candidates are not interchangeable: a response signature must be matched by signer identity and algorithm.
+  `model_attestations[]` is not an inventory of every model instance behind a URL. Instances of the same model share one signing key, including instances with different measured configurations, so a matching signer does not establish that the report and the completion came from the same serving instance.
 </Warning>
 
 ## Relationship to NEAR AI Cloud gateway TLS

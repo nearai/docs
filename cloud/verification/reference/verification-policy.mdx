@@ -10,7 +10,7 @@ Attestation verifies particular cryptographic statements. Your application must 
 At minimum, specify:
 
 - acceptable Intel TDX verification status and advisory policy
-- rejection of quotes with TDX debug mode enabled
+- rejection of quotes with TDX debug mode enabled (bit 0 of `TD_ATTRIBUTES` in the verified quote)
 - required signer algorithm and identity matching rules
 - whether GPU evidence is required and the accepted verdict
 - accepted workload measurements and configuration rules

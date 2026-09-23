@@ -33,7 +33,7 @@ The root response is the model report. Relevant fields include:
 | `model_name` | The model name stated in this report. |
 | `signing_address`, `signing_algo` | The model signing identity and algorithm. |
 | `request_nonce` | The nonce echoed for diagnostics. Verify it inside the quote. |
-| `report_data` | Optional HTTP copy of quote report data. When present, compare it with the verified quote. |
+| `report_data` | Not currently returned in direct model reports. Read report data from the verified quote. |
 | `intel_quote` | The model's Intel TDX quote. |
 | `event_log` | Runtime measurement log. Replay it and match the result to the quote's RTMR3. |
 | `nvidia_payload` | GPU evidence, when present. |
@@ -43,10 +43,10 @@ The root response is the model report. Relevant fields include:
 
 ## Verify the report
 
-1. Verify `intel_quote` with an Intel DCAP verifier and apply your TCB and advisory policy.
+1. Verify `intel_quote` with an Intel DCAP quote verifier, such as [`dcap-qvl`](https://github.com/Phala-Network/dcap-qvl), and apply your TCB and advisory policy.
 2. Check the client-generated nonce and signer identity against the verified quote. Read report data from the verified quote; require `request_nonce` to match the client nonce and, when `report_data` is present, require it to match the verified quote. Use `signing_algo` to interpret that identity and verify response signatures.
-3. Replay `event_log` and require the resulting RTMR3 to equal the RTMR3 in the verified quote.
-4. If `tcb_info` is JSON text, decode it to obtain `app_compose`. Hash the raw `app_compose` string without parsing or reserializing it. Require the quote's MRCONFIGID to begin with `01` followed by that SHA-256 hash.
+3. Replay `event_log` as described in [Replay the RTMR3 event log](/cloud/verification/reference/quote-nonce-signer#replay-the-rtmr3-event-log) and require the resulting RTMR3 to equal the RTMR3 in the verified quote.
+4. If `tcb_info` is JSON text, decode it to obtain `app_compose`. Hash the raw `app_compose` string without parsing or reserializing it. Require the quote's 48-byte MRCONFIGID to equal `01`, then that SHA-256 hash, then 15 zero bytes. See [Check the configuration measurement](/cloud/verification/reference/quote-nonce-signer#check-the-configuration-measurement).
 5. When GPU evidence is present, follow [GPU evidence verification](/cloud/verification/reference/quote-nonce-signer#verify-gpu-evidence-when-present).
 6. Apply your accepted measurement policy to the verified configuration.
 7. If source and build provenance are required, continue with [direct image provenance](/cloud/verification/direct/image-provenance).

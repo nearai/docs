@@ -20,7 +20,7 @@ request_hash  = SHA-256(exact request-body bytes)
 response_hash = SHA-256(exact response-body bytes)
 ```
 
-Do not parse and re-serialize JSON, normalize whitespace or line endings, omit stream delimiters, or reconstruct a streamed response from parsed events. Configure the HTTP client to retain the entity bytes it received; requesting `Accept-Encoding: identity` is the simplest way to avoid transparent decompression changing those bytes.
+Do not parse and re-serialize JSON, normalize whitespace or line endings, omit stream delimiters, or reconstruct a streamed response from parsed events. The signature covers the uncompressed response body. Request `Accept-Encoding: identity`, or hash the body after your HTTP client decompresses it.
 
 ## Fetch and verify the signature
 
@@ -35,7 +35,7 @@ curl --fail-with-body -G 'https://cloud-api.near.ai/v1/signature/<CHAT_ID>' \
 
 A successful (`2xx`) response containing `error_code` and `message` is an unavailable result, not a signature. A `404` means no matching signature was found; it can be retried for a short, bounded interval when the signature may still be recorded. Treat either result as unverified if a signature is required.
 
-Use the same explicit `signing_algo` as both preflight attestation requests. These endpoints have different defaults.
+Use the same explicit `signing_algo` for the attestation request and the signature request. Their defaults differ: `/v1/signature` defaults to `ecdsa`, while `/v1/attestation/report` defaults to `ed25519` for the gateway report and `ecdsa` for model reports.
 
 For `ecdsa`, recover the Ethereum EIP-191 signer from `text` and `signature`, then compare it with `signing_address`. For `ed25519`, verify the UTF-8 bytes of `text` using `signing_address` as the public key. Reject unsupported algorithms.
 
@@ -46,9 +46,9 @@ Then compare `text` with the expected payload:
 | `provider_tee` | `<MODEL_ID>:<request_hash>:<response_hash>` | Exactly one verified NEAR model report with the same `signing_address` and `signing_algo`. |
 | `gateway` | `<request_hash>:<response_hash>` | A verified `gateway_attestation` with the same `signing_address` and `signing_algo`. |
 
-Only `provider_tee` binds a response to a model-serving TEE. A `gateway` signature binds the response to the gateway, not to a model report. If a model signature is unavailable, model-level response binding is unavailable.
+Only `provider_tee` binds a response to a model-serving TEE. A `gateway` signature binds the response to the gateway, not to a model report. If a model signature is unavailable, model-level response binding is unavailable. Instances of the same model share one signing key, so a matching `provider_tee` signer does not establish that the verified report and the completion came from the same serving instance.
 
-The Gateway can rewrite client-visible streaming bytes, so a `gateway` signature covers the exact bytes received from the Gateway, including stream framing and terminal events.
+The Gateway signs a response itself when it changes the bytes it relays: by default on streamed completions (it removes per-chunk usage data), when it resolves a model alias, and on the Responses API. A `gateway` signature covers the exact bytes received from the Gateway, including stream framing and terminal events.
 
 If `signature_kind` is absent or unfamiliar, do not infer it from the shape of `text`. Treat the signer classification as unavailable unless your endpoint contract gives a rule for that response.
 
@@ -58,7 +58,7 @@ Use the [manual response-signature helpers](/cloud/verification/reference/respon
 
 ## Match preflight evidence
 
-Before sending the completion, request and verify gateway evidence with a client-generated nonce. To support `provider_tee`, also request NEAR model evidence with `model=<MODEL_ID>` and `provider=near`. Reject an empty `model_attestations[]` array; verify every returned candidate and retain the verified results.
+Before sending the completion, request and verify gateway evidence with a client-generated nonce. To support `provider_tee`, also request NEAR model evidence with `model=<MODEL_ID>` and `provider=near`. Reject a missing or empty `model_attestations[]`; verify every returned candidate and retain the verified results.
 
 After fetching the signature, use `signature_kind` to select the matching preflight result:
 

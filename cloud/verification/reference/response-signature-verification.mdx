@@ -17,14 +17,15 @@ preflight_signer = {
 The endpoint pages define the expected text and which preflight report to use:
 
 - [NEAR AI Cloud Gateway response signatures](/cloud/verification/cloud-api/response-signatures)
+- [Experimental direct model endpoint response signatures](/cloud/verification/direct/response-signatures)
 
 <Tabs>
 <Tab title="Node.js">
 
-Install [`ethers`](https://www.npmjs.com/package/ethers) and [`tweetnacl`](https://www.npmjs.com/package/tweetnacl):
+Install [`ethers`](https://www.npmjs.com/package/ethers) v6 and [`tweetnacl`](https://www.npmjs.com/package/tweetnacl), and save the code as an ES module (a `.mjs` file, or set `"type": "module"` in `package.json`):
 
 ```bash
-npm install ethers tweetnacl
+npm install ethers@6 tweetnacl
 ```
 
 ```javascript
@@ -119,7 +120,7 @@ export function verifyResponseSignature({ signature, expectedText, preflightSign
 </Tab>
 <Tab title="Python">
 
-Install [`eth-account`](https://pypi.org/project/eth-account/) and [`PyNaCl`](https://pypi.org/project/PyNaCl/):
+Requires Python 3.9 or later. Install [`eth-account`](https://pypi.org/project/eth-account/) and [`PyNaCl`](https://pypi.org/project/PyNaCl/):
 
 ```bash
 pip install eth-account pynacl

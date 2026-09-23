@@ -85,7 +85,7 @@ from cryptography.hazmat.primitives import hashes
 
 ENDPOINT = "https://cloud-api.near.ai"
 API_KEY = os.environ["NEAR_AI_CLOUD_API_KEY"]
-MODEL = "zai-org/GLM-5.1-FP8"
+MODEL = "z-ai/glm-5.3-flash"
 # Obtain this from `signing_public_key` only after verifying the attestation
 # candidates and selecting one report under your application's policy.
 MODEL_ED25519_PUBLIC_KEY_HEX = os.environ["MODEL_ED25519_PUBLIC_KEY_HEX"]
@@ -164,7 +164,7 @@ if msg.get("content"):
 
 ### Step 1: Get the Model's Public Key
 
-Fetch the model's Ed25519 public key from its TEE attestation report. The public key is generated inside the Model TEE and cryptographically bound to its hardware attestation. Reject an empty `model_attestations[]` array, verify every returned candidate and its fresh nonce, then choose one verified report under your application's acceptance policy. Use that report's `signing_public_key` as the `X-Model-Pub-Key` routing pin. See [NEAR model attestations](/cloud/verification/cloud-api/model-attestations).
+Fetch the model's Ed25519 public key from its TEE attestation report. The public key is generated inside the Model TEE and cryptographically bound to its hardware attestation. Reject a missing or empty `model_attestations[]`, verify every returned candidate and its fresh nonce, then choose one verified report under your application's acceptance policy. Use that report's `signing_public_key` as the `X-Model-Pub-Key` routing pin. See [NEAR model attestations](/cloud/verification/cloud-api/model-attestations).
 
 The gateway endpoint requires an API key (`Authorization: Bearer <api-key>`); report retrieval is free and never counts against your usage.
 
@@ -175,7 +175,7 @@ The gateway endpoint requires an API key (`Authorization: Bearer <api-key>`); re
 NONCE="$(openssl rand -hex 32)"
 
 curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
-  --data-urlencode 'model=zai-org/GLM-5.1-FP8' \
+  --data-urlencode 'model=z-ai/glm-5.3-flash' \
   --data-urlencode 'provider=near' \
   --data-urlencode 'signing_algo=ed25519' \
   --data-urlencode 'include_tls_fingerprint=false' \
@@ -200,7 +200,7 @@ response = requests.get(
         "x-no-aliasing": "true",
     },
     params={
-        "model": "zai-org/GLM-5.1-FP8",
+        "model": "z-ai/glm-5.3-flash",
         "provider": "near",
         "signing_algo": "ed25519",
         "include_tls_fingerprint": "false",
@@ -231,7 +231,7 @@ const nonce = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) =>
 const response = await fetch(
   'https://cloud-api.near.ai/v1/attestation/report?' +
     new URLSearchParams({
-      model: 'zai-org/GLM-5.1-FP8',
+      model: 'z-ai/glm-5.3-flash',
       provider: 'near',
       signing_algo: 'ed25519',
       include_tls_fingerprint: 'false',
@@ -258,7 +258,7 @@ console.log(`Retrieved ${modelReports.length} NEAR model-attestation candidate(s
 </Tab>
 </Tabs>
 
-Request `provider=near` with a canonical model ID and `x-no-aliasing: true`. Reject an empty response, verify every returned model-report candidate with the nonce you generated, and retain only reports your application accepts. Select a key only from that verified set, then send its `signing_public_key` in `X-Model-Pub-Key`.
+Request `provider=near` with a canonical model ID and `x-no-aliasing: true`. Reject a missing or empty `model_attestations[]`, verify every returned model-report candidate with the nonce you generated, and retain only reports your application accepts. Select a key only from that verified set, then send its `signing_public_key` in `X-Model-Pub-Key`.
 
 ---
 
@@ -430,7 +430,7 @@ curl https://cloud-api.near.ai/v1/chat/completions \
   -H "X-Encryption-Version: 2" \
   -H "x-no-aliasing: true" \
   -d '{
-    "model": "zai-org/GLM-5.1-FP8",
+    "model": "z-ai/glm-5.3-flash",
     "messages": [{
       "role": "user",
       "content": "ENCRYPTED_CONTENT_HEX"
@@ -457,7 +457,7 @@ response = requests.post(
         "x-no-aliasing": "true",
     },
     json={
-        "model": "zai-org/GLM-5.1-FP8",
+        "model": "z-ai/glm-5.3-flash",
         "messages": [{
             "role": "user",
             "content": encrypted_content  # Hex-encoded encrypted message
@@ -485,7 +485,7 @@ const response = await fetch('https://cloud-api.near.ai/v1/chat/completions', {
     'x-no-aliasing': 'true',
   },
   body: JSON.stringify({
-    model: 'zai-org/GLM-5.1-FP8',
+    model: 'z-ai/glm-5.3-flash',
     messages: [{
       role: 'user',
       content: encryptedContent
@@ -706,7 +706,7 @@ Before using a model public key for encryption, verify the attestation report an
   NONCE="$(openssl rand -hex 32)"
 
   curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
-    --data-urlencode 'model=zai-org/GLM-5.1-FP8' \
+    --data-urlencode 'model=z-ai/glm-5.3-flash' \
     --data-urlencode 'provider=near' \
     --data-urlencode 'signing_algo=ecdsa' \
     --data-urlencode 'include_tls_fingerprint=false' \
@@ -782,7 +782,7 @@ Before using a model public key for encryption, verify the attestation report an
     -H "X-Model-Pub-Key: MODEL_ECDSA_PUBLIC_KEY_HEX" \
     -H "x-no-aliasing: true" \
     -d '{
-      "model": "zai-org/GLM-5.1-FP8",
+      "model": "z-ai/glm-5.3-flash",
       "messages": [{"role": "user", "content": "ENCRYPTED_CONTENT_HEX"}],
       "stream": false
     }'
