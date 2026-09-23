@@ -1,9 +1,15 @@
 ---
-title: "Direct Model Endpoints"
-description: "Send a verified, end-to-end encrypted Chat Completion directly to a model endpoint."
+title: "Experimental Direct Model Endpoints"
+description: "Experimental SDK notes for direct model endpoints."
 ---
 
-Use `DirectInferenceClient` when your application sends requests directly to a model endpoint.
+<Warning>
+  Direct model endpoints are experimental and are not recommended for new integrations or production verification workflows. Use the NEAR AI Cloud Gateway instead.
+</Warning>
+
+Independent requests to the same direct hostname can reach different serving instances. An attestation report does not establish deployment evidence for a later completion, and a later signature lookup can return `404`. Do not use direct response signatures as a production verification gate.
+
+Use `DirectInferenceClient` only when maintaining an existing direct integration.
 
 ## Install
 
@@ -40,7 +46,7 @@ const receipt = await client.verifyResponse(completion.id);
 console.log(`Verified ${receipt.signatureKind} response.`);
 ```
 
-Before sending the completion, the SDK verifies the complete model-attestation set reported by that endpoint. It does not request Gateway evidence. It encrypts supported Chat fields to a key from the verified model evidence and decrypts the response automatically. A direct endpoint can require credentials different from your NEAR AI Cloud API key.
+Before sending the completion, the SDK verifies each model-attestation report returned by that endpoint. It does not request Gateway evidence. It encrypts supported Chat fields to a key from the verified model evidence and decrypts the response automatically. A direct endpoint can require credentials different from your NEAR AI Cloud API key.
 
 <Note>
   `verifyResponse()` is explicit. For a streaming completion, consume the entire stream first, then call it with the completion ID so the SDK can verify the exact response bytes.

@@ -93,8 +93,7 @@
                 "icon": "braces",
                 "root": "cloud/inference-sdk/index",
                 "pages": [
-                  "cloud/inference-sdk/cloud-gateway",
-                  "cloud/inference-sdk/direct"
+                  "cloud/inference-sdk/cloud-gateway"
                 ]
               }
             ]
