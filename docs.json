@@ -496,38 +496,6 @@
     {
       "source": "/cloud/verification/provenance",
       "destination": "/cloud/verification"
-    },
-    {
-      "source": "/cloud/verification/reference/sdk",
-      "destination": "/cloud/inference-sdk#e2ee"
-    },
-    {
-      "source": "/cloud/verification/sdk",
-      "destination": "/cloud/inference-sdk"
-    },
-    {
-      "source": "/cloud/verification/sdk/cloud-api",
-      "destination": "/cloud/inference-sdk#e2ee"
-    },
-    {
-      "source": "/cloud/verification/sdk/direct",
-      "destination": "/cloud/inference-sdk/direct"
-    },
-    {
-      "source": "/cloud/inference-sdk/cloud-gateway",
-      "destination": "/cloud/inference-sdk#e2ee"
-    },
-    {
-      "source": "/cloud/inference-sdk/e2ee",
-      "destination": "/cloud/inference-sdk#e2ee"
-    },
-    {
-      "source": "/cloud/inference-sdk/verification",
-      "destination": "/cloud/inference-sdk#verification"
-    },
-    {
-      "source": "/cloud/inference-sdk/ohttp",
-      "destination": "/cloud/inference-sdk#ohttp"
     }
   ]
 }
