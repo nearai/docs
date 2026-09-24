@@ -135,8 +135,13 @@
           {
             "group": "Experimental",
             "pages": [
-              "cloud/experimental/direct-completions",
-              "cloud/inference-sdk/direct"
+              {
+                "group": "Direct Completions",
+                "root": "cloud/experimental/direct-completions",
+                "pages": [
+                  "cloud/inference-sdk/direct"
+                ]
+              }
             ]
           }
         ]
