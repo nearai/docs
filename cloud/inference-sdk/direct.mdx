@@ -78,6 +78,14 @@ The example uses `@nearai/inference-sdk/node`. Direct endpoint TLS binding is no
 
 For a browser or an application proxy, import from `@nearai/inference-sdk`. Configure the same explicit `baseUrl` for the endpoint your application uses.
 
+## Examples
+
+See the [Inference SDK examples and setup instructions](https://github.com/nearai/inference-sdk/tree/main/examples#direct-model-endpoints) for runnable direct-endpoint projects.
+
+- [DirectInferenceClient](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/client.ts): streaming and non-streaming Chat with E2EE and response verification.
+- [OpenAI SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/client-openai-sdk.ts): use `DirectInferenceClient.fetch` with the OpenAI client.
+- [Manual verification](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/bare.ts): verify model attestations and response signatures directly. This example sends plaintext Chat bodies over HTTPS without E2EE.
+
 ## Next steps
 
 <CardGroup cols={2}>
