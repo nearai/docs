@@ -87,7 +87,8 @@
                     ]
                   }
                 ]
-              }
+              },
+              "cloud/inference-sdk/index"
             ]
           },
           {
@@ -134,7 +135,13 @@
           {
             "group": "Experimental",
             "pages": [
-              "cloud/experimental/direct-completions"
+              {
+                "group": "Direct Completions",
+                "root": "cloud/experimental/direct-completions",
+                "pages": [
+                  "cloud/inference-sdk/direct"
+                ]
+              }
             ]
           }
         ]

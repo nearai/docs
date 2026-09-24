@@ -1,0 +1,98 @@
+---
+title: "SDK"
+icon: "braces"
+description: "Experimental SDK notes for direct model endpoints."
+---
+
+<Warning>
+  Direct model endpoints are experimental and are not recommended for new integrations or production verification workflows. Use the NEAR AI Cloud Gateway instead.
+</Warning>
+
+Independent requests to the same direct hostname can reach different serving instances. An attestation report does not establish deployment evidence for a later completion, and a later signature lookup can return `404`. Do not use direct response signatures as a production verification gate.
+
+Use `DirectInferenceClient` only when maintaining an existing direct integration.
+
+## Install
+
+The package requires Node.js 24 or later.
+
+```bash
+npm install @nearai/inference-sdk@next
+```
+
+## Send and verify an E2EE Chat Completion
+
+```ts
+import { DirectInferenceClient } from '@nearai/inference-sdk/node';
+
+const baseUrl = 'https://glm-5-3-flash.completions.near.ai/v1';
+const model = 'z-ai/glm-5.3-flash';
+const apiKey = process.env.NEARAI_API_KEY;
+if (!apiKey) throw new Error('NEARAI_API_KEY is required');
+
+const client = new DirectInferenceClient({
+  baseUrl,
+  apiKey,
+  e2ee: true,
+});
+
+const completion = await client.chat.completions.create({
+  model,
+  messages: [{ role: 'user', content: 'Reply with the word ok.' }],
+});
+
+console.log(completion.choices[0]?.message.content);
+
+const receipt = await client.verifyResponse(completion.id);
+console.log(`Verified ${receipt.signatureKind} response.`);
+```
+
+Before sending the completion, the SDK verifies each model-attestation report returned by that endpoint. It does not request Gateway evidence. It encrypts supported Chat fields to a key from the verified model evidence and decrypts the response automatically.
+
+<Note>
+  `verifyResponse()` is explicit. For a streaming completion, consume the entire stream first, then call it with the completion ID so the SDK can verify the exact response bytes.
+</Note>
+
+## Add OHTTP
+
+Set `ohttp: true` to encapsulate Chat requests and responses with OHTTP. OHTTP uses the SDK's default Ed25519 signing algorithm; it is not compatible with `signingAlgo: 'ecdsa'`.
+
+```ts
+const client = new DirectInferenceClient({
+  baseUrl,
+  apiKey,
+  e2ee: true,
+  ohttp: true,
+});
+```
+
+The Chat and `verifyResponse()` calls stay the same. The SDK verifies the direct endpoint's signed OHTTP configuration before sending Chat; a missing or invalid configuration blocks the request. For a direct endpoint, both OHTTP and E2EE are scoped to the model service.
+
+<Note>
+  OHTTP applies only to Chat. Attestation and signature requests remain regular HTTPS. The configured endpoint or proxy must expose `/ohttp` at the same origin. Authorization and custom headers sent on the outer request, along with the client's network address, are not hidden by OHTTP.
+</Note>
+
+## Node, browser, and proxy integrations
+
+The example uses `@nearai/inference-sdk/node`. Direct endpoint TLS binding is not currently enabled; normal HTTPS certificate validation still applies.
+
+For a browser or an application proxy, import from `@nearai/inference-sdk`. Configure the same explicit `baseUrl` for the endpoint your application uses.
+
+## Examples
+
+See the [Inference SDK examples and setup instructions](https://github.com/nearai/inference-sdk/tree/main/examples#direct-model-endpoints) for runnable direct-endpoint projects.
+
+- [DirectInferenceClient](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/client.ts): streaming and non-streaming Chat with E2EE and response verification.
+- [OpenAI SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/client-openai-sdk.ts): use `DirectInferenceClient.fetch` with the OpenAI client.
+- [Manual verification](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/bare.ts): verify model attestations and response signatures directly. This example sends plaintext Chat bodies over HTTPS without E2EE.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Verification" icon="file-check" href="/cloud/verification">
+    Understand the attestation and response-signature checks behind this flow.
+  </Card>
+  <Card title="E2EE Chat" icon="message-square-lock" href="/cloud/guides/e2ee-chat-completions">
+    Learn the protocol when you need to manage encryption yourself.
+  </Card>
+</CardGroup>
