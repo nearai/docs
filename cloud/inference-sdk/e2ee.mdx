@@ -1,0 +1,39 @@
+---
+title: "E2EE"
+description: "Send an end-to-end encrypted Chat Completion with the SDK."
+---
+
+E2EE is enabled by default. The SDK verifies the required attestation evidence, encrypts supported Chat fields to a key from the verified model evidence, and decrypts the response automatically.
+
+```ts
+import { InferenceClient } from '@nearai/inference-sdk/node';
+
+const baseUrl = 'https://cloud-api.near.ai/v1';
+const model = 'z-ai/glm-5.3-flash';
+const apiKey = process.env.NEARAI_API_KEY;
+if (!apiKey) throw new Error('NEARAI_API_KEY is required');
+
+const client = new InferenceClient({
+  baseUrl,
+  apiKey,
+  e2ee: true,
+});
+
+const completion = await client.chat.completions.create({
+  model,
+  messages: [{ role: 'user', content: 'Reply with the word ok.' }],
+});
+
+console.log(completion.choices[0]?.message.content);
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Verification" icon="file-check" href="/cloud/inference-sdk/verification">
+    Verify the completion and tune attestation policy.
+  </Card>
+  <Card title="OHTTP" icon="shield" href="/cloud/inference-sdk/ohttp">
+    Add OHTTP to Chat requests and responses.
+  </Card>
+</CardGroup>

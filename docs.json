@@ -89,11 +89,13 @@
                 ]
               },
               {
-                "group": "NEAR AI Inference SDK",
+                "group": "SDK",
                 "icon": "braces",
                 "root": "cloud/inference-sdk/index",
                 "pages": [
-                  "cloud/inference-sdk/cloud-gateway"
+                  "cloud/inference-sdk/e2ee",
+                  "cloud/inference-sdk/verification",
+                  "cloud/inference-sdk/ohttp"
                 ]
               }
             ]
@@ -501,7 +503,7 @@
     },
     {
       "source": "/cloud/verification/reference/sdk",
-      "destination": "/cloud/inference-sdk/cloud-gateway"
+      "destination": "/cloud/inference-sdk/e2ee"
     },
     {
       "source": "/cloud/verification/sdk",
@@ -509,11 +511,15 @@
     },
     {
       "source": "/cloud/verification/sdk/cloud-api",
-      "destination": "/cloud/inference-sdk/cloud-gateway"
+      "destination": "/cloud/inference-sdk/e2ee"
     },
     {
       "source": "/cloud/verification/sdk/direct",
       "destination": "/cloud/inference-sdk/direct"
+    },
+    {
+      "source": "/cloud/inference-sdk/cloud-gateway",
+      "destination": "/cloud/inference-sdk/e2ee"
     }
   ]
 }

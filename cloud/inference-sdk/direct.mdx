@@ -54,13 +54,12 @@ Before sending the completion, the SDK verifies each model-attestation report re
 
 ## Add OHTTP
 
-Set `ohttp: true` to encapsulate Chat requests and responses with OHTTP. OHTTP requires Ed25519, so set `signingAlgo` explicitly.
+Set `ohttp: true` to encapsulate Chat requests and responses with OHTTP. OHTTP uses the SDK's default Ed25519 signing algorithm; it is not compatible with `signingAlgo: 'ecdsa'`.
 
 ```ts
 const client = new DirectInferenceClient({
   baseUrl,
   apiKey,
-  signingAlgo: 'ed25519',
   e2ee: true,
   ohttp: true,
 });

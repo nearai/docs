@@ -1,12 +1,26 @@
 ---
-title: "NEAR AI Inference SDK"
+title: "SDK"
 description: "Use the TypeScript SDK for verified, end-to-end encrypted Chat Completions."
 ---
 
-Use the SDK with the NEAR AI Cloud Gateway for verified, end-to-end encrypted Chat Completions.
+Use the TypeScript SDK with the NEAR AI Cloud Gateway for verified, end-to-end encrypted Chat Completions.
 
-<CardGroup cols={1}>
-  <Card title="NEAR AI Cloud Gateway" icon="cloud" href="/cloud/inference-sdk/cloud-gateway">
-    Send a verified Chat Completion through `cloud-api.near.ai`.
+## Install
+
+The package requires Node.js 24 or later.
+
+```bash
+npm install @nearai/inference-sdk@next
+```
+
+<CardGroup cols={3}>
+  <Card title="E2EE" icon="message-square-lock" href="/cloud/inference-sdk/e2ee">
+    Send encrypted Chat Completions.
+  </Card>
+  <Card title="Verification" icon="file-check" href="/cloud/inference-sdk/verification">
+    Verify attestation and response signatures.
+  </Card>
+  <Card title="OHTTP" icon="shield" href="/cloud/inference-sdk/ohttp">
+    Encapsulate Chat traffic with OHTTP.
   </Card>
 </CardGroup>
