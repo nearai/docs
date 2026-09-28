@@ -14,7 +14,7 @@ Reasoning models can process information in two stages:
 1. **Thinking stage**: Internal reasoning process, returned in the `reasoning_content` field of the response message
 2. **Response stage**: The final answer, returned in the `content` field
 
-For most TEE-hosted models you can control whether the model uses reasoning by configuring the `chat_template_kwargs` parameter in your API requests. Reasoning output is billed as completion tokens and reported separately as `reasoning_tokens` in the `usage` object.
+For most TEE-hosted models you can control whether the model uses reasoning by configuring the `chat_template_kwargs` parameter in your API requests. Reasoning output is billed as completion tokens. The number of tokens spent thinking is reported in `usage.completion_tokens_details.reasoning_tokens`, the same location OpenAI uses, and is a subset of `completion_tokens`. The top-level `usage.reasoning_tokens` field is kept as a deprecated alias.
 
 <Tip>
   **Which models support reasoning?**
@@ -135,7 +135,7 @@ curl https://cloud-api.near.ai/v1/chat/completions \
   }'
 ```
 
-With `"thinking": false` the response contains no reasoning trace and `usage.reasoning_tokens` drops to 0.
+With `"thinking": false` the response contains no reasoning trace and `usage.completion_tokens_details.reasoning_tokens` drops to 0.
 
 <Warning>
   **`reasoning_effort` is not supported on Kimi**
@@ -180,6 +180,9 @@ When reasoning is active, responses contain the reasoning trace alongside the an
   "usage": {
     "prompt_tokens": 13,
     "completion_tokens": 81,
+    "completion_tokens_details": {
+      "reasoning_tokens": 73
+    },
     "reasoning_tokens": 73,
     "total_tokens": 94
   }
@@ -187,7 +190,7 @@ When reasoning is active, responses contain the reasoning trace alongside the an
 ```
 
 - `reasoning_content` — the model's internal thinking (streamed as `delta.reasoning_content` chunks when `stream: true`)
-- `usage.reasoning_tokens` — how many completion tokens were spent thinking
+- `usage.completion_tokens_details.reasoning_tokens` — how many of the completion tokens were spent thinking. It is present in non-streaming responses and in the final usage chunk of a stream when you set `stream_options: {"include_usage": true}`. The top-level `usage.reasoning_tokens` carries the same number and is deprecated.
 
 ---
 
