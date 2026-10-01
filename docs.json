@@ -88,7 +88,15 @@
                   }
                 ]
               },
-              "cloud/inference-sdk/index"
+              {
+                "group": "SDK",
+                "icon": "braces",
+                "root": "cloud/inference-sdk/index",
+                "pages": [
+                  "cloud/inference-sdk/javascript",
+                  "cloud/inference-sdk/python"
+                ]
+              }
             ]
           },
           {

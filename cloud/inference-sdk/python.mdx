@@ -1,0 +1,151 @@
+---
+title: "Python"
+icon: "code"
+description: "Use the asynchronous Python SDK for verified, encrypted Chat Completions."
+---
+
+## Install
+
+The SDK is available on [PyPI](https://pypi.org/project/nearai-inference-sdk/). The package requires Python 3.12 or later.
+
+```bash
+pip install nearai-inference-sdk
+export NEARAI_API_KEY="your-api-key"
+```
+
+## Send and verify a completion
+
+Save this example as `chat.py` and run it with `python chat.py`:
+
+```python chat.py
+import asyncio
+import os
+
+from nearai_inference_sdk import InferenceClient
+
+
+async def main():
+    async with InferenceClient(
+        os.environ["NEARAI_API_KEY"],
+        e2ee=True,
+    ) as client:
+        completion = await client.chat.completions.create(
+            model="z-ai/glm-5.3-flash",
+            messages=[{"role": "user", "content": "Reply with the word ok."}],
+        )
+        # Verify the exact request and response bytes before using the answer.
+        verified = await client.verify_response(completion.id)
+        print(f"Verified {verified.signature_kind} response.")
+        print(completion.choices[0].message.content or "")
+
+
+asyncio.run(main())
+```
+
+The client connects to `https://cloud-api.near.ai/v1` by default. Reuse a client for multiple requests; the async context manager closes its HTTP connections when finished.
+
+## E2EE
+
+End-to-end encryption is disabled by default. `e2ee=True` encrypts supported Chat fields to a verified model key and decrypts the response automatically.
+
+In Python, model attestation requires catalog metadata with `providerType="vllm"` and `attestationSupported=True`. Other providers, including Chutes, use Incognito mode: Gateway verification only. E2EE and model deployment policies reject Incognito models before sending Chat. Use `e2ee=False` for Gateway-only Chat without a claim about model TEE execution.
+
+## Verification
+
+Before sending Chat, the client verifies the Gateway and, for supported NEAR TEE models, every returned model report. Gateway TLS identity verification is enabled by default and subsequent requests are pinned to that identity. Failed required checks stop the request.
+
+Response-signature verification is explicit: call `await client.verify_response(completion.id)` after receiving the completion. It verifies the exact request and response bytes retained by the client against the relevant verified evidence.
+
+- `provider_tee`: a verified model signer signed the exact request and response bytes.
+- `gateway`: a verified Gateway signer signed those bytes; this does not prove that an attested model generated them.
+
+Successful deployment checks are cached for 60 minutes by default. Set `attestation_cache_time_to_live_ms=0` to verify deployments for every request. Response records also expire after 60 minutes by default; verify each response before its record expires.
+
+To verify a deployment before the first Chat request, call `await client.verify(model)`. This shares Chat's attestation cache but does not verify a future response signature. For application-owned deployment policies and standalone evidence verification, see the [Python verification guide](https://github.com/nearai/inference-sdk/blob/main/py/docs/verification-guide.md) and [Verification](/cloud/verification).
+
+### Streaming
+
+Consume the entire stream before calling `verify_response()`. This example buffers the text until verification succeeds; use it inside the client context above:
+
+```python
+stream = await client.chat.completions.create(
+    model="z-ai/glm-5.3-flash",
+    messages=[{"role": "user", "content": "Hello!"}],
+    stream=True,
+)
+completion_id = None
+parts = []
+async for chunk in stream:
+    if chunk.id:
+        completion_id = chunk.id
+    if chunk.choices:
+        parts.append(chunk.choices[0].delta.content or "")
+
+if completion_id is None:
+    raise RuntimeError("Stream returned no completion ID")
+await client.verify_response(completion_id)
+print("".join(parts))
+```
+
+## Use the OpenAI SDK
+
+For an existing `AsyncOpenAI` integration, use `InferenceClient.http_client` as its transport. Configure the API key on the inference client, which authenticates Chat, evidence, and signature requests.
+
+```bash
+pip install nearai-inference-sdk openai
+```
+
+```python chat_openai.py
+import asyncio
+import os
+
+from openai import AsyncOpenAI
+from nearai_inference_sdk import InferenceClient
+
+
+async def main():
+    api_key = os.environ["NEARAI_API_KEY"]
+    async with InferenceClient(api_key, e2ee=True) as inference_client:
+        async with AsyncOpenAI(
+            api_key=api_key,
+            base_url="https://cloud-api.near.ai/v1/",
+            http_client=inference_client.http_client,
+        ) as client:
+            completion = await client.chat.completions.create(
+                model="z-ai/glm-5.3-flash",
+                messages=[{"role": "user", "content": "Hello!"}],
+            )
+            await inference_client.verify_response(completion.id)
+            print(completion.choices[0].message.content or "")
+
+
+asyncio.run(main())
+```
+
+Run it with `python chat_openai.py`. This transport supports Chat Completions, including streaming; it does not support the Responses API.
+
+## OHTTP
+
+Set `ohttp=True` when constructing the client to encapsulate the Chat HTTP exchange to the attested Gateway:
+
+```python
+async with InferenceClient(api_key, e2ee=True, ohttp=True) as client:
+    completion = await client.chat.completions.create(
+        model="z-ai/glm-5.3-flash",
+        messages=[{"role": "user", "content": "Hello!"}],
+    )
+    await client.verify_response(completion.id)
+    print(completion.choices[0].message.content or "")
+```
+
+OHTTP requires the default Ed25519 algorithm and cannot be used with `signing_algo="ecdsa"`. E2EE is configured independently. Missing or invalid Gateway OHTTP evidence blocks the Chat request.
+
+<Note>
+  OHTTP applies only to Chat. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
+</Note>
+
+## Examples and reference
+
+- [Python verification guide](https://github.com/nearai/inference-sdk/blob/main/py/docs/verification-guide.md): policies, encryption, streaming, and errors.
+- [Python API reference](https://github.com/nearai/inference-sdk/blob/main/py/docs/api-reference.md): client options, verification functions, and result fields.
+- [Runnable Python examples](https://github.com/nearai/inference-sdk/tree/main/examples/example-py).
