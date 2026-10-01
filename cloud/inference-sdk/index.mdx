@@ -1,103 +1,52 @@
 ---
 title: "SDK"
 icon: "braces"
-description: "Use the TypeScript SDK for verified, end-to-end encrypted Chat Completions."
+description: "Use the JavaScript / TypeScript and Python SDKs for verified, encrypted Chat Completions."
 ---
+
+NEAR AI Inference SDK **v0.1.0** is available for JavaScript / TypeScript and Python. Both provide an OpenAI-compatible Chat Completions client, attestation verification, optional encryption, and explicit response-signature verification.
+
+<CardGroup cols={2}>
+  <Card title="JavaScript / TypeScript" icon="braces" href="/cloud/inference-sdk/javascript">
+    Install from npm and get started with Node.js 24 or later.
+  </Card>
+  <Card title="Python" icon="code" href="/cloud/inference-sdk/python">
+    Install from PyPI and get started with Python 3.12 or later.
+  </Card>
+</CardGroup>
 
 ## Install
 
-The package requires Node.js 24 or later.
-
-```bash
-npm install @nearai/inference-sdk
+<CodeGroup>
+```bash JavaScript / TypeScript
+npm install @nearai/inference-sdk@0.1.0
 ```
+
+```bash Python
+pip install nearai-inference-sdk==0.1.0
+```
+</CodeGroup>
+
+Packages: [npm](https://www.npmjs.com/package/@nearai/inference-sdk) · [PyPI](https://pypi.org/project/nearai-inference-sdk/).
 
 ## E2EE
 
-End-to-end encryption (E2EE) is disabled by default in `InferenceClient`. Set `e2ee: true` to enable it for a model with supported model attestation. When enabled, the SDK verifies the required attestation evidence, encrypts supported Chat fields to a key from the verified model evidence, and decrypts the response automatically.
-
-```ts
-import { InferenceClient } from '@nearai/inference-sdk/node';
-
-const baseUrl = 'https://cloud-api.near.ai/v1';
-const model = 'z-ai/glm-5.3-flash';
-const apiKey = process.env.NEARAI_API_KEY;
-if (!apiKey) throw new Error('NEARAI_API_KEY is required');
-
-const client = new InferenceClient({
-  baseUrl,
-  apiKey,
-  e2ee: true,
-});
-
-const completion = await client.chat.completions.create({
-  model,
-  messages: [{ role: 'user', content: 'Reply with the word ok.' }],
-});
-
-console.log(completion.choices[0]?.message.content);
-```
+End-to-end encryption is disabled by default. Enable it with `e2ee: true` in JavaScript or `e2ee=True` in Python to encrypt supported Chat fields to a verified model key. E2EE requires a supported NEAR TEE model and rejects models without supported model attestation.
 
 ## Verification
 
-`InferenceClient` verifies the Gateway and every returned NEAR model-attestation candidate before sending an E2EE Chat Completion. Call `verifyResponse()` after a completion to verify its response signature with the request and response bytes captured by the client.
+The clients verify Gateway evidence before sending Chat and verify model evidence where supported. In Python v0.1.0, model verification requires a NEAR vLLM deployment with attestation enabled; other providers use Gateway-only verification. The JavaScript SDK also supports Chutes model attestation.
 
-```ts
-const receipt = await client.verifyResponse(completion.id);
-console.log(`Verified ${receipt.signatureKind} response.`);
-```
+After receiving a completion, call `verifyResponse(completion.id)` in JavaScript or `await client.verify_response(completion.id)` in Python before using the answer as verified. For streaming, consume the entire stream first. Deployment verification alone does not verify a particular response.
 
-<Note>
-  `verifyResponse()` is explicit. For a streaming completion, consume the entire stream first, then call it with the completion ID so the SDK can verify the exact response bytes.
-</Note>
+A `provider_tee` signature binds the exact request and response bytes to a verified model signer. A `gateway` signature binds those bytes to a verified Gateway signer; it does not prove that an attested model generated them.
 
-### Set a TCB policy
-
-By default, the SDK accepts the Intel TCB statuses `UpToDate` and `OutOfDate`. To require `UpToDate`, apply a policy to both the Gateway and model evidence:
-
-```ts
-const strict = {
-  policy: { acceptedTcbStatuses: ['UpToDate'] as const },
-};
-
-const client = new InferenceClient({
-  baseUrl,
-  apiKey,
-  e2ee: true,
-  gatewayVerification: strict,
-  modelVerification: strict,
-});
-```
-
-### Runtime behavior
-
-For Node, import from `@nearai/inference-sdk/node`. It verifies the Gateway TLS peer and binds later requests to the verified Gateway identity. For a browser or application proxy, import from `@nearai/inference-sdk`; browser Fetch cannot read the TLS peer certificate, so that entry point does not perform Gateway TLS binding.
-
-For a manual verification flow or a custom policy, see [Verification](/cloud/verification).
+See [Verification](/cloud/verification) for evidence, policies, and verification limits, or follow the [JavaScript](/cloud/inference-sdk/javascript#verification) and [Python](/cloud/inference-sdk/python#verification) guides.
 
 ## OHTTP
 
-Set `ohttp: true` to encapsulate Chat requests and responses with OHTTP. OHTTP uses the SDK's default Ed25519 signing algorithm; it is not compatible with `signingAlgo: 'ecdsa'`.
-
-```ts
-const client = new InferenceClient({
-  baseUrl,
-  apiKey,
-  e2ee: true,
-  ohttp: true,
-});
-```
-
-The Chat and `verifyResponse()` calls stay the same. Before sending Chat, the SDK verifies the Gateway's signed OHTTP configuration; a missing or invalid configuration blocks the request. OHTTP encapsulates the exchange to the Gateway, while E2EE encrypts supported Chat fields to the verified model key.
-
-<Note>
-  OHTTP applies only to Chat. Attestation and signature requests remain regular HTTPS. The configured endpoint or proxy must expose `/ohttp` at the same origin. Authorization and custom headers sent on the outer request, along with the client's network address, are not hidden by OHTTP.
-</Note>
+Both SDKs support optional OHTTP to encapsulate the Chat HTTP exchange to the attested Gateway. It is disabled by default and requires Ed25519. E2EE protects supported fields to the model independently. See the [JavaScript](/cloud/inference-sdk/javascript#ohttp) or [Python](/cloud/inference-sdk/python#ohttp) configuration.
 
 ## Examples
 
-See the [Inference SDK examples and setup instructions](https://github.com/nearai/inference-sdk/tree/main/examples) for runnable projects.
-
-- [InferenceClient](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/client.ts): streaming and non-streaming Chat, response verification, and Gateway image provenance checks.
-- [OpenAI SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/client-openai-sdk.ts): use `InferenceClient.fetch` with the OpenAI client.
-- [Manual verification and E2EE](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/bare.ts): work directly with attestation, encryption, and signature-verification helpers.
+See the language guides for runnable examples, or explore the [SDK source and examples](https://github.com/nearai/inference-sdk).
