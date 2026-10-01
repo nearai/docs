@@ -1,15 +1,15 @@
 ---
 title: "JavaScript"
 icon: "braces"
-description: "Use the TypeScript SDK for verified, end-to-end encrypted Chat Completions."
+description: "Use the JavaScript SDK for verified, end-to-end encrypted Chat Completions."
 ---
 
 ## Install
 
-Version **0.1.0** is available on [npm](https://www.npmjs.com/package/@nearai/inference-sdk). It supports JavaScript and TypeScript and requires Node.js 24 or later for Node usage.
+The SDK is available on [npm](https://www.npmjs.com/package/@nearai/inference-sdk). It requires Node.js 24 or later for Node usage.
 
 ```bash
-npm install @nearai/inference-sdk@0.1.0
+npm install @nearai/inference-sdk
 ```
 
 Set your API key in the environment:
@@ -53,7 +53,7 @@ console.log(completion.choices[0]?.message.content);
 
 `InferenceClient` verifies the Gateway and every returned NEAR model-attestation candidate before sending an E2EE Chat Completion. Call `verifyResponse()` after a completion to verify its response signature with the request and response bytes captured by the client.
 
-```ts
+```js
 const receipt = await client.verifyResponse(completion.id);
 console.log(`Verified ${receipt.signatureKind} response.`);
 ```
@@ -66,9 +66,9 @@ console.log(`Verified ${receipt.signatureKind} response.`);
 
 By default, the SDK accepts the Intel TCB statuses `UpToDate` and `OutOfDate`. To require `UpToDate`, apply a policy to both the Gateway and model evidence:
 
-```ts
+```js
 const strict = {
-  policy: { acceptedTcbStatuses: ['UpToDate'] as const },
+  policy: { acceptedTcbStatuses: ['UpToDate'] },
 };
 
 const client = new InferenceClient({
@@ -90,7 +90,7 @@ For a manual verification flow or a custom policy, see [Verification](/cloud/ver
 
 Set `ohttp: true` to encapsulate Chat requests and responses with OHTTP. OHTTP uses the SDK's default Ed25519 signing algorithm; it is not compatible with `signingAlgo: 'ecdsa'`.
 
-```ts
+```js
 const client = new InferenceClient({
   baseUrl,
   apiKey,

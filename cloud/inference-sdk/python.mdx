@@ -6,10 +6,10 @@ description: "Use the asynchronous Python SDK for verified, encrypted Chat Compl
 
 ## Install
 
-Version **0.1.0** is available on [PyPI](https://pypi.org/project/nearai-inference-sdk/). The package requires Python 3.12 or later.
+The SDK is available on [PyPI](https://pypi.org/project/nearai-inference-sdk/). The package requires Python 3.12 or later.
 
 ```bash
-pip install nearai-inference-sdk==0.1.0
+pip install nearai-inference-sdk
 export NEARAI_API_KEY="your-api-key"
 ```
 
@@ -48,7 +48,7 @@ The client connects to `https://cloud-api.near.ai/v1` by default. Reuse a client
 
 End-to-end encryption is disabled by default. `e2ee=True` encrypts supported Chat fields to a verified model key and decrypts the response automatically.
 
-In Python v0.1.0, model attestation requires catalog metadata with `providerType="vllm"` and `attestationSupported=True`. Other providers, including Chutes, use Incognito mode: Gateway verification only. E2EE and model deployment policies reject Incognito models before sending Chat. Use `e2ee=False` for Gateway-only Chat without a claim about model TEE execution.
+In Python, model attestation requires catalog metadata with `providerType="vllm"` and `attestationSupported=True`. Other providers, including Chutes, use Incognito mode: Gateway verification only. E2EE and model deployment policies reject Incognito models before sending Chat. Use `e2ee=False` for Gateway-only Chat without a claim about model TEE execution.
 
 ## Verification
 
@@ -92,7 +92,7 @@ print("".join(parts))
 For an existing `AsyncOpenAI` integration, use `InferenceClient.http_client` as its transport. Configure the API key on the inference client, which authenticates Chat, evidence, and signature requests.
 
 ```bash
-pip install nearai-inference-sdk==0.1.0 openai
+pip install nearai-inference-sdk openai
 ```
 
 ```python chat_openai.py

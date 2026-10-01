@@ -1,13 +1,13 @@
 ---
 title: "SDK"
 icon: "braces"
-description: "Use the JavaScript / TypeScript and Python SDKs for verified, encrypted Chat Completions."
+description: "Use the JavaScript and Python SDKs for verified, encrypted Chat Completions."
 ---
 
-NEAR AI Inference SDK **v0.1.0** is available for JavaScript / TypeScript and Python. Both provide an OpenAI-compatible Chat Completions client, attestation verification, optional encryption, and explicit response-signature verification.
+NEAR AI Inference SDK is available for JavaScript and Python. Both provide an OpenAI-compatible Chat Completions client, attestation verification, optional encryption, and explicit response-signature verification.
 
 <CardGroup cols={2}>
-  <Card title="JavaScript / TypeScript" icon="braces" href="/cloud/inference-sdk/javascript">
+  <Card title="JavaScript" icon="braces" href="/cloud/inference-sdk/javascript">
     Install from npm and get started with Node.js 24 or later.
   </Card>
   <Card title="Python" icon="code" href="/cloud/inference-sdk/python">
@@ -18,12 +18,12 @@ NEAR AI Inference SDK **v0.1.0** is available for JavaScript / TypeScript and Py
 ## Install
 
 <CodeGroup>
-```bash JavaScript / TypeScript
-npm install @nearai/inference-sdk@0.1.0
+```bash JavaScript
+npm install @nearai/inference-sdk
 ```
 
 ```bash Python
-pip install nearai-inference-sdk==0.1.0
+pip install nearai-inference-sdk
 ```
 </CodeGroup>
 
@@ -35,7 +35,7 @@ End-to-end encryption is disabled by default. Enable it with `e2ee: true` in Jav
 
 ## Verification
 
-The clients verify Gateway evidence before sending Chat and verify model evidence where supported. In Python v0.1.0, model verification requires a NEAR vLLM deployment with attestation enabled; other providers use Gateway-only verification. The JavaScript SDK also supports Chutes model attestation.
+The clients verify Gateway evidence before sending Chat and verify model evidence where supported. In Python, model verification requires a NEAR vLLM deployment with attestation enabled; other providers use Gateway-only verification. The JavaScript SDK also supports Chutes model attestation.
 
 After receiving a completion, call `verifyResponse(completion.id)` in JavaScript or `await client.verify_response(completion.id)` in Python before using the answer as verified. For streaming, consume the entire stream first. Deployment verification alone does not verify a particular response.
 
