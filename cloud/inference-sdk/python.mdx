@@ -48,7 +48,7 @@ The client connects to `https://cloud-api.near.ai/v1` by default. Reuse a client
 
 End-to-end encryption is disabled by default. `e2ee=True` encrypts supported Chat fields to a verified model key and decrypts the response automatically.
 
-In Python, model attestation requires catalog metadata with `providerType="vllm"` and `attestationSupported=True`. Other providers, including Chutes, use Incognito mode: Gateway verification only. E2EE and model deployment policies reject Incognito models before sending Chat. Use `e2ee=False` for Gateway-only Chat without a claim about model TEE execution.
+In Python, model attestation requires catalog metadata with `providerType="vllm"` and `attestationSupported=True`. Other models, including Chutes-hosted [3P Confidential TEE](/cloud/models) models, are verified at the Gateway only. The SDK calls this Incognito mode, which is separate from the Incognito privacy tier in the model catalog. E2EE and model deployment policies reject these models before sending Chat. Use `e2ee=False` for Gateway-only Chat without a claim about model TEE execution.
 
 ## Verification
 

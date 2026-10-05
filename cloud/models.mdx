@@ -6,10 +6,11 @@ icon: "brain-circuit"
 
 NEAR AI Cloud provides access to leading AI models, each optimized for different use cases ranging from advanced reasoning and tool calling to long-context processing, embeddings, reranking, image generation, and audio transcription — all with transparent, pay-per-use pricing.
 
-The catalog contains two kinds of models:
+The [model catalog](https://near.ai/models) labels every model with one of three privacy tiers:
 
-- **TEE-hosted models** (marked <span className="doc-badge">TEE</span>) run on NEAR AI's own GPU fleet inside [Trusted Execution Environments](/cloud/private-inference). They support [attestation, signatures, and verification](/cloud/verification), and nobody — not even NEAR — can see your prompts or outputs.
-- **Third-party models** (OpenAI, Anthropic, Gemini, and others) are proxied to their providers through the NEAR AI gateway for convenience. They offer the same unified API and billing, but the TEE privacy and verifiability guarantees do not extend to the upstream provider.
+- **Confidential TEE** (marked <span className="doc-badge">Confidential TEE</span>) models run on NEAR AI's own GPU fleet inside [Trusted Execution Environments](/cloud/private-inference). They support [attestation, signatures, and verification](/cloud/verification), and nobody, not even NEAR, can see your prompts or outputs.
+- **3P Confidential TEE** models run inside a third-party provider's Trusted Execution Environment. Their provider is listed as **Attested 3P**. The request path to the provider's enclave is encrypted, and the provider publishes its own [attestation evidence](/cloud/verification/cloud-api/model-attestations). Model-level verification depends on the client: the JavaScript SDK verifies Chutes model attestation, while the Python SDK verifies the Gateway only.
+- **Incognito** models (OpenAI, Anthropic, Gemini, and others) are routed through the NEAR AI Gateway, which runs in a TEE, and sent to the provider under NEAR AI's provider account. Your NEAR AI credentials are not forwarded to the provider. The model itself runs on the provider's infrastructure, outside a TEE, so the TEE privacy and verifiability guarantees do not extend to the upstream provider.
 
 <div className="doc-lead">
   <a className="doc-button" href="https://near.ai/models" target="_blank" rel="noreferrer">Browse Model Catalog →</a>
