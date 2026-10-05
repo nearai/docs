@@ -19,7 +19,7 @@
           "Admin"
         ],
         "summary": "List admin access tokens (Admin only)",
-        "description": "Retrieves a paginated list of all admin access tokens in the system.\nOnly authenticated admins can access this endpoint.",
+        "description": "Retrieves a paginated list of all admin access tokens in the system.\nOnly authenticated admins can access this endpoint.\n\nAdmin permissions: admin session only. Both read_only and read_write admin tokens receive HTTP 403 with error.type forbidden.",
         "operationId": "list_admin_access_tokens",
         "parameters": [
           {
@@ -45,10 +45,27 @@
         ],
         "responses": {
           "200": {
-            "description": "Admin access tokens retrieved successfully"
+            "description": "Admin access tokens retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAdminAccessTokensResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin session required; admin tokens receive error.type forbidden.",
             "content": {
               "application/json": {
                 "schema": {
@@ -79,7 +96,7 @@
           "Admin"
         ],
         "summary": "Create admin access token (Admin only)",
-        "description": "Creates an access token for admin users with customizable expiration time, IP address, and user agent.\nThis is typically used by billing services and other automated systems that need access to admin endpoints.\n\n**Security Note:** These tokens can have very long expiration times and should be used with caution.\nStore them securely and rotate them regularly.",
+        "description": "Creates an access token for admin users with customizable expiration time, IP address, and user agent.\nThis is typically used by billing services and other automated systems that need access to admin endpoints.\n\n**Security Note:** These tokens can have very long expiration times and should be used with caution.\nStore them securely and rotate them regularly.\n\nAdmin permissions: admin session only. Both read_only and read_write admin tokens receive HTTP 403 with error.type forbidden.",
         "operationId": "create_admin_access_token",
         "requestBody": {
           "content": {
@@ -122,8 +139,31 @@
               }
             }
           },
+          "403": {
+            "description": "Admin session required; admin tokens receive error.type forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request deserialization failed (including invalid permission values)"
+          },
           "500": {
             "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Read-only token issuance is disabled during rollout",
             "content": {
               "application/json": {
                 "schema": {
@@ -146,7 +186,7 @@
           "Admin"
         ],
         "summary": "Delete admin access token (Admin only)",
-        "description": "Revokes an admin access token by setting it as inactive.\nOnly authenticated admins can perform this operation.",
+        "description": "Revokes an admin access token by setting it as inactive.\nOnly authenticated admins can perform this operation.\n\nAdmin permissions: admin session only. Both read_only and read_write admin tokens receive HTTP 403 with error.type forbidden.",
         "operationId": "delete_admin_access_token",
         "parameters": [
           {
@@ -183,6 +223,16 @@
               }
             }
           },
+          "403": {
+            "description": "Admin session required; admin tokens receive error.type forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Admin access token not found",
             "content": {
@@ -211,12 +261,460 @@
         ]
       }
     },
+    "/v1/admin/aml/allowlist": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List AML allowlist entries (Admin only)",
+        "description": "Admin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
+        "operationId": "list_aml_allowlist",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of allowlist entries to return (default: 100)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of allowlist entries to skip (default: 0)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AML allowlist entries retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAdminAmlAllowlistResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          },
+          {
+            "admin_token": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Add or update an AML allowlist entry (Admin only)",
+        "description": "Admin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
+        "operationId": "upsert_aml_allowlist_entry",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertAmlAllowlistEntryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "AML allowlist entry upserted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAmlAllowlistEntryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          },
+          {
+            "admin_token": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/aml/allowlist/{account_id}": {
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Remove an AML allowlist entry (Admin only)",
+        "description": "Admin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
+        "operationId": "delete_aml_allowlist_entry",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "NEAR account ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "AML allowlist entry removed successfully"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "AML allowlist entry not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          },
+          {
+            "admin_token": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/aml/reports": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List AML reports (Admin only)",
+        "description": "Admin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
+        "operationId": "list_aml_reports",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of reports to return (default: 100)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of reports to skip (default: 0)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AML reports retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAdminAmlReportsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          },
+          {
+            "admin_token": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/aml/reports/{report_id}/status": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update AML report active status (Admin only)",
+        "description": "Admin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
+        "operationId": "update_aml_report_status",
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "description": "AML report UUID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAmlReportStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "AML report status updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAmlReportResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "AML report not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          },
+          {
+            "admin_token": []
+          }
+        ]
+      }
+    },
     "/v1/admin/feature-requests": {
       "get": {
         "tags": [
           "Feature Requests"
         ],
         "summary": "List aggregated feature requests for admins.",
+        "description": "Admin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "list_admin_feature_requests",
         "parameters": [
           {
@@ -280,6 +778,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -294,6 +802,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -304,7 +815,7 @@
           "Admin"
         ],
         "summary": "List organization invitation email deliveries (Admin only)",
-        "description": "Returns delivery metadata for organization invitation emails without exposing invitation tokens.",
+        "description": "Returns delivery metadata for organization invitation emails without exposing invitation tokens.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "list_invitation_email_deliveries",
         "parameters": [
           {
@@ -416,6 +927,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -430,6 +951,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -440,6 +964,7 @@
           "Admin"
         ],
         "summary": "Resend a single organization invitation email (Admin only)",
+        "description": "Admin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
         "operationId": "resend_invitation_email",
         "parameters": [
           {
@@ -484,6 +1009,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Invitation not found",
             "content": {
@@ -508,6 +1043,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -518,7 +1056,7 @@
           "Admin"
         ],
         "summary": "List all models (Admin only)",
-        "description": "Returns a paginated list of all models in the system. By default, only active models are returned.\nUse `include_inactive=true` to also include disabled models.",
+        "description": "Returns a paginated list of all models in the system. By default, only active models are returned.\nUse `include_inactive=true` to also include disabled models.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "list_models",
         "parameters": [
           {
@@ -572,6 +1110,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -586,6 +1134,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       },
@@ -594,7 +1145,7 @@
           "Admin"
         ],
         "summary": "Batch upsert models metadata (Admin only)",
-        "description": "Upserts (inserts or updates) pricing and metadata for one or more models. Only authenticated admins can perform this operation.\nThe body should be an array of objects where each key is a model name and the value is the model data.",
+        "description": "Upserts (inserts or updates) pricing and metadata for one or more models. Only authenticated admins can perform this operation.\nThe body should be an array of objects where each key is a model name and the value is the model data.\n\nAdmin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
         "operationId": "batch_upsert_models",
         "requestBody": {
           "content": {
@@ -640,6 +1191,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -654,6 +1215,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -664,7 +1228,7 @@
           "Admin"
         ],
         "summary": "Deprecate a model in favor of another (Admin only)",
-        "description": "Atomically marks `modelId` as deprecated and routes its traffic to\n`successorModelId`:\n1. Adds `modelId` as an alias of `successorModelId`, so existing clients\n   sending `model: \"<modelId>\"` keep working — the alias resolver rewrites\n   the request-side `model` field to the successor before backend dispatch,\n   and the response's `model` field reflects the canonical (successor) name.\n2. Re-points any pre-existing inbound aliases of `modelId` at the\n   successor, so historical aliases keep resolving.\n3. Sets `modelId.isActive = false` so it is hidden from public\n   `GET /v1/models` and from `GET /v1/admin/models` unless\n   `include_inactive=true`.\n4. Records a `model_history` entry for audit purposes.\n\nAll steps run in a single DB transaction. If the successor is inactive or\neither model is missing, returns 404 without modifying state.",
+        "description": "Atomically marks `modelId` as deprecated and routes its traffic to\n`successorModelId`:\n1. Adds `modelId` as an alias of `successorModelId`, so existing clients\n   sending `model: \"<modelId>\"` keep working — the alias resolver rewrites\n   the request-side `model` field to the successor before backend dispatch,\n   and the response's `model` field reflects the canonical (successor) name.\n2. Re-points any pre-existing inbound aliases of `modelId` at the\n   successor, so historical aliases keep resolving.\n3. Sets `modelId.isActive = false` so it is hidden from public\n   `GET /v1/models` and from `GET /v1/admin/models` unless\n   `include_inactive=true`.\n4. Records a `model_history` entry for audit purposes.\n\nAll steps run in a single DB transaction. If the successor is inactive or\neither model is missing, returns 404 without modifying state.\n\nAdmin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
         "operationId": "deprecate_model",
         "requestBody": {
           "content": {
@@ -707,6 +1271,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Either model not found, or successor is not active",
             "content": {
@@ -731,6 +1305,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -741,6 +1318,7 @@
           "Admin"
         ],
         "summary": "List scheduled pricing changes (Admin only).",
+        "description": "Admin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "list_model_pricing_changes",
         "parameters": [
           {
@@ -804,6 +1382,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -818,6 +1406,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -828,7 +1419,7 @@
           "Admin"
         ],
         "summary": "Confirm a batch of scheduled pricing changes and notify affected admins (Admin only).",
-        "description": "Persists the schedule (the background scheduler applies each change at its\neffective date) and sends one consolidated email per affected recipient.",
+        "description": "Persists the schedule (the background scheduler applies each change at its\neffective date) and sends one consolidated email per affected recipient.\n\nAdmin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
         "operationId": "confirm_model_pricing_changes",
         "requestBody": {
           "content": {
@@ -871,6 +1462,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Model not found or inactive",
             "content": {
@@ -905,6 +1506,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -915,6 +1519,7 @@
           "Admin"
         ],
         "summary": "Preview a batch of scheduled pricing changes without mutating state (Admin only).",
+        "description": "Admin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "preview_model_pricing_changes",
         "requestBody": {
           "content": {
@@ -957,6 +1562,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Model not found or inactive",
             "content": {
@@ -981,6 +1596,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -991,6 +1609,7 @@
           "Admin"
         ],
         "summary": "Cancel a pending scheduled pricing change (Admin only).",
+        "description": "Admin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
         "operationId": "cancel_model_pricing_change",
         "parameters": [
           {
@@ -1025,6 +1644,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Pricing change not found or no longer pending",
             "content": {
@@ -1049,6 +1678,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -1059,7 +1691,7 @@
           "Admin"
         ],
         "summary": "Delete a model (Admin only)",
-        "description": "Soft deletes a model by setting is_active to false. This preserves historical usage records\nthat reference the model name while preventing it from being used in new requests.\n\n**Note:** Model names containing forward slashes (e.g., \"Qwen/Qwen3-30B-A3B-Instruct-2507\") must be URL-encoded.\nFor example, use \"Qwen%2FQwen3-30B-A3B-Instruct-2507\" in the URL path.",
+        "description": "Soft deletes a model by setting is_active to false. This preserves historical usage records\nthat reference the model name while preventing it from being used in new requests.\n\n**Note:** Model names containing forward slashes (e.g., \"Qwen/Qwen3-30B-A3B-Instruct-2507\") must be URL-encoded.\nFor example, use \"Qwen%2FQwen3-30B-A3B-Instruct-2507\" in the URL path.\n\nAdmin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
         "operationId": "delete_model",
         "parameters": [
           {
@@ -1096,6 +1728,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Model not found",
             "content": {
@@ -1120,6 +1762,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -1130,6 +1775,7 @@
           "Admin"
         ],
         "summary": "Confirm a planned model deprecation, update the catalog, and notify affected admins.",
+        "description": "Admin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
         "operationId": "confirm_model_deprecation",
         "parameters": [
           {
@@ -1182,6 +1828,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Model or successor not found",
             "content": {
@@ -1206,6 +1862,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -1216,6 +1875,7 @@
           "Admin"
         ],
         "summary": "Preview affected admins for a planned model deprecation (Admin only).",
+        "description": "Admin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "preview_model_deprecation",
         "parameters": [
           {
@@ -1268,6 +1928,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Model or successor not found",
             "content": {
@@ -1292,6 +1962,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -1302,7 +1975,7 @@
           "Admin"
         ],
         "summary": "Get complete history for a model (Admin only)",
-        "description": "Returns the complete history for a specific model, showing all changes over time including pricing,\ncontext length, display name, and description.\n\n**Note:** Model names containing forward slashes (e.g., \"Qwen/Qwen3-30B-A3B-Instruct-2507\") must be URL-encoded.\nFor example, use \"Qwen%2FQwen3-30B-A3B-Instruct-2507\" in the URL path.",
+        "description": "Returns the complete history for a specific model, showing all changes over time including pricing,\ncontext length, display name, and description.\n\n**Note:** Model names containing forward slashes (e.g., \"Qwen/Qwen3-30B-A3B-Instruct-2507\") must be URL-encoded.\nFor example, use \"Qwen%2FQwen3-30B-A3B-Instruct-2507\" in the URL path.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "get_model_history",
         "parameters": [
           {
@@ -1356,6 +2029,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Model not found",
             "content": {
@@ -1380,6 +2063,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -1390,7 +2076,7 @@
           "Admin"
         ],
         "summary": "Get a single organization by id (Admin only)",
-        "description": "Returns one organization with its spend limit and usage. Only authenticated\nadmins can perform this operation. Returns 404 if the organization does not\nexist or is inactive (consistent with the admin organizations list, which\nhides inactive orgs).",
+        "description": "Returns one organization with its spend limit and usage. Only authenticated\nadmins can perform this operation. Returns 404 if the organization does not\nexist or is inactive (consistent with the admin organizations list, which\nhides inactive orgs).\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "get_organization",
         "parameters": [
           {
@@ -1425,6 +2111,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Organization not found",
             "content": {
@@ -1449,6 +2145,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -1459,7 +2158,7 @@
           "Admin"
         ],
         "summary": "Get organization concurrent request limit (Admin only)",
-        "description": "Returns the current concurrent request limit for an organization.\nIf no custom limit is set, returns null for concurrent_limit and the default (64) for effective_limit.",
+        "description": "Returns the current concurrent request limit for an organization.\nIf no custom limit is set, returns null for concurrent_limit and the default (64) for effective_limit.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "get_organization_concurrent_limit",
         "parameters": [
           {
@@ -1493,6 +2192,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Organization not found",
             "content": {
@@ -1517,6 +2226,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       },
@@ -1525,7 +2237,7 @@
           "Admin"
         ],
         "summary": "Update organization concurrent request limit (Admin only)",
-        "description": "Updates the maximum concurrent requests allowed per model for an organization.\nSet to null to use the default limit (64).\nChanges take effect within 5 minutes due to caching.",
+        "description": "Updates the maximum concurrent requests allowed per model for an organization.\nSet to null to use the default limit (64).\nChanges take effect within 5 minutes due to caching.\n\nAdmin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
         "operationId": "update_organization_concurrent_limit",
         "parameters": [
           {
@@ -1579,6 +2291,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Organization not found",
             "content": {
@@ -1603,6 +2325,161 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/organizations/{org_id}/fallback": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get an organization's effective fallback policy (Admin only).",
+        "description": "Admin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
+        "operationId": "get_organization_fallback",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "description": "Organization ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fallback policy retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationFallbackResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organization not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          },
+          {
+            "admin_token": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update an organization's fallback policy (Admin only).",
+        "description": "Admin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
+        "operationId": "update_organization_fallback",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "description": "Organization ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrganizationFallbackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Fallback policy updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationFallbackResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organization not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -1613,7 +2490,7 @@
           "Admin"
         ],
         "summary": "Update organization limits (Admin only)",
-        "description": "Updates spending limits for a specific organization. This endpoint is typically called by\na billing service with an admin API key when a customer makes a purchase.",
+        "description": "Updates spending limits for a specific organization. This endpoint is typically called by\na billing service with an admin API key when a customer makes a purchase.\n\nAdmin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
         "operationId": "update_organization_limits",
         "parameters": [
           {
@@ -1667,6 +2544,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Organization not found",
             "content": {
@@ -1691,6 +2578,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -1701,7 +2591,7 @@
           "Admin"
         ],
         "summary": "Get limits history for an organization (Admin only)",
-        "description": "Returns the complete limits history for a specific organization, showing all limits changes over time.\nGet limits history for an organization (Admin only)\n\nReturns the complete limits history for a specific organization, showing all limits changes over time.",
+        "description": "Returns the complete limits history for a specific organization, showing all limits changes over time.\nGet limits history for an organization (Admin only)\n\nReturns the complete limits history for a specific organization, showing all limits changes over time.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "get_organization_limits_history",
         "parameters": [
           {
@@ -1755,6 +2645,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Organization not found",
             "content": {
@@ -1779,6 +2679,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -1789,7 +2692,7 @@
           "Admin"
         ],
         "summary": "List members of a specific organization (Admin only)",
-        "description": "Returns the members of the given organization with full user details\n(email, last login, active status), consistent with `/v1/admin/users`.\nOnly authenticated admins can perform this operation.",
+        "description": "Returns the members of the given organization with full user details\n(email, last login, active status), consistent with `/v1/admin/users`.\nOnly authenticated admins can perform this operation.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "list_organization_members",
         "parameters": [
           {
@@ -1854,6 +2757,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Organization not found",
             "content": {
@@ -1878,6 +2791,131 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/organizations/{org_id}/members/{user_id}": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update an organization member role as a system administrator.",
+        "description": "Assigning the owner role transfers ownership from the current owner to an\nexisting organization member. The previous owner is demoted to admin.\n\nAdmin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
+        "operationId": "update_organization_member_role",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "description": "Organization ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "description": "User ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrganizationMemberRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Member role updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationMemberResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "System administrator privileges required Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organization or member not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Malformed request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -1888,7 +2926,7 @@
           "Admin"
         ],
         "summary": "Get organization metrics (Admin only)",
-        "description": "Returns usage metrics for an organization including summary totals,\nand breakdowns by workspace, API key, and model.",
+        "description": "Returns usage metrics for an organization including summary totals,\nand breakdowns by workspace, API key, and model.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "get_organization_metrics",
         "parameters": [
           {
@@ -1917,6 +2955,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "credit_type",
+            "in": "query",
+            "description": "Filter consumed inference usage by grant, staking_farm, payment, or postpay. Costs include only saved matching allocations, including settlements. Each matching request and its full tokens count once; counts are not additive across credit types. Unattributed historical usage is excluded. Period totals may increase until outstanding unfunded usage is settled. Omit for all usage.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/CreditType"
+            }
           }
         ],
         "responses": {
@@ -1935,6 +2982,16 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
             "content": {
               "application/json": {
                 "schema": {
@@ -1967,6 +3024,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -1977,7 +3037,7 @@
           "Admin"
         ],
         "summary": "Get time series metrics for an organization (Admin only)",
-        "description": "Returns daily/weekly/hourly aggregations for charting:\nrequests, tokens, and cost per time period.",
+        "description": "Returns daily/weekly/hourly aggregations for charting:\nrequests, tokens, and cost per time period.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "get_organization_timeseries",
         "parameters": [
           {
@@ -2015,6 +3075,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "credit_type",
+            "in": "query",
+            "description": "Filter consumed inference usage by grant, staking_farm, payment, or postpay. Costs include only saved matching allocations, including settlements. Each matching request and its full tokens count once; counts are not additive across credit types. Unattributed historical usage is excluded. Period totals may increase until outstanding unfunded usage is settled. Omit for all usage.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/CreditType"
+            }
           }
         ],
         "responses": {
@@ -2033,6 +3102,16 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
             "content": {
               "application/json": {
                 "schema": {
@@ -2065,6 +3144,171 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/organizations/{org_id}/priority": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get an organization's scheduler priority (platform admins only).",
+        "description": "Admin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
+        "operationId": "get_organization_priority",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "description": "Organization ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scheduler priority retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationPriorityResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organization not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          },
+          {
+            "admin_token": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Set an organization's scheduler priority (platform admins with write access only).",
+        "description": "Admin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
+        "operationId": "update_organization_priority",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "description": "Organization ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrganizationPriorityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Scheduler priority updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationPriorityResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Priority outside -1000..1000",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organization not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -2075,7 +3319,7 @@
           "Admin"
         ],
         "summary": "Get admin organization staking farm state",
-        "description": "Returns the staking farm source and last synced farm-credit state for any\norganization. Requires platform admin access.",
+        "description": "Returns the staking farm source and last synced farm-credit state for any\norganization. Requires platform admin access.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "get_admin_organization_staking_farm",
         "parameters": [
           {
@@ -2120,7 +3364,7 @@
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
             "content": {
               "application/json": {
                 "schema": {
@@ -2153,6 +3397,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -2163,7 +3410,7 @@
           "Admin"
         ],
         "summary": "Sync admin organization staking farm credits",
-        "description": "Refreshes staking farm reward units and derived credits for any linked\norganization. Requires platform admin access.",
+        "description": "Refreshes staking farm reward units and derived credits for any linked\norganization. Requires platform admin access.\n\nAdmin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
         "operationId": "sync_admin_organization_staking_farm",
         "parameters": [
           {
@@ -2208,7 +3455,7 @@
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
             "content": {
               "application/json": {
                 "schema": {
@@ -2241,6 +3488,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -2251,7 +3501,7 @@
           "Admin"
         ],
         "summary": "Get organization balance (Admin only)",
-        "description": "Returns the current spending balance for an organization without requiring\nthe caller to be a member of that organization. Intended for trusted\nautomated billing services.",
+        "description": "Returns the current spending balance for an organization without requiring\nthe caller to be a member of that organization. Intended for trusted\nautomated billing services.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "get_admin_organization_balance",
         "parameters": [
           {
@@ -2295,6 +3545,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not found",
             "content": {
@@ -2319,6 +3579,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -2329,7 +3592,7 @@
           "Admin"
         ],
         "summary": "Get the platform billing summary (Admin only)",
-        "description": "Credit LIMITS (caps) and consumption — NOT payments/cash. Returns active paid/grant\ncredit limits, total consumed, paying/granted org counts, and a breakdown by funding\nsource. Real money-in lives in the billing service, not cloud-api.",
+        "description": "Credit LIMITS (caps) and consumption — NOT payments/cash. Returns active paid/grant\ncredit limits, total consumed, paying/granted org counts, and a breakdown by funding\nsource. Real money-in lives in the billing service, not cloud-api.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "get_billing_summary",
         "responses": {
           "200": {
@@ -2352,6 +3615,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -2366,6 +3639,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -2376,7 +3652,7 @@
           "Admin"
         ],
         "summary": "Get the platform infrastructure / fleet burn summary (Admin only)",
-        "description": "Fetches the live host list, counts active/idle hosts, and computes the monthly/daily\nGPU burn rate from the configured cost-per-host. Degrades gracefully (stale=true) if\nthe host inventory is unreachable.",
+        "description": "Fetches the live host list, counts active/idle hosts, and computes the monthly/daily\nGPU burn rate from the configured cost-per-host. Degrades gracefully (stale=true) if\nthe host inventory is unreachable.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "get_infra_summary",
         "responses": {
           "200": {
@@ -2399,6 +3675,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -2413,6 +3699,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -2423,7 +3712,7 @@
           "Admin"
         ],
         "summary": "Get platform-wide metrics for admin dashboards (Admin only)",
-        "description": "Returns aggregated metrics across all organizations including:\n- Total users and organizations\n- Total requests and revenue\n- Top models by usage\n- Top organizations by spend",
+        "description": "Returns aggregated metrics across all organizations including:\n- Total users and organizations\n- Total requests and revenue\n- Top models by usage\n- Top organizations by spend\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "get_platform_metrics",
         "parameters": [
           {
@@ -2466,6 +3755,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -2480,6 +3779,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -2490,7 +3792,7 @@
           "Admin"
         ],
         "summary": "Get platform-wide time series for admin dashboards (Admin only)",
-        "description": "Returns per-bucket requests, tokens, cost (paid/granted + verifiable/external splits),\nactive organizations, and new signups for growth/mix trend charts.",
+        "description": "Returns per-bucket requests, tokens, cost (paid/granted + verifiable/external splits),\nactive organizations, and new signups for growth/mix trend charts.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "get_platform_timeseries",
         "parameters": [
           {
@@ -2552,6 +3854,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -2566,6 +3878,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -2576,7 +3891,7 @@
           "Admin"
         ],
         "summary": "Get the per-model consumption ranking (Admin only)",
-        "description": "Models for the selected period ranked by consumed cost, with requests, tokens,\nunique orgs, verifiable flag, provider type, and latency. Paginated and filterable.",
+        "description": "Models for the selected period ranked by consumed cost, with requests, tokens,\nunique orgs, verifiable flag, provider type, and latency. Paginated and filterable.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "get_model_revenue",
         "parameters": [
           {
@@ -2676,6 +3991,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -2690,6 +4015,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -2700,7 +4028,7 @@
           "Admin"
         ],
         "summary": "Get the per-organization consumption ranking (Admin only)",
-        "description": "Organizations with usage in the selected period ranked by consumed cost, with the\nverifiable/external split, requests, tokens, models used, a current paying flag, and\nlast-usage timestamp. Paginated and filterable — full attribution of usage/spend per org.",
+        "description": "Organizations with usage in the selected period ranked by consumed cost, with the\nverifiable/external split, requests, tokens, models used, a current paying flag, and\nlast-usage timestamp. Paginated and filterable — full attribution of usage/spend per org.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "get_org_revenue",
         "parameters": [
           {
@@ -2791,6 +4119,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -2805,6 +4143,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -2815,6 +4156,7 @@
           "Admin"
         ],
         "summary": "Create platform service (Admin only)",
+        "description": "Admin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
         "operationId": "create_service",
         "requestBody": {
           "content": {
@@ -2857,6 +4199,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -2871,6 +4223,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -2881,6 +4236,7 @@
           "Admin"
         ],
         "summary": "Update platform service (Admin only; display_name, description, cost_per_unit, is_active)",
+        "description": "Admin permissions: admin session or read_write token. A read_only token receives HTTP 403 with error.type insufficient_permissions before the handler runs.",
         "operationId": "update_service",
         "parameters": [
           {
@@ -2935,6 +4291,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not found",
             "content": {
@@ -2959,6 +4325,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -2969,7 +4338,7 @@
           "Admin"
         ],
         "summary": "List all registered users with pagination (Admin only)",
-        "description": "Returns a paginated list of all users in the system. Only authenticated admins can perform this operation.",
+        "description": "Returns a paginated list of all users in the system. Only authenticated admins can perform this operation.\n\nAdmin permissions: admin session, read_write token, or read_only token. Approved read across organizations; does not mutate business state.",
         "operationId": "list_users",
         "parameters": [
           {
@@ -3050,6 +4419,16 @@
               }
             }
           },
+          "403": {
+            "description": "Missing admin privileges (forbidden) or insufficient token permission (insufficient_permissions).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -3064,6 +4443,9 @@
         "security": [
           {
             "session_token": []
+          },
+          {
+            "admin_token": []
           }
         ]
       }
@@ -3239,7 +4621,7 @@
           "Attestation"
         ],
         "summary": "Get attestation report",
-        "description": "Get hardware attestation report for TEE verification. Requires an API key\n(nearai/infra#193); report retrieval is non-billable — no usage or billing\nrecords are created.",
+        "description": "Get hardware attestation report for TEE verification. Requires an API key\n(nearai/infra#193); report retrieval is non-billable — no usage or billing\nrecords are created.\n\nWith `model=...&provider=chutes`, the Chutes entry in `model_attestations` includes\n`quote_b64`, `certificate_b64`, `e2e_pubkey`, `nonce`, and `gpu_evidence` for\nthe selected verified instance. `gpu_evidence` preserves every GPU's `arch`,\n`certificate` (base64 device certificate chain), and `evidence` (base64 SPDM\nevidence) from the same evidence request as the CPU quote and certificate.\n`gpu_verdict` remains available as verification metadata.\n\nThe GPU challenge is `SHA256(UTF8(nonce + e2e_pubkey))`, using the returned\nnonce's hex text and public key's base64 text without decoding either input.\nPass the hex-encoded digest as the NVIDIA verification nonce; it is also bound\ninto the CPU quote's `report_data[0:32]`. The raw client nonce is not the GPU\nchallenge.",
         "operationId": "get_attestation_report",
         "parameters": [
           {
@@ -3289,7 +4671,7 @@
           {
             "name": "include_tls_fingerprint",
             "in": "query",
-            "description": "Include TLS certificate fingerprint in the report data.\nDefaults to false; when true, report_data[..32] = SHA256(signing_address || cert_fingerprint).",
+            "description": "Include the TLS certificate SPKI fingerprint in the report-data binding.\nDefaults to false; when true, report_data[..32] = SHA256(signing_address || tls_cert_fingerprint).",
             "required": false,
             "schema": {
               "type": [
@@ -4732,7 +6114,7 @@
             }
           },
           "409": {
-            "description": "Organization is bound to a NEAR staking wallet",
+            "description": "Organization is a default or is bound to a NEAR staking wallet",
             "content": {
               "application/json": {
                 "schema": {
@@ -6151,6 +7533,15 @@
             }
           },
           {
+            "name": "credit_type",
+            "in": "query",
+            "description": "Filter costs by their saved grant, postpay, staking_farm, or payment allocation.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "limit",
             "in": "query",
             "description": "Maximum rows to return. Defaults to 100 and must not exceed 1000.",
@@ -6342,6 +7733,15 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "credit_type",
+            "in": "query",
+            "description": "Filter costs by their saved credit allocation.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/CreditType"
             }
           }
         ],
@@ -6566,6 +7966,15 @@
             "name": "service_name",
             "in": "query",
             "description": "Filter service usage by platform service name.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "credit_type",
+            "in": "query",
+            "description": "Filter costs by their saved grant, postpay, staking_farm, or payment allocation.",
             "required": false,
             "schema": {
               "type": "string"
@@ -7211,13 +8620,13 @@
           "Responses"
         ],
         "summary": "Create response",
-        "description": "Generate a single-turn, stateless AI response with optional streaming.",
+        "description": "Generate an AI response for a conversation with tool calling and streaming support.",
         "operationId": "create_response",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/StatelessCreateResponseRequestSchema"
+                "$ref": "#/components/schemas/CreateResponseRequest"
               }
             }
           },
@@ -7487,14 +8896,14 @@
         "tags": [
           "Attestation"
         ],
-        "summary": "Get completion or Responses API signature",
-        "description": "Get a cryptographic signature for a chat completion or completed stateless\n`resp_*` response. Returns signature data on success, or an unavailable\nresponse if a chat-completion stream was disconnected.",
+        "summary": "Get completion signature",
+        "description": "Get cryptographic signature for a chat completion for verification.\nReturns signature data on success, or an unavailable response if the stream was disconnected.",
         "operationId": "get_signature",
         "parameters": [
           {
             "name": "chat_id",
             "in": "path",
-            "description": "Chat completion ID or resp_* Responses API ID",
+            "description": "Chat completion ID",
             "required": true,
             "schema": {
               "type": "string"
@@ -8719,6 +10128,15 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "credit_type",
+            "in": "query",
+            "description": "Filter costs by their saved credit allocation.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/CreditType"
+            }
           }
         ],
         "responses": {
@@ -9144,6 +10562,95 @@
           }
         }
       },
+      "AdminAccessTokenListEntry": {
+        "type": "object",
+        "description": "Persisted admin token metadata. Preserves the existing listing response.",
+        "required": [
+          "id",
+          "token_hash",
+          "created_by_user_id",
+          "name",
+          "creation_reason",
+          "created_at",
+          "expires_at",
+          "is_active",
+          "permission"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by_user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "creation_reason": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "last_used_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "name": {
+            "type": "string"
+          },
+          "permission": {
+            "$ref": "#/components/schemas/AdminAccessTokenPermission"
+          },
+          "revocation_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revoked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "revoked_by_user_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "token_hash": {
+            "type": "string"
+          },
+          "user_agent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "AdminAccessTokenPermission": {
+        "type": "string",
+        "description": "Immutable admin-token permission across organizations. Read-only tokens can\ninvoke explicitly approved reads (including pricing/deprecation previews and\ndatabase-encryption scans), but cannot mutate business state. Usage\nbookkeeping and audit logging remain enabled. Both permissions are forbidden\nfrom creating, listing, or revoking admin tokens; those require an admin session.",
+        "enum": [
+          "read_only",
+          "read_write"
+        ]
+      },
       "AdminAccessTokenResponse": {
         "type": "object",
         "description": "Admin access token response model",
@@ -9154,7 +10661,8 @@
           "created_at",
           "expires_at",
           "name",
-          "reason"
+          "reason",
+          "permission"
         ],
         "properties": {
           "access_token": {
@@ -9177,8 +10685,122 @@
           "name": {
             "type": "string"
           },
+          "permission": {
+            "$ref": "#/components/schemas/AdminAccessTokenPermission"
+          },
           "reason": {
             "type": "string"
+          }
+        }
+      },
+      "AdminAmlAllowlistEntryResponse": {
+        "type": "object",
+        "description": "Admin AML allowlist entry response.",
+        "required": [
+          "account_id",
+          "address_type",
+          "created_at"
+        ],
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "address_type": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by_user_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "AdminAmlReportResponse": {
+        "type": "object",
+        "description": "Admin AML report audit entry.",
+        "required": [
+          "id",
+          "flow",
+          "provider",
+          "account_id",
+          "address_type",
+          "risk_level",
+          "active",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "address_type": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "flow": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "provider_report_time": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "report_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "risk_level": {
+            "type": "string"
+          },
+          "score": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user_id": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       },
@@ -9462,6 +11084,7 @@
           "outputCostPerToken": {
             "$ref": "#/components/schemas/DecimalPrice"
           },
+          "textPricing": {},
           "updatedAt": {
             "type": "string",
             "format": "date-time"
@@ -9868,7 +11491,7 @@
               "string",
               "null"
             ],
-            "description": "TLS certificate file (PEM) from TLS_CERT_PATH; report_data binds via SHA256 of these exact bytes"
+            "description": "PEM-encoded TLS certificate read from `TLS_CERT_PATH` when `include_tls_fingerprint=true`.\n`report_data` binds `tls_cert_fingerprint` (the SHA-256 hash of the TLS SPKI) together with\n`signing_address`, not the PEM bytes."
           }
         }
       },
@@ -10150,6 +11773,12 @@
               "null"
             ],
             "format": "float"
+          },
+          "service_tier": {
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "stop": {
             "oneOf": [
@@ -10477,6 +12106,789 @@
           }
         }
       },
+      "ConversationContent": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversationContentPart"
+            }
+          }
+        ],
+        "description": "Content for conversation items"
+      },
+      "ConversationContentPart": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "text",
+              "type"
+            ],
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "input_text"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "image_url",
+              "type"
+            ],
+            "properties": {
+              "detail": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "image_url": {
+                "$ref": "#/components/schemas/ResponseImageUrl"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "input_image"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "file_id",
+              "type"
+            ],
+            "properties": {
+              "detail": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file_id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "input_file"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "text",
+              "type"
+            ],
+            "properties": {
+              "annotations": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {}
+              },
+              "text": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "output_text"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Content part for conversations"
+      },
+      "ConversationDeleteResult": {
+        "type": "object",
+        "description": "Deleted conversation result",
+        "required": [
+          "id",
+          "object",
+          "deleted"
+        ],
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        }
+      },
+      "ConversationInputItem": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "role",
+              "content",
+              "type"
+            ],
+            "properties": {
+              "content": {
+                "$ref": "#/components/schemas/ConversationContent"
+              },
+              "metadata": {},
+              "model": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "role": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "message"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Input item for conversations"
+      },
+      "ConversationItem": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "status",
+              "role",
+              "content",
+              "model",
+              "type"
+            ],
+            "properties": {
+              "content": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ConversationContentPart"
+                }
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "id": {
+                "type": "string"
+              },
+              "metadata": {},
+              "model": {
+                "type": "string"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/components/schemas/ResponseItemStatus"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "message"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "status",
+              "tool_type",
+              "function",
+              "model",
+              "type"
+            ],
+            "properties": {
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "function": {
+                "$ref": "#/components/schemas/ConversationItemFunction"
+              },
+              "id": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/components/schemas/ResponseItemStatus"
+              },
+              "tool_type": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "tool_call"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "status",
+              "action",
+              "model",
+              "type"
+            ],
+            "properties": {
+              "action": {
+                "$ref": "#/components/schemas/ConversationItemWebSearchAction"
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "id": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/components/schemas/ResponseItemStatus"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "web_search_call"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "status",
+              "summary",
+              "content",
+              "model",
+              "type"
+            ],
+            "properties": {
+              "content": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "id": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/components/schemas/ResponseItemStatus"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "reasoning"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "server_label",
+              "tools",
+              "type"
+            ],
+            "properties": {
+              "error": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "type": "string"
+              },
+              "server_label": {
+                "type": "string"
+              },
+              "tools": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/McpDiscoveredTool"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "mcp_list_tools"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "server_label",
+              "name",
+              "arguments",
+              "model",
+              "type"
+            ],
+            "properties": {
+              "approval_request_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "arguments": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "error": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "output": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "server_label": {
+                "type": "string"
+              },
+              "status": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "mcp_call"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "server_label",
+              "name",
+              "arguments",
+              "model",
+              "type"
+            ],
+            "properties": {
+              "arguments": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "id": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "server_label": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "mcp_approval_request"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Function call requiring client execution",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "call_id",
+              "name",
+              "arguments",
+              "status",
+              "model",
+              "type"
+            ],
+            "properties": {
+              "arguments": {
+                "type": "string",
+                "description": "JSON-encoded arguments"
+              },
+              "call_id": {
+                "type": "string",
+                "description": "The LLM's tool_call_id for correlation"
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "id": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string",
+                "description": "Function name"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "description": "Status: \"in_progress\" when pending client execution"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "function_call"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Result of a client-executed function call",
+            "required": [
+              "id",
+              "response_id",
+              "created_at",
+              "call_id",
+              "output",
+              "type"
+            ],
+            "properties": {
+              "call_id": {
+                "type": "string",
+                "description": "The call_id from the FunctionCall this is a response to"
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "id": {
+                "type": "string"
+              },
+              "next_response_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "output": {
+                "type": "string",
+                "description": "Result of the function execution"
+              },
+              "previous_response_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "response_id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "function_call_output"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Conversation item (for responses)"
+      },
+      "ConversationItemFunction": {
+        "type": "object",
+        "required": [
+          "name",
+          "arguments"
+        ],
+        "properties": {
+          "arguments": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "ConversationItemList": {
+        "type": "object",
+        "description": "List of conversation items",
+        "required": [
+          "object",
+          "data",
+          "first_id",
+          "last_id",
+          "has_more"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversationItem"
+            }
+          },
+          "first_id": {
+            "type": "string"
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "last_id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        }
+      },
+      "ConversationItemWebSearchAction": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "query",
+              "type"
+            ],
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "search"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "ConversationObject": {
+        "type": "object",
+        "description": "Conversation object (follows OpenAI spec)",
+        "required": [
+          "id",
+          "object",
+          "created_at",
+          "metadata"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "type": "string"
+          },
+          "metadata": {},
+          "object": {
+            "type": "string"
+          }
+        }
+      },
+      "ConversationReference": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "metadata": {}
+            }
+          }
+        ],
+        "description": "Conversation reference"
+      },
       "ConversationResponseReference": {
         "type": "object",
         "description": "Conversation reference in response object",
@@ -10506,6 +12918,15 @@
           "name": {
             "type": "string",
             "description": "Name for the token (required)"
+          },
+          "permission": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AdminAccessTokenPermission",
+                "description": "Defaults to read_write when omitted for backwards compatibility. Null\nand unknown values are rejected. Revoke and recreate to change permission."
+              }
+            ],
+            "default": "read_write"
           },
           "reason": {
             "type": "string",
@@ -10539,6 +12960,28 @@
               }
             ]
           }
+        }
+      },
+      "CreateConversationItemsRequest": {
+        "type": "object",
+        "description": "Request to create items in a conversation",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversationInputItem"
+            }
+          }
+        }
+      },
+      "CreateConversationRequest": {
+        "type": "object",
+        "description": "Request to create a conversation",
+        "properties": {
+          "metadata": {}
         }
       },
       "CreateOrganizationRequest": {
@@ -10641,6 +13084,160 @@
           }
         }
       },
+      "CreateResponseRequest": {
+        "type": "object",
+        "description": "Request to create a response",
+        "required": [
+          "model"
+        ],
+        "properties": {
+          "background": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "conversation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ConversationReference"
+              }
+            ]
+          },
+          "include": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "input": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResponseInput"
+              }
+            ]
+          },
+          "instructions": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "max_output_tokens": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "max_tool_calls": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "metadata": {},
+          "model": {
+            "type": "string"
+          },
+          "parallel_tool_calls": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "previous_response_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "prompt_cache_key": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reasoning": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResponseReasoningConfig"
+              }
+            ]
+          },
+          "safety_identifier": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "service_tier": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Responses is Standard-only for now. `auto` is accepted but normalized\nto Standard before the internal Chat Completions call."
+          },
+          "store": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "stream": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "temperature": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "float"
+          },
+          "tool_choice": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResponseToolChoice"
+              }
+            ]
+          },
+          "tools": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ResponseTool"
+            }
+          },
+          "top_p": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "float"
+          }
+        }
+      },
       "CreateServiceRequest": {
         "type": "object",
         "description": "Request to create a platform service (admin)",
@@ -10691,15 +13288,59 @@
           }
         }
       },
+      "CreditAllocation": {
+        "type": "object",
+        "description": "Immutable portion of a usage charge paid by one credit type.",
+        "required": [
+          "type",
+          "amount",
+          "policy_version"
+        ],
+        "properties": {
+          "amount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "organization_limit_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "policy_version": {
+            "type": "string"
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
       "CreditLimitBreakdownResponse": {
         "type": "object",
         "required": [
           "type",
           "amount",
+          "consumed",
+          "available",
           "currency"
         ],
         "properties": {
           "amount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "available": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "consumed": {
             "type": "integer",
             "format": "int64"
           },
@@ -10719,11 +13360,12 @@
       },
       "CreditType": {
         "type": "string",
-        "description": "Credit type for organization limits\n- grant: Free credits provided by the platform\n- payment: Credits purchased by the organization\n- staking_farm: House of Stake farm reward units converted into credits",
+        "description": "Credit type for organization limits\n- grant: Free credits provided by the platform\n- payment: Credits purchased by the organization\n- staking_farm: House of Stake farm reward units converted into credits\n- postpay: Contract billing safety ceiling; usage is invoiced separately",
         "enum": [
           "grant",
           "payment",
-          "staking_farm"
+          "staking_farm",
+          "postpay"
         ]
       },
       "Datacenter": {
@@ -10880,7 +13522,7 @@
           },
           "report_data": {
             "type": "string",
-            "description": "The report data that contains signing address and nonce"
+            "description": "Value bound into the quote. Its final 32 bytes contain the request nonce.\nWith `include_tls_fingerprint=true`, its first 32 bytes are\nSHA-256(signing_address || tls_cert_fingerprint)."
           },
           "request_nonce": {
             "type": "string",
@@ -10961,6 +13603,23 @@
         "properties": {
           "certificate": {
             "type": "string"
+          }
+        }
+      },
+      "ExpiresAfter": {
+        "type": "object",
+        "description": "Expires after configuration",
+        "required": [
+          "anchor",
+          "seconds"
+        ],
+        "properties": {
+          "anchor": {
+            "type": "string"
+          },
+          "seconds": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -11058,6 +13717,102 @@
           "userId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "FileDeleteResponse": {
+        "type": "object",
+        "description": "File delete response",
+        "required": [
+          "id",
+          "object",
+          "deleted"
+        ],
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        }
+      },
+      "FileListResponse": {
+        "type": "object",
+        "description": "File list response",
+        "required": [
+          "object",
+          "data",
+          "has_more"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FileUploadResponse"
+            }
+          },
+          "first_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "last_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "object": {
+            "type": "string"
+          }
+        }
+      },
+      "FileUploadResponse": {
+        "type": "object",
+        "description": "File upload response",
+        "required": [
+          "id",
+          "object",
+          "bytes",
+          "created_at",
+          "filename",
+          "purpose"
+        ],
+        "properties": {
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "expires_at": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
           }
         }
       },
@@ -11334,6 +14089,13 @@
               },
               "description": "Sampling parameters accepted by the model (OpenRouter vocabulary)."
             },
+            "textPricing": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Exact, versioned USD-per-million text pricing profile.\nOmitted leaves it unchanged; null removes it."
+            },
             "verifiable": {
               "type": [
                 "boolean",
@@ -11540,6 +14302,11 @@
           "cost_per_host_usd_month",
           "monthly_burn_usd",
           "daily_burn_usd",
+          "cost_per_gpu_hour_usd",
+          "total_allocated_gpus",
+          "hourly_gpu_burn_usd",
+          "model_gpu_allocations",
+          "gpu_data_stale",
           "fetched_at",
           "stale"
         ],
@@ -11548,6 +14315,11 @@
             "type": "integer",
             "format": "int64",
             "description": "Hosts serving ≥1 model."
+          },
+          "cost_per_gpu_hour_usd": {
+            "type": "number",
+            "format": "double",
+            "description": "Planning rate for one allocated physical GPU-hour."
           },
           "cost_per_host_usd_month": {
             "type": "number",
@@ -11561,10 +14333,26 @@
             "type": "string",
             "format": "date-time"
           },
+          "gpu_data_stale": {
+            "type": "boolean",
+            "description": "True when current GPU allocation is unavailable or served from cache."
+          },
+          "hourly_gpu_burn_usd": {
+            "type": "number",
+            "format": "double",
+            "description": "Current projected fleet GPU burn per hour."
+          },
           "idle_hosts": {
             "type": "integer",
             "format": "int64",
             "description": "Hosts serving no models (idle capacity we still pay for)."
+          },
+          "model_gpu_allocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelGpuAllocation"
+            },
+            "description": "Current allocation grouped by the model label emitted by DCGM. A GPU\ncarrying multiple labels can appear in multiple groups; the fleet total\nremains separately deduplicated by physical UUID."
           },
           "monthly_burn_usd": {
             "type": "number",
@@ -11573,6 +14361,11 @@
           "stale": {
             "type": "boolean",
             "description": "True when this is last-known / fallback data because the live fetch failed."
+          },
+          "total_allocated_gpus": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Current distinct physical GPUs allocated to a model workload."
           },
           "total_hosts": {
             "type": "integer",
@@ -11838,6 +14631,95 @@
           }
         }
       },
+      "ListAdminAccessTokensResponse": {
+        "type": "object",
+        "required": [
+          "data",
+          "limit",
+          "offset",
+          "total"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAccessTokenListEntry"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ListAdminAmlAllowlistResponse": {
+        "type": "object",
+        "description": "Admin AML allowlist response.",
+        "required": [
+          "accounts",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "properties": {
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAmlAllowlistEntryResponse"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ListAdminAmlReportsResponse": {
+        "type": "object",
+        "description": "Paginated admin AML reports response.",
+        "required": [
+          "reports",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAmlReportResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "ListAdminInvitationEmailDeliveriesResponse": {
         "type": "object",
         "description": "Paginated admin invitation email delivery response.",
@@ -12091,8 +14973,7 @@
         "enum": [
           "always",
           "never"
-        ],
-        "description": "Simple MCP approval mode"
+        ]
       },
       "McpApprovalRequirement": {
         "oneOf": [
@@ -12110,8 +14991,14 @@
               }
             }
           }
-        ],
-        "description": "Approval requirement for MCP tool calls"
+        ]
+      },
+      "McpApprovalResponseType": {
+        "type": "string",
+        "description": "Type marker for MCP approval response input",
+        "enum": [
+          "mcp_approval_response"
+        ]
       },
       "McpDiscoveredTool": {
         "type": "object",
@@ -12132,6 +15019,13 @@
           }
         }
       },
+      "McpListToolsType": {
+        "type": "string",
+        "description": "Type marker for MCP list tools input",
+        "enum": [
+          "mcp_list_tools"
+        ]
+      },
       "McpToolNameFilter": {
         "type": "object",
         "required": [
@@ -12145,8 +15039,7 @@
             },
             "uniqueItems": true
           }
-        },
-        "description": "Filter for tool names that don't require approval"
+        }
       },
       "MemberRole": {
         "type": "string",
@@ -12178,6 +15071,20 @@
               "string",
               "null"
             ]
+          },
+          "reasoning": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "OpenRouter-dialect spelling of the same field. Accepted on input and\nfolded into `reasoning_content` at conversion (see\n[`Message::prior_reasoning`]); a sibling field rather than a serde\nalias so a message carrying both spellings — which our own responses\nmay emit — stays valid instead of failing as a duplicate field. Never\nemitted."
+          },
+          "reasoning_content": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Reasoning the model produced on a *previous* assistant turn, echoed\nback by the client. Thinking models continue their own chain of\nthought across tool calls only when this reaches the engine; without\nthe field serde silently dropped it, so the model re-reasoned from\nscratch after every tool result. Forwarded verbatim to self-hosted and\nattested OpenAI-compatible engines; stripped for strict external\nupstreams (see `inference_providers::strip_reasoning_content`)."
           },
           "role": {
             "type": "string"
@@ -12527,6 +15434,22 @@
           }
         }
       },
+      "ModelGpuAllocation": {
+        "type": "object",
+        "required": [
+          "model_name",
+          "allocated_gpus"
+        ],
+        "properties": {
+          "allocated_gpus": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "model_name": {
+            "type": "string"
+          }
+        }
+      },
       "ModelHistoryEntry": {
         "type": "object",
         "description": "Model history entry - includes pricing, context length, and other model attributes",
@@ -12720,6 +15643,7 @@
               "type": "string"
             }
           },
+          "textPricing": {},
           "verifiable": {
             "type": "boolean"
           }
@@ -12917,6 +15841,9 @@
               "type": "string"
             },
             "description": "Sampling parameters accepted by the model (OpenRouter `supported_sampling_parameters`)."
+          },
+          "textPricing": {
+            "description": "Exact, versioned USD-per-million text pricing. The legacy `pricing`\nprojection remains Standard-short for compatibility."
           },
           "top_provider": {
             "oneOf": [
@@ -13337,7 +16264,8 @@
           },
           "outputCostPerToken": {
             "$ref": "#/components/schemas/DecimalPrice"
-          }
+          },
+          "textPricing": {}
         }
       },
       "ModelsResponse": {
@@ -13625,7 +16553,8 @@
           "total_requests",
           "total_tokens",
           "updated_at",
-          "credit_limits"
+          "credit_limits",
+          "unfunded_amount"
         ],
         "properties": {
           "credit_limits": {
@@ -13684,8 +16613,30 @@
             "type": "integer",
             "format": "int64"
           },
+          "unfunded_amount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unresolved cost from completed requests that exceeded all capacity."
+          },
           "updated_at": {
             "type": "string"
+          }
+        }
+      },
+      "OrganizationFallbackResponse": {
+        "type": "object",
+        "description": "Effective fallback policy returned by admin organization endpoints.",
+        "required": [
+          "organizationId",
+          "enabled"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "organizationId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -13821,6 +16772,24 @@
           }
         }
       },
+      "OrganizationPriorityResponse": {
+        "type": "object",
+        "description": "Scheduler priority, available only through platform-admin endpoints.",
+        "required": [
+          "organization_id",
+          "priority"
+        ],
+        "properties": {
+          "organization_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "OrganizationResponse": {
         "type": "object",
         "description": "Organization response model",
@@ -13932,6 +16901,7 @@
           "non_verifiable_consumed_usd",
           "non_verifiable_requests",
           "provider_error_or_timeout_rate",
+          "incomplete_stream_rate",
           "provider_usage",
           "top_models",
           "top_organizations"
@@ -13946,6 +16916,11 @@
             "type": "string",
             "format": "date-time",
             "description": "When this response was computed. The `total_users`/`total_organizations`/\n`paying_organizations` fields are **current snapshots as of this time**, not\nperiod-bound like the rest."
+          },
+          "incomplete_stream_rate": {
+            "type": "number",
+            "format": "double",
+            "description": "Share of requests whose stop_reason is incomplete, 0.0-1.0"
           },
           "new_organizations": {
             "type": "integer",
@@ -14284,6 +17259,12 @@
                 "$ref": "#/components/schemas/DecimalPriceRequest"
               }
             ]
+          },
+          "textPricing": {
+            "type": [
+              "object",
+              "null"
+            ]
           }
         }
       },
@@ -14397,7 +17378,8 @@
                 "$ref": "#/components/schemas/DecimalPrice"
               }
             ]
-          }
+          },
+          "textPricing": {}
         }
       },
       "PricingFields": {
@@ -14427,7 +17409,8 @@
           },
           "outputCostPerToken": {
             "$ref": "#/components/schemas/DecimalPrice"
-          }
+          },
+          "textPricing": {}
         }
       },
       "PrivacyClassifyRequestDoc": {
@@ -14747,6 +17730,7 @@
               "output_tokens",
               "total_tokens",
               "cache_read_tokens",
+              "cache_write_tokens",
               "input_cost",
               "output_cost",
               "total_cost",
@@ -14755,14 +17739,41 @@
               "type"
             ],
             "properties": {
+              "allocation_policy_version": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "cache_read_tokens": {
                 "type": "integer",
                 "format": "int32",
                 "description": "Number of prompt tokens that were cache hits (subset of input_tokens)"
               },
+              "cache_write_tokens": {
+                "type": "integer",
+                "format": "int32",
+                "description": "Number of prompt tokens written to provider cache (subset of input_tokens)"
+              },
               "created_at": {
                 "type": "string",
                 "description": "Timestamp of the recorded entry (RFC3339)"
+              },
+              "credit_allocations": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "$ref": "#/components/schemas/CreditAllocation"
+                }
+              },
+              "funded_amount": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "int64"
               },
               "id": {
                 "type": "string",
@@ -14811,6 +17822,13 @@
                 "enum": [
                   "chat_completion"
                 ]
+              },
+              "unfunded_amount": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "int64"
               }
             }
           },
@@ -14827,9 +17845,31 @@
               "type"
             ],
             "properties": {
+              "allocation_policy_version": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "created_at": {
                 "type": "string",
                 "description": "Timestamp of the recorded entry (RFC3339)"
+              },
+              "credit_allocations": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "$ref": "#/components/schemas/CreditAllocation"
+                }
+              },
+              "funded_amount": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "int64"
               },
               "id": {
                 "type": "string",
@@ -14858,6 +17898,13 @@
                 "enum": [
                   "image_generation"
                 ]
+              },
+              "unfunded_amount": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "int64"
               }
             }
           }
@@ -15294,6 +18341,12 @@
               "total_cost_nano_usd"
             ],
             "properties": {
+              "allocation_policy_version": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "api_key_id": {
                 "type": "string",
                 "format": "uuid"
@@ -15301,6 +18354,23 @@
               "created_at": {
                 "type": "string",
                 "format": "date-time"
+              },
+              "credit_allocations": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "$ref": "#/components/schemas/CreditAllocation"
+                },
+                "description": "None marks historical usage recorded before funding attribution."
+              },
+              "funded_amount": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "int64"
               },
               "id": {
                 "type": "string",
@@ -15315,6 +18385,13 @@
                   "string",
                   "null"
                 ]
+              },
+              "unfunded_amount": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "int64"
               },
               "workspace_id": {
                 "type": "string",
@@ -15627,6 +18704,20 @@
           }
         }
       },
+      "ResponseContent": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseContentPart"
+            }
+          }
+        ],
+        "description": "Content can be text or array of content parts"
+      },
       "ResponseContentItem": {
         "oneOf": [
           {
@@ -15777,6 +18868,77 @@
         ],
         "description": "Unified content item that can represent both user inputs and assistant outputs\nThis replaces ResponseOutputContent and correctly represents semantic types"
       },
+      "ResponseContentPart": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "text",
+              "type"
+            ],
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "input_text"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "image_url",
+              "type"
+            ],
+            "properties": {
+              "detail": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "image_url": {
+                "$ref": "#/components/schemas/ResponseImageUrl"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "input_image"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "file_id",
+              "type"
+            ],
+            "properties": {
+              "detail": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file_id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "input_file"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Content part from user inputs (input-only variants).\n\nThis type is used for type-safe operations on user inputs only.\nIt cannot contain output variants, providing compile-time safety.\n\nUsed in:\n- ResponseContent::Parts (for input listing)\n- list_input_items endpoint\n- Input validation operations"
+      },
       "ResponseError": {
         "type": "object",
         "required": [
@@ -15829,6 +18991,68 @@
         ],
         "properties": {
           "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "ResponseInput": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseInputItem"
+            }
+          }
+        ],
+        "description": "Input for a response - can be text, array of items, or single item"
+      },
+      "ResponseInputItem": {
+        "type": "object",
+        "description": "Single input item",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "content": {
+            "$ref": "#/components/schemas/ResponseContent"
+          },
+          "metadata": {},
+          "role": {
+            "type": "string"
+          }
+        }
+      },
+      "ResponseInputItemList": {
+        "type": "object",
+        "description": "Input item list for responses",
+        "required": [
+          "object",
+          "data",
+          "first_id",
+          "last_id",
+          "has_more"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseInputItem"
+            }
+          },
+          "first_id": {
+            "type": "string"
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "last_id": {
+            "type": "string"
+          },
+          "object": {
             "type": "string"
           }
         }
@@ -15996,7 +19220,7 @@
           "tools": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ClientManagedResponseTool"
+              "$ref": "#/components/schemas/ResponseTool"
             }
           },
           "top_logprobs": {
@@ -16523,13 +19747,6 @@
                 "type": "string",
                 "description": "Status: \"in_progress\" when pending client execution"
               },
-              "thought_signature": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "description": "Provider-specific metadata that clients must echo unchanged when\nreplaying the function call (for example Gemini's thought signature)."
-              },
               "type": {
                 "type": "string",
                 "enum": [
@@ -16741,10 +19958,27 @@
               "type"
             ],
             "properties": {
+              "filters": {},
+              "search_context_size": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "type": {
                 "type": "string",
                 "enum": [
                   "web_search"
+                ]
+              },
+              "user_location": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/UserLocation"
+                  }
                 ]
               }
             }
@@ -16807,6 +20041,7 @@
           },
           {
             "type": "object",
+            "description": "Remote MCP server tool",
             "required": [
               "server_label",
               "server_url",
@@ -16822,14 +20057,9 @@
                   "type": "string"
                 }
               },
-              "authorization": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
               "require_approval": {
-                "$ref": "#/components/schemas/McpApprovalRequirement"
+                "$ref": "#/components/schemas/McpApprovalRequirement",
+                "description": "Tool approval requirement (default: \"always\")"
               },
               "server_description": {
                 "type": [
@@ -16841,7 +20071,8 @@
                 "type": "string"
               },
               "server_url": {
-                "type": "string"
+                "type": "string",
+                "description": "HTTPS endpoint for the remote MCP server"
               },
               "type": {
                 "type": "string",
@@ -17210,11 +20441,33 @@
           "created_at"
         ],
         "properties": {
+          "allocation_policy_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "api_key_id": {
             "type": "string"
           },
           "created_at": {
             "type": "string"
+          },
+          "credit_allocations": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CreditAllocation"
+            }
+          },
+          "funded_amount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
           },
           "id": {
             "type": "string"
@@ -17241,6 +20494,13 @@
           },
           "total_cost_display": {
             "type": "string"
+          },
+          "unfunded_amount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
           },
           "workspace_id": {
             "type": "string"
@@ -17295,7 +20555,7 @@
               "string",
               "null"
             ],
-            "description": "Which key produced this signature: `\"provider_tee\"` (model-serving TEE)\nor `\"gateway\"` (cloud-api gateway TEE, used when the gateway rewrites\nthe stream bytes — usage accounting/stripping, redaction — and for\nattested fallback providers without per-response signatures). Omitted\nfor signatures stored before the kind was recorded, whose provenance is\nunknown."
+            "description": "Which key produced this signature: `\"provider_tee\"` (model-serving TEE)\nor `\"gateway\"` (cloud-api gateway TEE). Gateway signatures cover\nclient-facing bytes, including Incognito completions and rewritten\nresponses. They do not prove model execution inside a TEE.\nOmitted for signatures stored before the kind was recorded, whose\nprovenance is unknown."
           },
           "signing_address": {
             "type": "string"
@@ -17590,30 +20850,48 @@
         "description": "Annotation for output text (citations, etc.)"
       },
       "ToolCall": {
-        "type": "object",
-        "required": [
-          "id",
-          "type",
-          "function"
-        ],
-        "properties": {
-          "function": {
-            "$ref": "#/components/schemas/FunctionCall"
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "extra_content": {
+                "type": "object",
+                "properties": {
+                  "google": {
+                    "type": "object",
+                    "properties": {
+                      "thought_signature": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "thought_signature": {
+                "type": "string"
+              }
+            }
           },
-          "id": {
-            "type": "string"
-          },
-          "thought_signature": {
-            "type": [
-              "string",
-              "null"
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "type",
+              "function"
             ],
-            "description": "Gemini-3 thought_signature. The client must echo this verbatim on\nthe next turn or Gemini rejects the request with\n\"Function call is missing a thought_signature\"."
-          },
-          "type": {
-            "type": "string"
+            "properties": {
+              "function": {
+                "$ref": "#/components/schemas/FunctionCall"
+              },
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
+            }
           }
-        }
+        ]
       },
       "TopModelMetrics": {
         "type": "object",
@@ -17784,6 +21062,18 @@
           }
         }
       },
+      "UpdateAmlReportStatusRequest": {
+        "type": "object",
+        "description": "Admin AML report status update request.",
+        "required": [
+          "active"
+        ],
+        "properties": {
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
       "UpdateApiKeyRequest": {
         "type": "object",
         "description": "Request to update API key (general update for name, expires_at, and/or spend_limit)",
@@ -17833,6 +21123,13 @@
               }
             ]
           }
+        }
+      },
+      "UpdateConversationRequest": {
+        "type": "object",
+        "description": "Request to update a conversation",
+        "properties": {
+          "metadata": {}
         }
       },
       "UpdateModelApiRequest": {
@@ -18056,6 +21353,13 @@
             },
             "description": "Sampling parameters accepted by the model (OpenRouter vocabulary)."
           },
+          "textPricing": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Exact, versioned USD-per-million text pricing profile.\nOmitted leaves it unchanged; null removes it."
+          },
           "verifiable": {
             "type": [
               "boolean",
@@ -18101,6 +21405,18 @@
           },
           "updatedAt": {
             "type": "string"
+          }
+        }
+      },
+      "UpdateOrganizationFallbackRequest": {
+        "type": "object",
+        "description": "Admin request to update an organization's fallback policy.",
+        "required": [
+          "enabled"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
           }
         }
       },
@@ -18177,6 +21493,22 @@
         "properties": {
           "role": {
             "$ref": "#/components/schemas/MemberRole"
+          }
+        }
+      },
+      "UpdateOrganizationPriorityRequest": {
+        "type": "object",
+        "description": "Operator-controlled priority for the inference scheduler. Higher values run first.",
+        "required": [
+          "priority"
+        ],
+        "properties": {
+          "priority": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Inclusive range -1000..1000. Set 0 to restore the default.",
+            "maximum": 1000,
+            "minimum": -1000
           }
         }
       },
@@ -18274,6 +21606,24 @@
             ]
           },
           "settings": {}
+        }
+      },
+      "UpsertAmlAllowlistEntryRequest": {
+        "type": "object",
+        "description": "Admin AML allowlist upsert request.",
+        "required": [
+          "account_id"
+        ],
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
         }
       },
       "Usage": {
@@ -18393,6 +21743,7 @@
           "input_tokens",
           "output_tokens",
           "cache_read_tokens",
+          "cache_write_tokens",
           "total_tokens",
           "total_cost",
           "total_cost_display",
@@ -18400,16 +21751,51 @@
           "created_at"
         ],
         "properties": {
+          "allocation_policy_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "api_key_id": {
             "type": "string"
           },
+          "billingDetails": {},
           "cache_read_tokens": {
             "type": "integer",
             "format": "int32",
             "description": "Number of prompt tokens that were cache hits"
           },
+          "cache_write_tokens": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Number of prompt tokens written to provider cache"
+          },
+          "contextBand": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "created_at": {
             "type": "string"
+          },
+          "credit_allocations": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CreditAllocation"
+            },
+            "description": "None denotes legacy usage whose funding was not historically captured."
+          },
+          "funded_amount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
           },
           "id": {
             "type": "string"
@@ -18457,6 +21843,12 @@
             ],
             "description": "Response ID when called from Responses API"
           },
+          "serviceTier": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "stop_reason": {
             "type": [
               "string",
@@ -18474,6 +21866,13 @@
           "total_tokens": {
             "type": "integer",
             "format": "int32"
+          },
+          "unfunded_amount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
           },
           "workspace_id": {
             "type": "string"
@@ -18507,6 +21906,42 @@
           "total": {
             "type": "integer",
             "minimum": 0
+          }
+        }
+      },
+      "UserLocation": {
+        "type": "object",
+        "description": "User location for web search",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "city": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "country": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "region": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timezone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": {
+            "type": "string"
           }
         }
       },
@@ -18969,365 +22404,15 @@
             "format": "date-time"
           }
         }
-      },
-      "ClientManagedResponseTool": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": [
-              "name",
-              "type"
-            ],
-            "properties": {
-              "description": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "name": {
-                "type": "string"
-              },
-              "parameters": {},
-              "type": {
-                "type": "string",
-                "enum": [
-                  "function"
-                ]
-              }
-            }
-          }
-        ],
-        "description": "The only tool shape accepted from a public Responses request.\n\n`ResponseTool` retains legacy variants for dormant/internal code paths, but\nthe `CreateResponseRequest::tools` deserializer first parses this enum. That\nmakes unsupported builtin types ordinary request-deserialization failures,\nbefore the route or a provider can do any work."
-      },
-      "StatelessResponseInputItemSchema": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": [
-              "type",
-              "call_id",
-              "name",
-              "arguments"
-            ],
-            "properties": {
-              "arguments": {
-                "type": "string"
-              },
-              "call_id": {
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              },
-              "thought_signature": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "type": {
-                "$ref": "#/components/schemas/FunctionCallType"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": [
-              "type",
-              "call_id",
-              "output"
-            ],
-            "properties": {
-              "call_id": {
-                "type": "string"
-              },
-              "output": {
-                "type": "string"
-              },
-              "type": {
-                "$ref": "#/components/schemas/FunctionCallOutputType"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": [
-              "role",
-              "content"
-            ],
-            "properties": {
-              "content": {
-                "$ref": "#/components/schemas/StatelessResponseContentSchema"
-              },
-              "metadata": {},
-              "role": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "StatelessResponseContentSchema": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/StatelessResponseContentPartSchema"
-            }
-          }
-        ]
-      },
-      "StatelessResponseInputSchema": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/StatelessResponseInputItemSchema"
-            }
-          }
-        ]
-      },
-      "FunctionCallType": {
-        "type": "string",
-        "description": "Type marker for a client-replayed function call input item.",
-        "enum": [
-          "function_call"
-        ]
-      },
-      "StatelessResponseToolSchema": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": [
-              "name",
-              "type"
-            ],
-            "properties": {
-              "description": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "name": {
-                "type": "string"
-              },
-              "parameters": {},
-              "type": {
-                "type": "string",
-                "enum": [
-                  "function"
-                ]
-              }
-            }
-          }
-        ]
-      },
-      "StatelessResponseContentPartSchema": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": [
-              "text",
-              "type"
-            ],
-            "properties": {
-              "text": {
-                "type": "string"
-              },
-              "type": {
-                "type": "string",
-                "enum": [
-                  "input_text"
-                ]
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": [
-              "text",
-              "type"
-            ],
-            "properties": {
-              "text": {
-                "type": "string"
-              },
-              "type": {
-                "type": "string",
-                "enum": [
-                  "output_text"
-                ]
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": [
-              "image_url",
-              "type"
-            ],
-            "properties": {
-              "detail": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "image_url": {
-                "$ref": "#/components/schemas/ResponseImageUrl"
-              },
-              "type": {
-                "type": "string",
-                "enum": [
-                  "input_image"
-                ]
-              }
-            }
-          }
-        ]
-      },
-      "StatelessCreateResponseRequestSchema": {
-        "type": "object",
-        "description": "OpenAPI-only view of the stateless Responses request contract.\n\nThe runtime request type keeps legacy variants so it can return a precise\n`invalid_request_error` for them. The public endpoint schema should instead\nshow only the items accepted by the stateless implementation.",
-        "required": [
-          "model"
-        ],
-        "properties": {
-          "include": {
-            "type": [
-              "array",
-              "null"
-            ],
-            "items": {
-              "type": "string"
-            }
-          },
-          "input": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/StatelessResponseInputSchema"
-              }
-            ]
-          },
-          "instructions": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "max_output_tokens": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64"
-          },
-          "max_tool_calls": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64"
-          },
-          "metadata": {},
-          "model": {
-            "type": "string"
-          },
-          "parallel_tool_calls": {
-            "type": [
-              "boolean",
-              "null"
-            ]
-          },
-          "prompt_cache_key": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "reasoning": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/ResponseReasoningConfig"
-              }
-            ]
-          },
-          "safety_identifier": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "service_tier": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "store": {
-            "type": "boolean",
-            "description": "Must be `false` when supplied; omitted is normalized to `false`.",
-            "default": false,
-            "example": false,
-            "const": false
-          },
-          "stream": {
-            "type": [
-              "boolean",
-              "null"
-            ]
-          },
-          "temperature": {
-            "type": [
-              "number",
-              "null"
-            ],
-            "format": "float"
-          },
-          "tool_choice": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/ResponseToolChoice"
-              }
-            ]
-          },
-          "tools": {
-            "type": [
-              "array",
-              "null"
-            ],
-            "items": {
-              "$ref": "#/components/schemas/StatelessResponseToolSchema"
-            }
-          },
-          "top_p": {
-            "type": [
-              "number",
-              "null"
-            ],
-            "format": "float"
-          }
-        }
       }
     },
     "securitySchemes": {
+      "admin_token": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "adm_",
+        "description": "Opaque admin access token. Permission is immutable and applies across organizations: read_only allows approved reads; read_write allows admin mutations. Both require the creator to remain an admin. Token management requires an admin session. Usage bookkeeping and audit logging remain enabled."
+      },
       "api_key": {
         "type": "http",
         "scheme": "bearer",
@@ -19392,8 +22477,12 @@
       "description": "Public model catalog and information"
     },
     {
+      "name": "Conversations",
+      "description": "Conversation management"
+    },
+    {
       "name": "Responses",
-      "description": "Stateless response inference (`store: false` only). Raw request/response content, response items, and history are not persisted. Clients must include any prior context in each request. Every successful Responses inference makes exactly one Chat Completions call. Only custom `function` tools are supported. They are client-managed: Cloud returns `function_call` items but never executes them; a later `store: false` request replays the individual call (the raw item from output is accepted) with its matching `function_call_output`, alongside caller-managed message history and the same function tool definitions. The minimal replay path also accepts assistant `message` text parts of type `output_text`, but not reasoning or arbitrary full `response.output` items. Server-executed tools (`web_search`, `web_context_search`, `file_search`, `code_interpreter`, `computer`, and remote `mcp`) and image-generation/editing models are rejected. The separate `POST /mcp` endpoint continues to expose its `web_search` tool independently of Responses; use `/v1/images/*` for image generation/editing. Existing completed-response gateway attestation is preserved best-effort: when the signature write succeeds, `GET /v1/signature/resp_*` retrieves signatures over SHA-256 request/response digests, never raw content. Interrupted streams create no `resp_*` attestation record or legacy disconnect fallback. Conversations, response history, and file input are rejected."
+      "description": "Response handling and streaming"
     },
     {
       "name": "Organizations",
@@ -19406,6 +22495,10 @@
     {
       "name": "Workspaces",
       "description": "Workspace and API key management"
+    },
+    {
+      "name": "Files",
+      "description": "File upload and management"
     },
     {
       "name": "Users",
