@@ -94,7 +94,8 @@
                 "root": "cloud/inference-sdk/index",
                 "pages": [
                   "cloud/inference-sdk/javascript",
-                  "cloud/inference-sdk/python"
+                  "cloud/inference-sdk/python",
+                  "cloud/inference-sdk/rust"
                 ]
               }
             ]
