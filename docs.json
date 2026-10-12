@@ -67,17 +67,11 @@
                 "icon": "file-check",
                 "root": "cloud/verification/index",
                 "pages": [
-                  {
-                    "group": "NEAR AI Cloud Gateway",
-                    "root": "cloud/verification/cloud-api/index",
-                    "pages": [
-                      "cloud/verification/cloud-api/gateway-attestation",
-                      "cloud/verification/cloud-api/model-attestations",
-                      "cloud/verification/cloud-api/tls",
-                      "cloud/verification/cloud-api/response-signatures",
-                      "cloud/verification/cloud-api/image-provenance"
-                    ]
-                  },
+                  "cloud/verification/cloud-api/gateway-attestation",
+                  "cloud/verification/cloud-api/model-attestations",
+                  "cloud/verification/cloud-api/tls",
+                  "cloud/verification/cloud-api/response-signatures",
+                  "cloud/verification/cloud-api/image-provenance",
                   {
                     "group": "Reference",
                     "pages": [
