@@ -1,0 +1,113 @@
+---
+title: "Rust"
+icon: "code"
+description: "Use the Rust SDK for verified, encrypted Chat Completions."
+---
+
+## Install
+
+The SDK is available on [crates.io](https://crates.io/crates/nearai-inference-sdk). Use Rust stable and Cargo. Add these dependencies to your application's `Cargo.toml`:
+
+```toml Cargo.toml
+[dependencies]
+nearai-inference-sdk = "0.1"
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+```
+
+Set your API key in your server environment:
+
+```bash
+export NEARAI_API_KEY="your-api-key"
+```
+
+## Send and verify a completion
+
+Save this example as `src/main.rs` and run it with `cargo run`:
+
+```rust src/main.rs
+use nearai_inference_sdk::{InferenceClient, InferenceClientOptions};
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = InferenceClient::with_options(InferenceClientOptions {
+        api_key: Some(std::env::var("NEARAI_API_KEY")?),
+        e2ee: true,
+        ..Default::default()
+    })?;
+    let completion = client.chat_completions(json!({
+        "model": "z-ai/glm-5.3-flash",
+        "messages": [{"role": "user", "content": "Hello!"}]
+    })).await?;
+
+    // Verify the exact request and response bytes before using the answer.
+    let id = completion["id"].as_str().ok_or("Completion has no ID")?;
+    let verified = client.verify_response(id).await?;
+    println!("Verified {:?} response", verified.signature_kind());
+    println!("{}", completion["choices"][0]["message"]["content"]);
+    Ok(())
+}
+```
+
+The client connects to `https://cloud-api.near.ai/v1` by default. Reuse a client across requests; clones share connections, caches, and in-flight verification.
+
+## E2EE
+
+End-to-end encryption is disabled by default. Set `e2ee: true` to encrypt supported Chat fields to a verified model key and decrypt the response automatically.
+
+Rust model attestation requires a NEAR vLLM deployment with attestation enabled. Other providers use Gateway-only verification, called Incognito mode by the SDK. This is separate from the Incognito privacy tier in the model catalog. E2EE and model deployment policies reject Gateway-only models before sending Chat. Set `e2ee: false` for Gateway-only Chat without a claim about model TEE execution. Failed required checks never downgrade to this mode.
+
+## Verification
+
+Before sending Chat, the client verifies the Gateway and every returned model report for supported models. Gateway TLS identity verification is enabled by default and subsequent requests are pinned to that identity. Normal HTTPS certificate validation remains enabled. Failed required checks stop the request.
+
+Response-signature verification is explicit: call `client.verify_response(id).await?` after receiving the completion. The client retains the exact request and response bytes automatically, including encrypted wire bytes when E2EE is enabled.
+
+- `ProviderTee`: a verified model signer signed the exact request and response bytes.
+- `Gateway`: a verified Gateway signer signed those bytes; this does not prove that an attested model generated them.
+
+These checks do not establish a complete chain through Gateway transformations. See [Verification](/cloud/verification) for evidence boundaries and policies.
+
+Successful deployment checks are cached for 60 minutes by default. Set `attestation_cache_ttl: std::time::Duration::ZERO` in `InferenceClientOptions` to verify deployments for every request. Response records have a separate 60-minute lifetime beginning after full body consumption and can also be evicted by cache limits. Verify responses before their records expire or are evicted.
+
+Optionally call `client.verify(model).await?` before the first Chat request. It shares Chat's cache and in-flight work and returns verified evidence with its original verification timestamp. It does not verify a future response signature. Deployment and image provenance policies let your application require approved deployments; the SDK has no default deployment allowlist. See the [Rust verification guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md).
+
+### Streaming and HTTP transport
+
+Use `chat_request()` with `"stream": true`, then `send(reqwest::Request)` to obtain an `InferenceResponse`. Consume its `body` through HTTP EOF, including bytes after SSE `[DONE]`, before calling `verify_response()` with the completion ID from an SSE data event. Dropping a partial stream leaves no verifiable receipt. Output displayed before verification succeeds is not yet signature-verified.
+
+Rust exposes its own reqwest transport API rather than an OpenAI SDK adapter. Body chunks are SSE bytes and need not correspond to complete events or UTF-8 strings. The [streaming guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md#streaming) and [Gateway client example](https://github.com/nearai/inference-sdk/blob/main/examples/example-rs/src/gateway/client.rs) show how to consume responses and verify receipts. Only Chat Completions are supported; the Responses API is not supported.
+
+## OHTTP
+
+Set `ohttp: true` when constructing the client to encapsulate the Chat HTTP exchange to the attested Gateway:
+
+```rust
+let client = InferenceClient::with_options(InferenceClientOptions {
+    api_key: Some(std::env::var("NEARAI_API_KEY")?),
+    e2ee: true,
+    ohttp: true,
+    ..Default::default()
+})?;
+```
+
+Use these options in the completion example above. OHTTP requires the default Ed25519 algorithm and cannot be used with `SigningAlgo::Ecdsa`. E2EE is configured independently. Missing or invalid Gateway OHTTP evidence blocks Chat.
+
+<Note>
+  OHTTP applies only to Chat. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
+</Note>
+
+## Advanced APIs
+
+`AttestationClient` and standalone verification functions let your application retrieve evidence, verify deployments, and verify signatures over exact retained wire bytes. `prepare_e2ee_chat_request()` encrypts a raw Chat request and supplies JSON/SSE decryptors; key verification and response-signature verification remain your application's responsibility.
+
+Direct model endpoints are experimental. `DirectInferenceClient` and `DirectAttestationClient` connect without Gateway verification, and direct TLS fingerprint fetching is disabled; normal HTTPS validation remains enabled. Use Gateway clients for production. See the [direct-endpoint limitations](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md#experimental-direct-endpoints).
+
+Integrated client operations return `InferenceError`, wrapping retrieval or verification errors with stable `code()` and `retryable()` classifications. Retry transient signature retrieval failures without replaying Chat; verification failures remain failures. See [error handling](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md#handle-errors).
+
+## Examples and reference
+
+- [Rust verification guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md): policies, encryption, streaming, TLS binding, and errors.
+- [Rust API reference](https://github.com/nearai/inference-sdk/blob/main/rs/docs/api-reference.md): client options, verification functions, defaults, and result fields.
+- [Runnable Rust examples](https://github.com/nearai/inference-sdk/tree/main/examples/example-rs): Gateway and direct clients, standalone verification, and JSON/SSE.
