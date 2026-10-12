@@ -9,21 +9,13 @@ Use these guides to verify the evidence returned for requests sent through the N
   See an example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo. A more complete verifier is available in the [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) repo.
 </Tip>
 
-## Verify a NEAR AI Cloud Gateway request
-
-<CardGroup cols={1}>
-  <Card title="NEAR AI Cloud Gateway" icon="cloud" href="/cloud/verification/cloud-api">
-    Use this when your application sends requests through `cloud-api.near.ai`. Verify the gateway and, when your policy requires it, every returned NEAR model-attestation candidate.
-  </Card>
-</CardGroup>
-
 <Note>
   Using a direct completions endpoint (`{slug}.completions.near.ai`)? Direct verification is experimental. See [Direct Completions](/cloud/experimental/direct-completions) for the current limitations.
 </Note>
 
-## What happens next
+## Verification flow
 
-The Gateway guide walks through verifying fresh deployment evidence before a completion and, when present, a response signature against its reported signer. Depending on your application's policy, you can also verify the TLS connection and software-image provenance.
+Start with [Gateway attestation](/cloud/verification/cloud-api/gateway-attestation) to verify fresh deployment evidence before a completion. When your policy requires NEAR model evidence, verify every returned [model-attestation candidate](/cloud/verification/cloud-api/model-attestations). You can also verify the [TLS connection](/cloud/verification/cloud-api/tls) and [image provenance](/cloud/verification/cloud-api/image-provenance) as required by your policy; after a completion, verify its [response signature](/cloud/verification/cloud-api/response-signatures) when present.
 
 ## Common verification concepts
 
