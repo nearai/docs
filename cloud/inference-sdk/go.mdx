@@ -103,7 +103,7 @@ These receipts do not establish a complete cryptographic chain through Gateway t
 
 Deployment checks are cached for 60 minutes by default. `AttestationTTL` and `ResponseTTL` accept `*time.Duration`; a pointer to zero disables reuse or retention. Response retention begins after full body consumption, lasts 60 minutes by default, and is also subject to cache eviction. Verify receipts before they expire or are evicted.
 
-Optionally call `client.Verify(ctx, model)` before Chat to retrieve verified deployment evidence without sending a prompt. It shares Chat's cache and in-flight verification work and preserves the original verification timestamp. The SDK has no default application deployment allowlist; configure deployment and image provenance policies when your application requires approved images.
+Optionally call `client.Verify(ctx, model)` before Chat to retrieve verified deployment evidence without sending a prompt. It shares Chat's cache and in-flight verification work and preserves the original verification timestamp. The SDK has no default application deployment allowlist; configure deployment and image provenance policies when your application requires approved images. See the [Go verification guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md#configure-verification-and-deployment-policies) for policy examples.
 
 ## Use the OpenAI Go SDK
 
@@ -142,12 +142,13 @@ Set `OHTTP: true` in `InferenceOptions` to encapsulate the Chat HTTP exchange to
 
 `NewAttestationClient` fetches evidence without verifying it. Standalone verification functions let your application verify deployments and signatures over exact retained wire bytes. `PrepareE2EEChatRequest` supports raw HTTP request encryption after your application authenticates the model key; retain ciphertext when verifying receipts manually.
 
-`NewDirectInferenceClient` and `NewDirectAttestationClient` support experimental direct endpoints. Direct inference defaults E2EE to enabled and omits Gateway verification and direct TLS attestation binding; normal HTTPS validation remains enabled. Use Gateway clients for production.
+`NewDirectInferenceClient` and `NewDirectAttestationClient` support experimental direct endpoints. Direct inference defaults E2EE to enabled and omits Gateway verification and direct TLS attestation binding; normal HTTPS validation remains enabled. Use Gateway clients for production. See the [direct-endpoint guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md#experimental-direct-endpoints) for configuration and limitations.
 
 Use `errors.As` to inspect `*nearai.Error`, including its `Code` and `Retryable` fields. Transient signature retrieval can be retried without replaying Chat. The inference transport does not automatically replay completions.
 
 ## Examples and reference
 
-- [Go API and verification notes](https://github.com/nearai/inference-sdk/blob/main/go/docs/api-reference.md): lifecycle, policies, trust boundaries, encryption, and errors.
+- [Go verification guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md): policies, encryption, streaming, TLS binding, and errors.
+- [Go API reference](https://github.com/nearai/inference-sdk/blob/main/go/docs/api-reference.md): client options, verification functions, defaults, and result fields.
 - [Runnable Go examples](https://github.com/nearai/inference-sdk/tree/main/examples/example-go): Gateway and direct clients, standalone verification, and official OpenAI JSON/SSE integration.
 - [Go SDK v0.1.0 release](https://github.com/nearai/inference-sdk/releases/tag/go/v0.1.0).
