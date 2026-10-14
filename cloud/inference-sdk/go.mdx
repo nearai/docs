@@ -14,8 +14,6 @@ go get github.com/nearai/inference-sdk/go@v0.1.0
 export NEARAI_API_KEY="your-api-key"
 ```
 
-The SDK embeds its DCAP verifier as WebAssembly and executes it locally with wazero. You do not need Rust, a C compiler, CGO, a separate native library, or runtime downloads. Ordinary builds support `CGO_ENABLED=0`.
-
 ## Send and verify a completion
 
 Save this as `main.go` and run `go run .`:
