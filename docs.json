@@ -89,7 +89,8 @@
                 "pages": [
                   "cloud/inference-sdk/javascript",
                   "cloud/inference-sdk/python",
-                  "cloud/inference-sdk/rust"
+                  "cloud/inference-sdk/rust",
+                  "cloud/inference-sdk/go"
                 ]
               }
             ]

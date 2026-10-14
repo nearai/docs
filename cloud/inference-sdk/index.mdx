@@ -1,12 +1,12 @@
 ---
 title: "SDK"
 icon: "braces"
-description: "Use the JavaScript, Python, and Rust SDKs for verified, encrypted Chat Completions."
+description: "Use the JavaScript, Python, Rust, and Go SDKs for verified, encrypted Chat Completions."
 ---
 
-NEAR AI Inference SDK is available for JavaScript, Python, and Rust. All three provide an OpenAI-compatible Chat Completions client, attestation verification, optional encryption, and explicit response-signature verification.
+NEAR AI Inference SDK is available for JavaScript, Python, Rust, and Go. All four provide an OpenAI-compatible Chat Completions client, attestation verification, optional encryption, and explicit response-signature verification.
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
   <Card title="JavaScript" icon="braces" href="/cloud/inference-sdk/javascript">
     Install from npm and get started with Node.js 24 or later.
   </Card>
@@ -15,6 +15,9 @@ NEAR AI Inference SDK is available for JavaScript, Python, and Rust. All three p
   </Card>
   <Card title="Rust" icon="code" href="/cloud/inference-sdk/rust">
     Install from crates.io and get started with Rust stable and Cargo.
+  </Card>
+  <Card title="Go" icon="code" href="/cloud/inference-sdk/go">
+    Install with go get and get started with Go 1.25.8 or later.
   </Card>
 </CardGroup>
 
@@ -33,27 +36,31 @@ pip install nearai-inference-sdk
 [dependencies]
 nearai-inference-sdk = "0.1"
 ```
+
+```bash Go
+go get github.com/nearai/inference-sdk/go@v0.1.0
+```
 </CodeGroup>
 
-Packages: [npm](https://www.npmjs.com/package/@nearai/inference-sdk) · [PyPI](https://pypi.org/project/nearai-inference-sdk/) · [crates.io](https://crates.io/crates/nearai-inference-sdk).
+Packages: [npm](https://www.npmjs.com/package/@nearai/inference-sdk) · [PyPI](https://pypi.org/project/nearai-inference-sdk/) · [crates.io](https://crates.io/crates/nearai-inference-sdk) · [Go release](https://github.com/nearai/inference-sdk/releases/tag/go/v0.1.0).
 
 ## E2EE
 
-End-to-end encryption is disabled by default. Enable it with `e2ee: true` in JavaScript and Rust or `e2ee=True` in Python to encrypt supported Chat fields to a verified model key. E2EE requires a supported NEAR TEE model and rejects models without supported model attestation.
+End-to-end encryption is disabled by default. Enable it with `e2ee: true` in JavaScript and Rust, `e2ee=True` in Python, or `E2EE: true` in Go to encrypt supported Chat fields to a verified model key. E2EE requires a supported NEAR TEE model and rejects models without supported model attestation.
 
 ## Verification
 
-The clients verify Gateway evidence before sending Chat and verify model evidence where supported. In Python and Rust, model verification requires a NEAR vLLM deployment with attestation enabled; other providers use Gateway-only verification. The JavaScript SDK also supports Chutes model attestation.
+The clients verify Gateway evidence before sending Chat and verify model evidence where supported. In Python, Rust, and Go, model verification requires a NEAR vLLM deployment with attestation enabled; other providers use Gateway-only verification. The JavaScript SDK also supports Chutes model attestation.
 
-After receiving a completion, call `verifyResponse(completion.id)` in JavaScript, `await client.verify_response(completion.id)` in Python, or `client.verify_response(id).await?` in Rust before using the answer as verified. For streaming, consume the entire stream first. Deployment verification alone does not verify a particular response.
+After receiving a completion, call `verifyResponse(completion.id)` in JavaScript, `await client.verify_response(completion.id)` in Python, `client.verify_response(id).await?` in Rust, or `client.VerifyResponse(ctx, id)` in Go before using the answer as verified. For streaming, consume the entire stream first. Deployment verification alone does not verify a particular response.
 
 A `provider_tee` signature binds the exact request and response bytes to a verified model signer. A `gateway` signature binds those bytes to a verified Gateway signer; it does not prove that an attested model generated them.
 
-See [Verification](/cloud/verification) for evidence, policies, and verification limits, or follow the [JavaScript](/cloud/inference-sdk/javascript#verification), [Python](/cloud/inference-sdk/python#verification), and [Rust](/cloud/inference-sdk/rust#verification) guides.
+See [Verification](/cloud/verification) for evidence, policies, and verification limits, or follow the [JavaScript](/cloud/inference-sdk/javascript#verification), [Python](/cloud/inference-sdk/python#verification), [Rust](/cloud/inference-sdk/rust#verification), and [Go](/cloud/inference-sdk/go#verification) guides.
 
 ## OHTTP
 
-All three SDKs support optional OHTTP to encapsulate the Chat HTTP exchange to the attested Gateway. It is disabled by default and requires Ed25519. E2EE protects supported fields to the model independently. See the [JavaScript](/cloud/inference-sdk/javascript#ohttp), [Python](/cloud/inference-sdk/python#ohttp), or [Rust](/cloud/inference-sdk/rust#ohttp) configuration.
+All four SDKs support optional OHTTP to encapsulate the Chat HTTP exchange to the attested Gateway. It is disabled by default and requires Ed25519. E2EE protects supported fields to the model independently. See the [JavaScript](/cloud/inference-sdk/javascript#ohttp), [Python](/cloud/inference-sdk/python#ohttp), [Rust](/cloud/inference-sdk/rust#ohttp), or [Go](/cloud/inference-sdk/go#ohttp) configuration.
 
 ## Examples
 
