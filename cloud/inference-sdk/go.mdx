@@ -1,0 +1,154 @@
+---
+title: "Go"
+icon: "code"
+description: "Use the Go SDK for verified, encrypted Chat Completions."
+---
+
+## Install
+
+Requires Go **1.25.8 or later**. Install the published SDK in your application:
+
+```bash
+go mod init example.com/my-app # If your project does not have a go.mod yet.
+go get github.com/nearai/inference-sdk/go@v0.1.0
+export NEARAI_API_KEY="your-api-key"
+```
+
+## Send and verify a completion
+
+Save this as `main.go` and run `go run .`:
+
+```go main.go
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+	"time"
+
+	nearai "github.com/nearai/inference-sdk/go"
+)
+
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
+	apiKey := os.Getenv("NEARAI_API_KEY")
+	if apiKey == "" {
+		return fmt.Errorf("set NEARAI_API_KEY")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	client, err := nearai.NewInferenceClient(nearai.InferenceOptions{
+		ClientOptions: nearai.ClientOptions{APIKey: apiKey},
+		E2EE:          true,
+	})
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	body, err := client.CreateChatCompletion(ctx, map[string]any{
+		"model":    "z-ai/glm-5.3-flash",
+		"messages": []map[string]string{{"role": "user", "content": "Hello!"}},
+	})
+	if err != nil {
+		return err
+	}
+	var completion struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(body, &completion); err != nil {
+		return err
+	}
+	if completion.ID == "" {
+		return fmt.Errorf("completion has no ID")
+	}
+
+	verified, err := client.VerifyResponse(ctx, completion.ID)
+	if err != nil {
+		return err
+	}
+	fmt.Println(verified.SignatureKind)
+	fmt.Println(string(body))
+	return nil
+}
+```
+
+The client connects to `https://cloud-api.near.ai/v1` by default. Reuse it across requests and call `Close()` when finished. The example enables E2EE and verifies the response signature before printing the completion.
+
+## E2EE
+
+Gateway E2EE is disabled by default. Set `E2EE: true` to encrypt supported Chat fields to an attested model key and decrypt the response automatically.
+
+Model attestation requires catalog metadata with `providerType="vllm"` and `attestationSupported=true`. Other providers use Gateway-only verification, called Incognito mode by the SDK. This is separate from the Incognito privacy tier in the model catalog. E2EE and model deployment policies reject Gateway-only models before sending Chat. Leave E2EE disabled for Gateway-only Chat without a claim about model TEE execution. Failed required checks never downgrade to unverified Chat.
+
+## Verification
+
+Before sending Chat, the client verifies the Gateway and every returned model report for supported models. Attested Gateway TLS pinning is enabled by default; normal HTTPS certificate validation remains enabled. Failed required checks stop the request.
+
+Response-signature verification is explicit: call `client.VerifyResponse(ctx, completionID)` after fully consuming the response. The client retains exact request and response bytes automatically, including encrypted wire bytes when E2EE is enabled.
+
+- `provider_tee`: a verified model signer signed the exact request and response bytes.
+- `gateway`: a verified Gateway signer signed those bytes; this does not prove that an attested model generated them.
+
+These receipts do not establish a complete cryptographic chain through Gateway transformations. See [Verification](/cloud/verification) for evidence boundaries and policies.
+
+Deployment checks are cached for 60 minutes by default. `AttestationTTL` and `ResponseTTL` accept `*time.Duration`; a pointer to zero disables reuse or retention. Response retention begins after full body consumption, lasts 60 minutes by default, and is also subject to cache eviction. Verify receipts before they expire or are evicted.
+
+Optionally call `client.Verify(ctx, model)` before Chat to retrieve verified deployment evidence without sending a prompt. It shares Chat's cache and in-flight verification work and preserves the original verification timestamp. The SDK has no default application deployment allowlist; configure deployment and image provenance policies when your application requires approved images. See the [Go verification guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md#configure-verification-and-deployment-policies) for policy examples.
+
+## Use the OpenAI Go SDK
+
+`InferenceClient` implements `http.RoundTripper`. To use an existing official OpenAI Go client, pass the verified HTTP client and disable automatic completion retries:
+
+```bash
+go get github.com/openai/openai-go/v3
+```
+
+```go
+// Imports:
+// "github.com/openai/openai-go/v3"
+// "github.com/openai/openai-go/v3/option"
+
+ai := openai.NewClient(
+    option.WithAPIKey(apiKey),
+    option.WithBaseURL(client.BaseURL()),
+    option.WithHTTPClient(client.HTTPClient()),
+    option.WithMaxRetries(0),
+)
+```
+
+Use `client` from the completion example and the same API key. Both `ai.Chat.Completions.New` and `NewStreaming` use the verified transport. Configure credentials on the inference client so evidence and signature requests are authenticated too. Only Chat Completions are supported; the Responses API is not supported.
+
+For streaming, consume the stream to completion, check `stream.Err()`, close it, and call `client.VerifyResponse(ctx, completionID)` using an ID from the stream. Output displayed before verification succeeds is not yet signature-verified. Close abandoned streams to cancel requests; incomplete or failed streams do not produce verifiable receipt records. The [runnable OpenAI example](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/gateway/openai/main.go) and its [shared implementation](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/internal/demo/demo.go) cover JSON and streaming calls.
+
+## OHTTP
+
+Set `OHTTP: true` in `InferenceOptions` to encapsulate the Chat HTTP exchange to the attested Gateway. OHTTP is disabled by default and requires Ed25519, the default signing algorithm. Configure E2EE independently. Missing or invalid Gateway OHTTP evidence blocks Chat.
+
+<Note>
+  OHTTP applies only to Chat. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
+</Note>
+
+## Advanced APIs
+
+`NewAttestationClient` fetches evidence without verifying it. Standalone verification functions let your application verify deployments and signatures over exact retained wire bytes. `PrepareE2EEChatRequest` supports raw HTTP request encryption after your application authenticates the model key; retain ciphertext when verifying receipts manually.
+
+`NewDirectInferenceClient` and `NewDirectAttestationClient` support experimental direct endpoints. Direct inference defaults E2EE to enabled and omits Gateway verification and direct TLS attestation binding; normal HTTPS validation remains enabled. Use Gateway clients for production. See the [direct-endpoint guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md#experimental-direct-endpoints) for configuration and limitations.
+
+Use `errors.As` to inspect `*nearai.Error`, including its `Code` and `Retryable` fields. Transient signature retrieval can be retried without replaying Chat. The inference transport does not automatically replay completions.
+
+## Examples and reference
+
+- [Go verification guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md): policies, encryption, streaming, TLS binding, and errors.
+- [Go API reference](https://github.com/nearai/inference-sdk/blob/main/go/docs/api-reference.md): client options, verification functions, defaults, and result fields.
+- [Runnable Go examples](https://github.com/nearai/inference-sdk/tree/main/examples/example-go): Gateway and direct clients, standalone verification, and official OpenAI JSON/SSE integration.
+- [Go SDK v0.1.0 release](https://github.com/nearai/inference-sdk/releases/tag/go/v0.1.0).
