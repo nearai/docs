@@ -29,10 +29,6 @@ curl https://cloud-api.near.ai/v1/responses \
 
 `count` applies to `web_search` in the Responses API. You can also use `web_context_search` in Responses, but it does not accept this request-level `count` setting. The response includes search activity as `web_search_call` output items alongside the model's answer.
 
-<Note>
-  The [native stateless Responses flow](/cloud/guides/stateless-responses) accepts client-managed `function` tools only. Built-in web search is unavailable in that flow. Use a model that supports built-in search on Responses, such as the one in the example above.
-</Note>
-
 ## Chat Completions API
 
 `web_context_search` is also available on `/v1/chat/completions`. It requires `stream: true`:
