@@ -5,13 +5,13 @@ description: "Use the OpenAI Responses shape without server-side conversation or
 icon: "message-square"
 ---
 
-The NEAR AI Cloud Responses API is a stateless compatibility layer over Chat Completions. It keeps the OpenAI Responses request, output, and streaming shapes while leaving conversation state and tool execution under your application's control.
+The NEAR AI Cloud Responses API is a stateless compatibility layer over Chat Completions. It keeps the OpenAI Responses request, output, and streaming shapes while leaving conversation state and custom-function execution under your application's control. NEAR AI Cloud executes built-in web search during the request.
 
 ```text
 POST https://cloud-api.near.ai/v1/responses
 ```
 
-Every successful request makes exactly one Chat Completions inference. NEAR AI Cloud does not store the raw request, response, output items, or conversation history for later retrieval.
+A request without built-in tools makes one Chat Completions inference. Built-in web search can use additional inference rounds within the request. NEAR AI Cloud does not store the raw request, response, output items, or conversation history for later retrieval.
 
 <Note>
   `store` must be `false`. If you omit it, NEAR AI Cloud treats it as `false`.
@@ -31,7 +31,7 @@ client = OpenAI(
 )
 
 response = client.responses.create(
-    model="z-ai/glm-5.2",
+    model="Qwen/Qwen3.8-27B",
     input="Explain confidential inference in one sentence.",
     store=False,
 )
@@ -51,7 +51,7 @@ const client = new OpenAI({
 });
 
 const response = await client.responses.create({
-  model: 'z-ai/glm-5.2',
+  model: 'Qwen/Qwen3.8-27B',
   input: 'Explain confidential inference in one sentence.',
   store: false,
 });
@@ -67,7 +67,7 @@ curl https://cloud-api.near.ai/v1/responses \
   -H "Authorization: Bearer $NEARAI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "z-ai/glm-5.2",
+    "model": "Qwen/Qwen3.8-27B",
     "input": "Explain confidential inference in one sentence.",
     "store": false
   }'
@@ -84,7 +84,7 @@ There is no server-side conversation object and no `previous_response_id` contin
 
 ```json
 {
-  "model": "z-ai/glm-5.2",
+  "model": "Qwen/Qwen3.8-27B",
   "store": false,
   "input": [
     {
@@ -143,7 +143,7 @@ tools = [{
 
 prompt = "What is the weather in Paris?"
 first = client.responses.create(
-    model="z-ai/glm-5.2",
+    model="Qwen/Qwen3.8-27B",
     input=prompt,
     tools=tools,
     tool_choice="required",
@@ -156,7 +156,7 @@ function_call = next(item for item in first.output if item.type == "function_cal
 function_result = {"temperature_c": 22, "condition": "sunny"}
 
 second = client.responses.create(
-    model="z-ai/glm-5.2",
+    model="Qwen/Qwen3.8-27B",
     store=False,
     tools=tools,
     input=[
@@ -175,7 +175,11 @@ print(second.output_text)
 
 Echo the returned `function_call` item unchanged. This preserves provider-specific fields needed for the next inference. Include exactly one matching `function_call_output` later in the same request for each replayed call.
 
-## Unsupported Stateful Features
+## Use Built-in Web Search
+
+Built-in `web_search` and `web_context_search` run on NEAR AI Cloud during the request. They do not require your application to execute a function or store response history. Add `web_search` to `tools` to let the model search; its optional `count` sets the maximum results per search. See [Web Search](/cloud/guides/web-search) for an example and the supported range.
+
+## Unsupported Features
 
 The following Responses inputs return `400 invalid_request_error`:
 
@@ -184,11 +188,11 @@ The following Responses inputs return `400 invalid_request_error`:
 - `previous_response_id`
 - `background: true`
 - `input_file`
-- Built-in `web_search`, `web_context_search`, `file_search`, `code_interpreter`, and `computer` tools
+- Built-in `file_search`, `code_interpreter`, and `computer` tools
 - Remote `mcp` tools and MCP approval or tool-list continuation items
 - Image-generation or image-editing output models; use the [Images endpoints](/cloud/guides/specialized-endpoints#image-generation) instead
 
-For server-side web search, use the supported [Chat Completions flow](/cloud/guides/web-search). You can also expose search as a custom function and execute it in your application.
+For server-side web search in Responses or Chat Completions, see [Web Search](/cloud/guides/web-search). You can also expose search as a custom function and execute it in your application.
 
 ## Retired APIs
 

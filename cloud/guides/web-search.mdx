@@ -1,17 +1,33 @@
 ---
 title: "Web Search"
-description: "Give models access to live web results through Chat Completions"
+description: "Give models access to live web results with built-in web search tools"
 icon: "globe"
 ---
 
 
-NEAR AI Cloud provides a built-in **server-side web search tool** for Chat Completions. The model decides when to search, the platform executes the search, and the results are fed back to the model without tool-handling code on your side.
+NEAR AI Cloud provides built-in **server-side web search tools** for the Responses and Chat Completions APIs. The model decides when to search, the platform executes the search, and the results are fed back to the model without tool-handling code on your side.
 
 Web search is billed per request as a platform service in addition to model tokens. Current pricing is available from the public [`/v1/services`](https://cloud-api.near.ai/v1/services) endpoint.
 
-<Warning>
-  The stateless Responses API does not execute built-in `web_search` or `web_context_search` tools. Use Chat Completions as shown below, or expose search as a custom function and execute it in your application.
-</Warning>
+## Responses API
+
+Add `web_search` to the `tools` array. Set `count` to control the maximum number of results returned by **each** search in this request:
+
+```bash
+curl https://cloud-api.near.ai/v1/responses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "Qwen/Qwen3.8-27B",
+    "input": "Find recent news about lunar missions and summarize it with sources.",
+    "store": false,
+    "tools": [{"type": "web_search", "count": 5}]
+  }'
+```
+
+`count` is optional and accepts integers from `0` through `20`. When set, it overrides the result count chosen by the model for every `web_search` call in the request. Omit it to let the model choose. With `count: 0`, search calls return empty results without calling the search provider; the model can still make a search tool call. Fewer results than requested may be returned.
+
+`count` applies to `web_search` in the Responses API. You can also use `web_context_search` in Responses, but it does not accept this request-level `count` setting. The response includes search activity as `web_search_call` output items alongside the model's answer.
 
 ## Chat Completions API
 
@@ -22,7 +38,7 @@ curl https://cloud-api.near.ai/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
-    "model": "z-ai/glm-5.2",
+    "model": "Qwen/Qwen3.8-27B",
     "messages": [{"role": "user", "content": "What is the current population of Tokyo? One short sentence."}],
     "tools": [{"type": "web_context_search"}],
     "stream": true
@@ -42,6 +58,6 @@ This makes it easy to display "searching the web…" states and surface sources 
 </Note>
 ## See Also
 
-- [Stateless Responses](/cloud/guides/stateless-responses) — client-managed functions and unsupported built-in tools
+- [Stateless Responses](/cloud/guides/stateless-responses) — native stateless requests and client-managed functions
 - [OpenAI Compatibility](/cloud/guides/openai-compatibility) — SDK setup
 - [Prompt Caching](/cloud/guides/prompt-caching) — search context benefits from cache-read pricing on repeated turns
