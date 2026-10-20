@@ -16741,16 +16741,6 @@
               "type"
             ],
             "properties": {
-              "count": {
-                "type": [
-                  "integer",
-                  "null"
-                ],
-                "format": "int32",
-                "minimum": 0,
-                "maximum": 20,
-                "description": "Maximum results per search (0-20); zero returns empty results without calling the search provider. Overrides the model's count when set."
-              },
               "type": {
                 "type": "string",
                 "enum": [
