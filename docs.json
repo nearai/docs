@@ -67,6 +67,7 @@
                 "icon": "file-check",
                 "root": "cloud/verification/index",
                 "pages": [
+                  "cloud/verification/verification-center",
                   "cloud/verification/cloud-api/gateway-attestation",
                   "cloud/verification/cloud-api/model-attestations",
                   "cloud/verification/cloud-api/tls",
