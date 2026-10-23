@@ -13,6 +13,10 @@ Use these guides to verify the evidence returned for requests sent through the N
   Using a direct completions endpoint (`{slug}.completions.near.ai`)? Direct verification is experimental. See [Direct Completions](/cloud/experimental/direct-completions) for the current limitations.
 </Note>
 
+## Verify in your browser
+
+Use the [Verification Center](/cloud/verification/verification-center) at [cloud.near.ai/verify](https://cloud.near.ai/verify) to inspect a model's hardware attestation and a reply's signature without writing code.
+
 ## Verification flow
 
 Start with [Gateway attestation](/cloud/verification/cloud-api/gateway-attestation) to verify fresh deployment evidence before a completion. When your policy requires NEAR model evidence, verify every returned [model-attestation candidate](/cloud/verification/cloud-api/model-attestations). You can also verify the [TLS connection](/cloud/verification/cloud-api/tls) and [image provenance](/cloud/verification/cloud-api/image-provenance) as required by your policy; after a completion, verify its [response signature](/cloud/verification/cloud-api/response-signatures) when present.
