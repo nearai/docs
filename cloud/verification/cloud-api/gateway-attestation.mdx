@@ -7,7 +7,7 @@ description: "Verify the NEAR AI Cloud gateway attestation for requests sent to 
 
 ## Request gateway evidence
 
-Generate the nonce in your client. It must be 32 random bytes encoded as 64 hexadecimal characters.
+Generate the nonce in your client. It must be 32 random bytes encoded as 64 hexadecimal characters. No API key is needed, so you can verify the gateway before you send your key.
 
 ```bash
 NONCE="$(openssl rand -hex 32)"
@@ -15,8 +15,7 @@ NONCE="$(openssl rand -hex 32)"
 curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
   --data-urlencode 'signing_algo=ecdsa' \
   --data-urlencode "nonce=${NONCE}" \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
+  -H 'Accept: application/json'
 ```
 
 The response contains the gateway report at `gateway_attestation`. For a deployment-first completion, verify and retain it before sending the completion. Add `model=<MODEL_ID>`, `provider=near`, and the `x-no-aliasing: true` header when you also need [NEAR model evidence](/cloud/verification/cloud-api/model-attestations). That request returns NEAR model reports in `model_attestations[]`; verify every entry before sending the completion. Add `include_tls_fingerprint=true` only when you are following the [NEAR AI Cloud gateway TLS flow](/cloud/verification/cloud-api/tls).

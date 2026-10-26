@@ -7,7 +7,7 @@ Use this page when a request to `cloud-api.near.ai` needs evidence for a NEAR-op
 
 ## Request model evidence
 
-Include the canonical model ID when requesting the report. Do not use an alias: send `x-no-aliasing: true` so the request fails instead of being rewritten to another model ID.
+Include the canonical model ID when requesting the report. Do not use an alias: send `x-no-aliasing: true` so the request fails instead of being rewritten to another model ID. No API key is needed. Send your key (`Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>`) only for a model that is enabled just for your organization; without it, that model is reported as unknown.
 
 ```bash
 NONCE="$(openssl rand -hex 32)"
@@ -19,8 +19,7 @@ curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
   --data-urlencode 'signing_algo=ecdsa' \
   --data-urlencode "nonce=${NONCE}" \
   -H 'Accept: application/json' \
-  -H 'x-no-aliasing: true' \
-  -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
+  -H 'x-no-aliasing: true'
 ```
 
 The response includes gateway evidence and NEAR model-report candidates in `model_attestations[]`. The field is omitted when no candidate is available. If your policy requires NEAR model evidence, reject a missing or empty `model_attestations[]`. Before sending a completion, verify every candidate and retain the verified results; do not choose a raw entry yourself.
