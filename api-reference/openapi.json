@@ -3343,7 +3343,7 @@
             }
           },
           "429": {
-            "description": "Too many anonymous requests with a nonce in progress; retry after `Retry-After` seconds or send an API key",
+            "description": "Too many anonymous requests in progress; retry after `Retry-After` seconds or send an API key",
             "content": {
               "application/json": {
                 "schema": {
