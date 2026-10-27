@@ -25,6 +25,46 @@ For most TEE-hosted models you can control whether the model uses reasoning by c
 </Tip>
 ---
 
+## GLM-5.3 Flash
+
+GLM-5.3 Flash (`z-ai/glm-5.3-flash`) reasons by default. The reasoning is returned in `reasoning_content`.
+
+### Cap the reasoning with `thinking_token_budget`
+
+`thinking_token_budget` sets the maximum number of reasoning tokens. When you omit it, the budget is 8192 tokens. Send `null` to remove the cap. This is the most precise control for this model:
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "model": "z-ai/glm-5.3-flash",
+    "messages": [
+      {"role": "user", "content": "How many prime numbers are there between 1 and 200?"}
+    ],
+    "thinking_token_budget": 512
+  }'
+```
+
+### `reasoning_effort` is close to on/off
+
+GLM-5.3 Flash accepts `reasoning_effort`, but the levels are not a gradual dial:
+
+| `reasoning_effort` | Reasoning |
+|--------------------|-----------|
+| omitted, `"medium"` or `"max"` | Full reasoning (up to the budget) |
+| `"low"` or `"high"` | Minimal reasoning, usually under 20 tokens |
+
+To shorten the reasoning without removing it, use `thinking_token_budget` instead.
+
+<Warning>
+  **`enable_thinking: false` does not make GLM-5.3 Flash faster**
+
+  With `"chat_template_kwargs": {"enable_thinking": false}`, the response has no `reasoning_content` and `reasoning_tokens` is 0, but the model writes its reasoning into `content` instead. Responses are not shorter or faster. Use a small `thinking_token_budget` or `"reasoning_effort": "low"` for minimal reasoning.
+</Warning>
+
+---
+
 ## GLM-5.1
 
 GLM-5.1 supports reasoning through the `enable_thinking` parameter in `chat_template_kwargs`. **Reasoning is enabled by default** for GLM-5.1.
@@ -150,6 +190,7 @@ Different models use different parameter names for controlling reasoning:
 
 | Model | Model ID | Parameter | Default |
 |-------|----------|-----------|---------|
+| GLM-5.3 Flash | `z-ai/glm-5.3-flash` | `thinking_token_budget` (integer or `null`); `reasoning_effort` (`low`/`high` = minimal) | on, budget 8192 |
 | GLM-5.1 | `zai-org/GLM-5.1-FP8` | `chat_template_kwargs.enable_thinking` | `true` |
 | Qwen3.5-122B | `Qwen/Qwen3.5-122B-A10B` | `chat_template_kwargs.enable_thinking` | `true` |
 | Qwen3.6-35B | `Qwen/Qwen3.6-35B-A3B-FP8` | `chat_template_kwargs.enable_thinking` | `true` |
