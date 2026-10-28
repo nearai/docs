@@ -9,7 +9,7 @@ description: "Use the asynchronous Python SDK for verified Chat Completions, Res
 The SDK is available on [PyPI](https://pypi.org/project/nearai-inference-sdk/). The package requires Python 3.12 or later.
 
 ```bash
-pip install nearai-inference-sdk==0.2.0
+pip install nearai-inference-sdk
 export NEARAI_API_KEY="your-api-key"
 ```
 
@@ -92,7 +92,7 @@ print("".join(parts))
 For an existing `AsyncOpenAI` integration, use `InferenceClient.http_client` as its transport. Configure the API key on the inference client, which authenticates Chat, evidence, and signature requests.
 
 ```bash
-pip install nearai-inference-sdk==0.2.0 openai
+pip install nearai-inference-sdk openai
 ```
 
 ```python chat_openai.py

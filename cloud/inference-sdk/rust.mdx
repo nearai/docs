@@ -6,13 +6,11 @@ description: "Use the Rust SDK for verified Chat Completions, Responses, and Sys
 
 ## Install
 
-The SDK is available on [crates.io](https://crates.io/crates/nearai-inference-sdk). Use Rust stable and Cargo. Add these dependencies to your application's `Cargo.toml`:
+The SDK is available on [crates.io](https://crates.io/crates/nearai-inference-sdk). Use Rust stable and Cargo. Install the dependencies used by the example:
 
-```toml Cargo.toml
-[dependencies]
-nearai-inference-sdk = "0.2.0"
-serde_json = "1"
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+```bash
+cargo add nearai-inference-sdk serde_json
+cargo add tokio --features macros,rt-multi-thread
 ```
 
 Set your API key in your server environment:
