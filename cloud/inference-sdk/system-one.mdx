@@ -8,7 +8,7 @@ Use Inference SDK 0.2.0 to send structured questions to `/v1/systemone` and veri
 
 ## Send and verify a decision
 
-Set `NEARAI_API_KEY` and choose the canonical decision-model ID from the [catalog](/cloud/models). These examples use `typesafe/jev`; replace it if your endpoint lists a different ID. Requires Node.js 24.22.1+, Python 3.12+, Rust stable, or Go 1.26.10+. Create a Cargo project or Go module before installing into a new Rust or Go application.
+Set `NEARAI_API_KEY` and choose the canonical decision-model ID from the [catalog](/cloud/models). These examples use `typesafe/jev-1.13`; replace it if your endpoint lists a different ID. Requires Node.js 24.22.1+, Python 3.12+, Rust stable, or Go 1.26.10+. Create a Cargo project or Go module before installing into a new Rust or Go application.
 
 System One supports JSON requests over HTTPS with E2EE and OHTTP disabled. The official Jev SDK's base URL excludes `/v1`, while `InferenceClient` includes `/v1`. Disable request compression and automatic inference retries as shown below.
 
@@ -41,7 +41,7 @@ const jev = new TypeSafeClient({
 });
 
 const { data, response } = await jev.systemOne({
-  model: "typesafe/jev",
+  model: "typesafe/jev-1.13",
   state: { message: "I was charged twice. Please help." },
   questions: { billing: noul("Is this about billing?") },
 }).withResponse();
@@ -85,7 +85,7 @@ async def main():
             retry=RetryPolicy(max_retries=0),
         ) as jev:
             result = await jev.system_one(
-                model="typesafe/jev",
+                model="typesafe/jev-1.13",
                 state={"message": "I was charged twice. Please help."},
                 questions={"billing": Noul(instructions="Is this about billing?")},
             )
@@ -123,7 +123,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     })?;
     let result = client.systemone_create(&json!({
-        "model": r#"typesafe/jev"#,
+        "model": r#"typesafe/jev-1.13"#,
         "state": {"message": "I was charged twice. Please help."},
         "questions": {
             "billing": {"type": "noul", "instructions": "Is this about billing?"}
@@ -186,7 +186,7 @@ func run() error {
     defer client.Close()
 
     result, err := client.CreateSystemOne(ctx, nearai.SystemOneRequest{
-        Model: "typesafe/jev",
+        Model: "typesafe/jev-1.13",
         State: map[string]string{"message": "I was charged twice. Please help."},
         Questions: map[string]nearai.SystemOneQuestion{
             "billing": {Type: "noul", Instructions: "Is this about billing?"},
@@ -222,7 +222,7 @@ If you do not need Jev's question builders, call the native System One API. Use 
 <CodeGroup>
 ```js JavaScript
 const result = await client.systemone.create({
-  model: 'typesafe/jev',
+  model: 'typesafe/jev-1.13',
   state: { message: 'I was charged twice. Please help.' },
   questions: {
     billing: { type: 'noul', instructions: 'Is this about billing?' },
@@ -234,7 +234,7 @@ console.log(verified.signatureKind, result.data.answers);
 
 ```python Python
 result = await client.systemone.create({
-    'model': 'typesafe/jev',
+    'model': 'typesafe/jev-1.13',
     'state': {'message': 'I was charged twice. Please help.'},
     'questions': {
         'billing': {'type': 'noul', 'instructions': 'Is this about billing?'},
