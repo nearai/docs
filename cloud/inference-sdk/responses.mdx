@@ -1,19 +1,21 @@
 ---
 title: "Responses"
 icon: "message"
-description: "Create and verify stateless Responses with SDK 0.2.0 and official OpenAI clients."
+description: "Use the OpenAI Responses API with attestation and response-signature verification."
 ---
 
-Use Inference SDK 0.2.0 to create Responses through the NEAR AI Cloud Gateway with attestation checks and explicit response-signature verification. JavaScript, Python, and Go can keep the official OpenAI SDK interface; Rust uses the native client.
+Call the OpenAI Responses API with attestation and response-signature verification. JavaScript, Python, and Go use the official OpenAI clients with the Inference SDK as their transport; Rust uses the native NEAR AI client.
 
 ## Create and verify a response
 
-Set `NEARAI_API_KEY` in your server environment and choose an available model from the [catalog](/cloud/models). These examples require Node.js 24.22.1+, Python 3.12+, Rust stable, or Go 1.26.10+. Create a Cargo project or Go module first when starting a new Rust or Go application.
+Set `NEARAI_API_KEY` and choose a Responses model from the [catalog](/cloud/models).
 
-Each example sets `store: false`, disables field E2EE, and verifies the response before displaying it. Applications control inference retries; automatic retries in the official SDKs are disabled here.
+Use `store: false` for stateless requests and leave E2EE disabled. The examples verify the response before displaying it.
 
 <Tabs>
 <Tab title="JavaScript">
+
+Requires Node.js 24.22.1 or later.
 
 ```bash
 npm install @nearai/inference-sdk openai
@@ -26,7 +28,6 @@ import { InferenceClient } from "@nearai/inference-sdk/node";
 const apiKey = process.env.NEARAI_API_KEY;
 if (!apiKey) throw new Error("Set NEARAI_API_KEY first.");
 
-// Verify deployment evidence and the Gateway's Responses receipt.
 const inferenceClient = new InferenceClient({
   apiKey,
   baseUrl: "https://cloud-api.near.ai/v1",
@@ -46,7 +47,7 @@ const response = await openai.responses.create({
   store: false,
 });
 
-// Verify the exact request/response bytes before displaying the answer.
+// Verify before displaying the answer.
 const verified = await inferenceClient.verifyResponse(response.id);
 console.log(response.output_text);
 console.log("Verified signer:", verified.signatureKind);
@@ -54,6 +55,8 @@ console.log("Verified signer:", verified.signatureKind);
 
 </Tab>
 <Tab title="Python">
+
+Requires Python 3.12 or later.
 
 ```bash
 pip install nearai-inference-sdk openai
@@ -70,7 +73,6 @@ from nearai_inference_sdk import InferenceClient
 async def main():
     api_key = os.environ["NEARAI_API_KEY"]
 
-    # Verify deployment evidence and the Gateway's Responses receipt.
     async with InferenceClient(
         api_key,
         base_url="https://cloud-api.near.ai/v1",
@@ -88,7 +90,7 @@ async def main():
                 store=False,
             )
 
-            # Verify the exact bytes before displaying the answer.
+            # Verify before displaying the answer.
             verified = await inference_client.verify_response(response.id)
             print(response.output_text)
             print("Verified signer:", verified.signature_kind)
@@ -100,6 +102,8 @@ asyncio.run(main())
 </Tab>
 <Tab title="Rust">
 
+Requires Rust stable and Cargo.
+
 ```bash
 cargo add nearai-inference-sdk
 ```
@@ -110,7 +114,6 @@ use serde_json::json;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Verify deployment evidence and the Gateway's Responses receipt.
     let client = InferenceClient::with_options(InferenceClientOptions {
         api_key: Some(std::env::var("NEARAI_API_KEY")?),
         base_url: "https://cloud-api.near.ai/v1".into(),
@@ -123,7 +126,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "store": false
     })).await?;
 
-    // Verify the exact bytes before displaying the answer.
+    // Verify before displaying the answer.
     let id = response["id"].as_str().ok_or("response has no ID")?;
     let verified = client.verify_response(id).await?;
     println!("{}", response["output"]);
@@ -134,6 +137,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 </Tab>
 <Tab title="Go">
+
+Requires Go 1.26.10 or later.
 
 ```bash
 go get github.com/nearai/inference-sdk/go github.com/openai/openai-go/v3
@@ -169,7 +174,6 @@ func run() error {
     ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
     defer cancel()
 
-    // Verify deployment evidence and the Gateway's Responses receipt.
     client, err := nearai.NewInferenceClient(nearai.InferenceOptions{
         ClientOptions: nearai.ClientOptions{
             APIKey: apiKey,
@@ -200,7 +204,7 @@ func run() error {
         return fmt.Errorf("response has no ID")
     }
 
-    // Verify the exact bytes before displaying the answer.
+    // Verify before displaying the answer.
     verified, err := client.VerifyResponse(ctx, response.ID)
     if err != nil {
         return err
@@ -214,23 +218,20 @@ func run() error {
 </Tab>
 </Tabs>
 
-JavaScript and Python also expose `client.responses.create()` directly on `InferenceClient`. Go provides `client.CreateResponse(ctx, request)`; Rust provides `client.create_response(request).await`.
-
 ## Receipt verification
 
-Responses receipts use `signature_kind: gateway`. They authenticate the exact request and response bytes signed by the attested Gateway. A Gateway receipt does not establish that an attested model generated the response, even when preflight also verifies model evidence.
+Pass the response `id` to the verification method. Responses use Gateway signatures: they verify the bytes signed by the Gateway, not model TEE execution.
 
-Use the top-level response `id` for verification. Receipt persistence is best-effort: a successful inference may have a temporarily unavailable receipt. Retry verification with the same ID when appropriate, without repeating inference. Response records expire after the configured TTL, which defaults to 60 minutes after full body consumption; verify before expiry or client cleanup.
+If the receipt is temporarily unavailable, retry verification with the same ID. Response records expire after 60 minutes by default, so verify before expiry or closing the client.
 
 ## Streaming
 
-Set `stream: true` (`stream=True` in Python) and consume the entire stream before verifying. Use the nested `event.response.id` from a response event such as `response.created`; output item IDs are not receipt IDs. Content displayed before verification succeeds is not yet signature-verified.
+Set `stream: true` (`stream=True` in Python), read the entire stream, then verify using `event.response.id` from an event such as `response.created`. Text displayed before verification succeeds is still unverified.
 
-See complete streaming examples for [JavaScript](https://github.com/nearai/inference-sdk/blob/v0.2.0/examples/example-js/gateway/responses-openai-sdk.ts), [Python](https://github.com/nearai/inference-sdk/blob/v0.2.0/examples/example-py/gateway/responses_openai_sdk.py), [Rust](https://github.com/nearai/inference-sdk/blob/v0.2.0/examples/example-rs/src/bin/responses.rs), and [Go](https://github.com/nearai/inference-sdk/blob/v0.2.0/examples/example-go/gateway/responses/main.go).
+See complete streaming examples for [JavaScript](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/responses-openai-sdk.ts), [Python](https://github.com/nearai/inference-sdk/blob/main/examples/example-py/gateway/responses_openai_sdk.py), [Rust](https://github.com/nearai/inference-sdk/blob/main/examples/example-rs/src/bin/responses.rs), and [Go](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/gateway/responses/main.go).
 
-## Supported behavior
+## API support
 
-- The Gateway transport supports `POST /v1/responses`, including JSON and SSE. Retrieval, deletion, cancellation, and history endpoints are outside this transport.
-- Use client-managed history and `store: false`; see [Stateless Responses](/cloud/guides/stateless-responses) for multi-turn input and function-call replay.
-- OHTTP is optional and requires Ed25519. Field-level E2EE and direct-endpoint Responses are rejected before network I/O.
-- Provider `reasoning.encrypted_content` passes through as opaque data; it is separate from NEAR field encryption.
+The SDK supports `POST /v1/responses` with JSON or streaming responses. Manage conversation history in your application; see [Stateless Responses](/cloud/guides/stateless-responses) for multi-turn conversations and function calls.
+
+OHTTP is optional and requires Ed25519. Field E2EE and direct model endpoints are not supported for Responses.

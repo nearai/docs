@@ -48,7 +48,7 @@ The client connects to `https://cloud-api.near.ai/v1` by default. Reuse a client
 
 End-to-end encryption is disabled by default. `e2ee=True` encrypts supported Chat fields to a verified model key and decrypts the response automatically.
 
-In Python, model attestation requires catalog metadata with `providerType="vllm"` and `attestationSupported=True`. Other models, including Chutes-hosted [3P Confidential TEE](/cloud/models) models, are verified at the Gateway only. The SDK calls this Incognito mode, which is separate from the Incognito privacy tier in the model catalog. E2EE and model deployment policies reject these models before sending Chat. Use `e2ee=False` for Gateway-only Chat without a claim about model TEE execution.
+E2EE requires a NEAR vLLM model with attestation enabled. Other providers use Gateway-only verification; set `e2ee=False` for those models.
 
 ## Verification
 
@@ -59,9 +59,9 @@ Response-signature verification is explicit: call `await client.verify_response(
 - `provider_tee`: a verified model signer signed the exact request and response bytes.
 - `gateway`: a verified Gateway signer signed those bytes; this does not prove that an attested model generated them.
 
-Successful deployment checks are cached for 60 minutes by default. Set `attestation_cache_time_to_live_ms=0` to verify deployments for every request. Response records have a separate 60-minute TTL starting after full body consumption, with no capacity limit. Verify each response before its record expires or the client closes.
+Response records expire 60 minutes after the full response is read, by default. Verify each response before its record expires or the client closes.
 
-To verify a deployment before the first Chat request, call `await client.verify(model)`. This shares Chat's attestation cache but does not verify a future response signature. For application-owned deployment policies and standalone evidence verification, see the [Python verification guide](https://github.com/nearai/inference-sdk/blob/main/py/docs/verification-guide.md) and [Verification](/cloud/verification).
+To check a deployment without sending a prompt, call `await client.verify(model)`. For custom policies and cache settings, see the [Python verification guide](https://github.com/nearai/inference-sdk/blob/main/py/docs/verification-guide.md).
 
 ### Streaming
 
@@ -125,11 +125,11 @@ asyncio.run(main())
 
 Run it with `python chat_openai.py`. The transport supports Chat Completions and Responses, including streaming. Use a client with `e2ee=False` for Responses. Applications control inference retries; these examples disable automatic retries.
 
-Keep `http_client` for existing HTTPX integrations. For an OpenAI version that supports HTTPX2, install `openai[httpx2]` and pass `inference_client.httpx2_client` instead. The same HTTPX2 adapter supports the [official Jev SDK](/cloud/inference-sdk/system-one); both adapters share verification and retained receipts.
+For the [official Jev SDK](/cloud/inference-sdk/system-one), use `inference_client.httpx2_client`. Use `http_client` for HTTPX clients such as the OpenAI example above.
 
 ## Responses and System One
 
-SDK 0.2.0 supports [verified Responses](/cloud/inference-sdk/responses) and [System One decisions](/cloud/inference-sdk/system-one) through the Gateway. The guides include complete examples and official SDK integrations. Responses supports JSON and streaming with Gateway receipts; System One returns JSON decisions and uses the `X-Generation-Id` header for receipt verification.
+For other APIs, follow the [Responses](/cloud/inference-sdk/responses) or [System One](/cloud/inference-sdk/system-one) guide.
 
 ## OHTTP
 

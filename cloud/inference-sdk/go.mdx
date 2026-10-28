@@ -82,13 +82,13 @@ func run() error {
 }
 ```
 
-The client connects to `https://cloud-api.near.ai/v1` by default. Reuse it across requests and call `Close()` when finished. The example enables E2EE and verifies the response signature before printing the completion.
+The client connects to `https://cloud-api.near.ai/v1` by default. Reuse it across requests and call `Close()` when finished.
 
 ## E2EE
 
 Gateway E2EE is disabled by default. Set `E2EE: true` to encrypt supported Chat fields to an attested model key and decrypt the response automatically.
 
-Model attestation requires catalog metadata with `providerType="vllm"` and `attestationSupported=true`. Other providers use Gateway-only verification, called Incognito mode by the SDK. This is separate from the Incognito privacy tier in the model catalog. E2EE and model deployment policies reject Gateway-only models before sending Chat. Leave E2EE disabled for Gateway-only Chat without a claim about model TEE execution. Failed required checks never downgrade to unverified Chat.
+E2EE requires a NEAR vLLM model with attestation enabled. Other providers use Gateway-only verification; leave E2EE disabled for those models.
 
 ## Verification
 
@@ -99,11 +99,9 @@ Response-signature verification is explicit: call `client.VerifyResponse(ctx, co
 - `provider_tee`: a verified model signer signed the exact request and response bytes.
 - `gateway`: a verified Gateway signer signed those bytes; this does not prove that an attested model generated them.
 
-These receipts do not establish a complete cryptographic chain through Gateway transformations. See [Verification](/cloud/verification) for evidence boundaries and policies.
+Response records expire 60 minutes after the full response is read, by default. Verify each response before its record expires or the client closes.
 
-Deployment checks are cached for 60 minutes by default. `AttestationTTL` and `ResponseTTL` accept `*time.Duration`; a pointer to zero disables reuse or retention. Response retention begins after full body consumption and lasts 60 minutes by default, with no capacity limit. Verify receipts before they expire or the client closes.
-
-Optionally call `client.Verify(ctx, model)` before Chat to retrieve verified deployment evidence without sending a prompt. It shares Chat's cache and in-flight verification work and preserves the original verification timestamp. The SDK has no default application deployment allowlist; configure deployment and image provenance policies when your application requires approved images. `DeploymentPolicy` applies to model deployments; Gateway policies use `GatewayVerification.DeploymentVerifier`, whose callback has no model argument. See the [Go verification guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md#configure-verification-and-deployment-policies) for policy examples.
+To check a deployment without sending a prompt, call `client.Verify(ctx, model)`. For custom policies and cache settings, see the [Go verification guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md).
 
 ## Use the OpenAI Go SDK
 
@@ -126,13 +124,13 @@ ai := openai.NewClient(
 )
 ```
 
-Use `client` from the completion example and the same API key. Both `ai.Chat.Completions.New` and `NewStreaming` use the verified transport. Configure credentials on the inference client so evidence and signature requests are authenticated too. `ai.Responses.New` and `NewStreaming` also use this transport when E2EE is disabled; see [verified Responses](/cloud/inference-sdk/responses).
+Use `client` from the completion example and the same API key. The transport supports Chat Completions and Responses, including streaming. Disable E2EE for Responses.
 
-For streaming, consume the stream to completion, check `stream.Err()`, close it, and call `client.VerifyResponse(ctx, completionID)` using an ID from the stream. Output displayed before verification succeeds is not yet signature-verified. Close abandoned streams to cancel requests; incomplete or failed streams do not produce verifiable receipt records. The [runnable OpenAI example](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/gateway/openai/main.go) and its [shared implementation](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/internal/demo/demo.go) cover JSON and streaming calls.
+For streaming, consume the stream, check `stream.Err()`, and close it before calling `client.VerifyResponse(ctx, completionID)`. Use a completion ID from the stream. See the [OpenAI streaming example](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/gateway/openai/main.go).
 
 ## Responses and System One
 
-SDK 0.2.0 supports [verified Responses](/cloud/inference-sdk/responses) and [System One decisions](/cloud/inference-sdk/system-one) through the Gateway. The guides include complete examples and official SDK integrations. Responses supports JSON and streaming with Gateway receipts; System One returns JSON decisions and uses the `X-Generation-Id` header for receipt verification.
+For other APIs, follow the [Responses](/cloud/inference-sdk/responses) or [System One](/cloud/inference-sdk/system-one) guide.
 
 ## OHTTP
 
@@ -142,17 +140,10 @@ Set `OHTTP: true` in `InferenceOptions` to encapsulate the Chat HTTP exchange to
   OHTTP supports Chat and Responses through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
 </Note>
 
-## Advanced APIs
-
-`NewAttestationClient` fetches evidence without verifying it. Standalone verification functions let your application verify deployments and signatures over exact retained wire bytes. In a manual Gateway flow, rebuild the attestation client with the pinned HTTP transport before fetching model evidence or completion signatures; creating the transport alone does not change an existing client. See the [manual verification walkthrough](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md#manual-verification). `PrepareE2EEChatRequest` supports raw HTTP request encryption after your application authenticates the model key; retain ciphertext when verifying receipts manually.
-
-`NewDirectInferenceClient` and `NewDirectAttestationClient` support experimental direct endpoints. Direct inference defaults E2EE to disabled; set `InferenceOptions.E2EE: true` to enable it. Direct clients omit Gateway verification and direct TLS attestation binding; normal HTTPS validation remains enabled. Use Gateway clients for production. See the [direct-endpoint guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md#experimental-direct-endpoints) for configuration and limitations.
-
-Use `errors.As` to inspect `*nearai.Error`, including its `Code` and `Retryable` fields. Transient signature retrieval can be retried without replaying Chat. The inference transport does not automatically replay completions.
-
 ## Examples and reference
 
 - [Go verification guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md): policies, encryption, streaming, TLS binding, and errors.
 - [Go API reference](https://github.com/nearai/inference-sdk/blob/main/go/docs/api-reference.md): client options, verification functions, defaults, and result fields.
 - [Runnable Go examples](https://github.com/nearai/inference-sdk/tree/main/examples/example-go): Gateway and direct clients, standalone verification, and official OpenAI JSON/SSE integration.
-- [Go SDK v0.2.0 release](https://github.com/nearai/inference-sdk/releases/tag/v0.2.0).
+
+For experimental direct endpoints, see the [direct-client guide](/cloud/inference-sdk/direct).

@@ -84,13 +84,13 @@ const client = new InferenceClient({
 
 For Node, import from `@nearai/inference-sdk/node`. It verifies the Gateway TLS peer and binds later requests to the verified Gateway identity. For a browser or application proxy, import from `@nearai/inference-sdk`; browser Fetch cannot read the TLS peer certificate, so that entry point does not perform Gateway TLS binding.
 
-The browser entry point uses NEAR AI Cloud Intel and NVIDIA attestation proxies by default. Successful deployment verification and response records each have a 60-minute TTL by default; records have no capacity limit. Verify each response before its record expires or the client is disposed.
+Response records expire after 60 minutes by default. Verify each response before its record expires or you dispose of the client.
 
 For a manual verification flow or a custom policy, see [Verification](/cloud/verification).
 
 ## Responses and System One
 
-SDK 0.2.0 supports [verified Responses](/cloud/inference-sdk/responses) and [System One decisions](/cloud/inference-sdk/system-one) through the Gateway. The guides include complete examples and official SDK integrations. Responses supports JSON and streaming with Gateway receipts; System One returns JSON decisions and uses the `X-Generation-Id` header for receipt verification.
+For other APIs, follow the [Responses](/cloud/inference-sdk/responses) or [System One](/cloud/inference-sdk/system-one) guide.
 
 ## OHTTP
 

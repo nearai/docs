@@ -1,19 +1,21 @@
 ---
 title: "System One"
 icon: "list-check"
-description: "Verify Jev System One decisions with SDK 0.2.0 and the official Jev SDKs."
+description: "Ask structured questions with Jev and verify the answers."
 ---
 
-Use Inference SDK 0.2.0 to send structured questions to `/v1/systemone` and verify the returned decision. JavaScript and Python can retain the official Jev SDK question builders and response types by using the inference client's verified transport. Rust and Go use native clients.
+Send structured questions to Jev through `/v1/systemone` and verify the answers. JavaScript and Python use the official Jev SDKs with the Inference SDK as their transport; Rust and Go use native NEAR AI clients.
 
 ## Send and verify a decision
 
-Set `NEARAI_API_KEY` and choose the canonical decision-model ID from the [catalog](/cloud/models). These examples use `typesafe/jev-1.13`; replace it if your endpoint lists a different ID. Requires Node.js 24.22.1+, Python 3.12+, Rust stable, or Go 1.26.10+. Create a Cargo project or Go module before installing into a new Rust or Go application.
+Set `NEARAI_API_KEY` and choose a System One model from the [catalog](/cloud/models).
 
-System One supports JSON requests over HTTPS with E2EE and OHTTP disabled. The official Jev SDK's base URL excludes `/v1`, while `InferenceClient` includes `/v1`. Disable request compression and automatic inference retries as shown below.
+Keep E2EE, OHTTP, request compression, and automatic retries disabled as shown below. The official Jev clients use `https://cloud-api.near.ai` as their base URL, without `/v1`.
 
 <Tabs>
 <Tab title="JavaScript">
+
+Requires Node.js 24.22.1 or later.
 
 ```bash
 npm install @nearai/inference-sdk @typesafe-ai/sdk
@@ -56,6 +58,8 @@ console.log("Verified signer:", verified.signatureKind);
 
 </Tab>
 <Tab title="Python">
+
+Requires Python 3.12 or later.
 
 ```bash
 pip install nearai-inference-sdk typesafe-sdk
@@ -104,6 +108,8 @@ asyncio.run(main())
 </Tab>
 <Tab title="Rust">
 
+Requires Rust stable and Cargo.
+
 ```bash
 cargo add nearai-inference-sdk
 ```
@@ -139,6 +145,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 </Tab>
 <Tab title="Go">
+
+Requires Go 1.26.10 or later.
 
 ```bash
 go get github.com/nearai/inference-sdk/go
@@ -212,44 +220,12 @@ func run() error {
 </Tab>
 </Tabs>
 
-The Python Jev SDK installs HTTPX2. Pass `inference.httpx2_client` to `AsyncTypeSafeClient`; this adapter shares the inference client's verification, network transport, and response records. Existing OpenAI HTTPX integrations can continue to use `inference.http_client`.
-
-## Native JavaScript and Python clients
-
-If you do not need Jev's question builders, call the native System One API. Use an `InferenceClient` with E2EE and OHTTP disabled:
-
-<CodeGroup>
-```js JavaScript
-const result = await client.systemone.create({
-  model: 'typesafe/jev-1.13',
-  state: { message: 'I was charged twice. Please help.' },
-  questions: {
-    billing: { type: 'noul', instructions: 'Is this about billing?' },
-  },
-});
-const verified = await client.verifyResponse(result.decisionId);
-console.log(verified.signatureKind, result.data.answers);
-```
-
-```python Python
-result = await client.systemone.create({
-    'model': 'typesafe/jev-1.13',
-    'state': {'message': 'I was charged twice. Please help.'},
-    'questions': {
-        'billing': {'type': 'noul', 'instructions': 'Is this about billing?'},
-    },
-})
-verified = await client.verify_response(result.decision_id)
-print(verified.signature_kind, result.data['answers'])
-```
-</CodeGroup>
-
-Questions support `noul` (probability), `choice`, and `score`. Use the OpenRouter-compatible JSON contract served by NEAR AI Cloud. TypeSafe-native multipart uploads and asset endpoints are outside this integration. Streaming is not supported.
-
 ## Receipt verification
 
-The receipt ID comes from the `X-Generation-Id` response header. It is distinct from Jev's request ID. Native clients expose it as `decisionId` in JavaScript, `decision_id` in Python and Rust, and `DecisionID` in Go. Official JavaScript callers use `.withResponse()`; official Python callers use `result.raw_http_response`.
+Use the `X-Generation-Id` response header to verify the decision. This is separate from Jev's request ID. The native Rust and Go clients expose it as `decision_id` and `DecisionID`.
 
-The client verifies Gateway evidence and applicable model evidence before sending the decision request. `verifyResponse()` or its language equivalent verifies the exact request and response bytes retained by that client. A `gateway` receipt authenticates Gateway signing; a `provider_tee` receipt authenticates the verified model signer. Inspect the signature kind before making a claim about model TEE execution.
+If the receipt is temporarily unavailable, retry verification with the same ID. Response records expire after 60 minutes by default, so verify before expiry or closing the client. See [Verification](/cloud/inference-sdk#verification) for the meaning of each signature kind.
 
-If receipt retrieval is temporarily unavailable, retry verification with the same decision ID before its cached record expires; the default response TTL is 60 minutes after full body consumption. Do not repeat the inference merely to fetch its receipt.
+## More examples
+
+System One supports JSON requests with `noul` (probability), `choice`, and `score` questions. See the [SDK examples](https://github.com/nearai/inference-sdk/tree/main/examples) for more question types and native JavaScript/Python clients.
