@@ -1,0 +1,256 @@
+---
+title: "System One"
+icon: "list-check"
+description: "Verify Jev System One decisions with SDK 0.2.0 and the official Jev SDKs."
+---
+
+Use Inference SDK 0.2.0 to send structured questions to `/v1/systemone` and verify the returned decision. JavaScript and Python can retain the official Jev SDK question builders and response types by using the inference client's verified transport. Rust and Go use native clients.
+
+## Send and verify a decision
+
+Set `NEARAI_API_KEY` and choose the canonical decision-model ID from the [catalog](/cloud/models). These examples use `typesafe/jev`; replace it if your endpoint lists a different ID. Requires Node.js 24.22.1+, Python 3.12+, Rust stable, or Go 1.26.10+. Create a Cargo project or Go module before installing into a new Rust or Go application.
+
+System One supports JSON requests over HTTPS with E2EE and OHTTP disabled. The official Jev SDK's base URL excludes `/v1`, while `InferenceClient` includes `/v1`. Disable request compression and automatic inference retries as shown below.
+
+<Tabs>
+<Tab title="JavaScript">
+
+```bash
+npm install @nearai/inference-sdk@0.2.0 @typesafe-ai/sdk@0.7.0
+```
+
+```javascript
+import { InferenceClient } from "@nearai/inference-sdk/node";
+import { TypeSafeClient, noul } from "@typesafe-ai/sdk";
+
+const apiKey = process.env.NEARAI_API_KEY;
+if (!apiKey) throw new Error("Set NEARAI_API_KEY first.");
+
+const inference = new InferenceClient({
+  apiKey,
+  baseUrl: "https://cloud-api.near.ai/v1",
+  e2ee: false,
+  ohttp: false,
+});
+const jev = new TypeSafeClient({
+  apiKey,
+  baseURL: "https://cloud-api.near.ai",
+  fetch: inference.fetch,
+  compression: false,
+  retry: { maxRetries: 0 },
+});
+
+const { data, response } = await jev.systemOne({
+  model: "typesafe/jev",
+  state: { message: "I was charged twice. Please help." },
+  questions: { billing: noul("Is this about billing?") },
+}).withResponse();
+
+// Use the NEAR receipt ID, which is separate from Jev's requestId.
+const id = response.headers.get("X-Generation-Id");
+if (!id) throw new Error("Missing System One receipt ID.");
+const verified = await inference.verifyResponse(id);
+console.log(data.answers);
+console.log("Verified signer:", verified.signatureKind);
+```
+
+</Tab>
+<Tab title="Python">
+
+```bash
+pip install nearai-inference-sdk==0.2.0 typesafe-sdk==0.7.5
+```
+
+```python
+import asyncio
+import os
+
+from nearai_inference_sdk import InferenceClient
+from typesafe_sdk import AsyncTypeSafeClient, Noul, RetryPolicy
+
+
+async def main():
+    api_key = os.environ["NEARAI_API_KEY"]
+    async with InferenceClient(
+        api_key,
+        base_url="https://cloud-api.near.ai/v1",
+        e2ee=False,
+        ohttp=False,
+    ) as inference:
+        async with AsyncTypeSafeClient(
+            api_key=api_key,
+            base_url="https://cloud-api.near.ai",
+            http_client=inference.httpx2_client,
+            compression=False,
+            retry=RetryPolicy(max_retries=0),
+        ) as jev:
+            result = await jev.system_one(
+                model="typesafe/jev",
+                state={"message": "I was charged twice. Please help."},
+                questions={"billing": Noul(instructions="Is this about billing?")},
+            )
+            # Use the NEAR receipt ID, not Jev's request_id.
+            receipt_id = result.raw_http_response.headers.get("X-Generation-Id")
+            if not receipt_id:
+                raise RuntimeError("Missing System One receipt ID.")
+            verified = await inference.verify_response(receipt_id)
+            print(result.answers)
+            print("Verified signer:", verified.signature_kind)
+
+
+asyncio.run(main())
+```
+
+</Tab>
+<Tab title="Rust">
+
+```bash
+cargo add nearai-inference-sdk@0.2.0 serde_json
+cargo add tokio --features macros,rt-multi-thread
+```
+
+```rust
+use nearai_inference_sdk::{InferenceClient, InferenceClientOptions};
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = InferenceClient::with_options(InferenceClientOptions {
+        api_key: Some(std::env::var("NEARAI_API_KEY")?),
+        base_url: "https://cloud-api.near.ai/v1".into(),
+        e2ee: false,
+        ohttp: false,
+        ..Default::default()
+    })?;
+    let result = client.systemone_create(&json!({
+        "model": r#"typesafe/jev"#,
+        "state": {"message": "I was charged twice. Please help."},
+        "questions": {
+            "billing": {"type": "noul", "instructions": "Is this about billing?"}
+        }
+    })).await?;
+
+    // decision_id is captured from X-Generation-Id.
+    let verified = client.verify_response(&result.decision_id).await?;
+    println!("{}", serde_json::to_string_pretty(&result.data.answers)?);
+    println!("Verified signer: {:?}", verified.signature_kind());
+    Ok(())
+}
+```
+
+</Tab>
+<Tab title="Go">
+
+```bash
+go get github.com/nearai/inference-sdk/go@v0.2.0
+```
+
+```go
+package main
+
+import (
+    "context"
+    "encoding/json"
+    "fmt"
+    "log"
+    "os"
+    "time"
+
+    nearai "github.com/nearai/inference-sdk/go"
+)
+
+func main() {
+    if err := run(); err != nil {
+        log.Fatal(err)
+    }
+}
+
+func run() error {
+    apiKey := os.Getenv("NEARAI_API_KEY")
+    if apiKey == "" {
+        return fmt.Errorf("set NEARAI_API_KEY first")
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+    defer cancel()
+    client, err := nearai.NewInferenceClient(nearai.InferenceOptions{
+        ClientOptions: nearai.ClientOptions{
+            APIKey: apiKey,
+            BaseURL: "https://cloud-api.near.ai/v1",
+        },
+        E2EE: false,
+        OHTTP: false,
+    })
+    if err != nil {
+        return err
+    }
+    defer client.Close()
+
+    result, err := client.CreateSystemOne(ctx, nearai.SystemOneRequest{
+        Model: "typesafe/jev",
+        State: map[string]string{"message": "I was charged twice. Please help."},
+        Questions: map[string]nearai.SystemOneQuestion{
+            "billing": {Type: "noul", Instructions: "Is this about billing?"},
+        },
+    })
+    if err != nil {
+        return err
+    }
+    // DecisionID is captured from X-Generation-Id.
+    verified, err := client.VerifyResponse(ctx, result.DecisionID)
+    if err != nil {
+        return err
+    }
+    answers, err := json.MarshalIndent(result.Data.Answers, "", "  ")
+    if err != nil {
+        return err
+    }
+    fmt.Println(string(answers))
+    fmt.Println("Verified signer:", verified.SignatureKind)
+    return nil
+}
+```
+
+</Tab>
+</Tabs>
+
+The Python Jev SDK installs HTTPX2. Pass `inference.httpx2_client` to `AsyncTypeSafeClient`; this adapter shares the inference client's verification, network transport, and response records. Existing OpenAI HTTPX integrations can continue to use `inference.http_client`.
+
+## Native JavaScript and Python clients
+
+If you do not need Jev's question builders, call the native System One API. Use an `InferenceClient` with E2EE and OHTTP disabled:
+
+<CodeGroup>
+```js JavaScript
+const result = await client.systemone.create({
+  model: 'typesafe/jev',
+  state: { message: 'I was charged twice. Please help.' },
+  questions: {
+    billing: { type: 'noul', instructions: 'Is this about billing?' },
+  },
+});
+const verified = await client.verifyResponse(result.decisionId);
+console.log(verified.signatureKind, result.data.answers);
+```
+
+```python Python
+result = await client.systemone.create({
+    'model': 'typesafe/jev',
+    'state': {'message': 'I was charged twice. Please help.'},
+    'questions': {
+        'billing': {'type': 'noul', 'instructions': 'Is this about billing?'},
+    },
+})
+verified = await client.verify_response(result.decision_id)
+print(verified.signature_kind, result.data['answers'])
+```
+</CodeGroup>
+
+Questions support `noul` (probability), `choice`, and `score`. Use the OpenRouter-compatible JSON contract served by NEAR AI Cloud. TypeSafe-native multipart uploads and asset endpoints are outside this integration. Streaming is not supported.
+
+## Receipt verification
+
+The receipt ID comes from the `X-Generation-Id` response header. It is distinct from Jev's request ID. Native clients expose it as `decisionId` in JavaScript, `decision_id` in Python and Rust, and `DecisionID` in Go. Official JavaScript callers use `.withResponse()`; official Python callers use `result.raw_http_response`.
+
+The client verifies Gateway evidence and applicable model evidence before sending the decision request. `verifyResponse()` or its language equivalent verifies the exact request and response bytes retained by that client. A `gateway` receipt authenticates Gateway signing; a `provider_tee` receipt authenticates the verified model signer. Inspect the signature kind before making a claim about model TEE execution.
+
+If receipt retrieval is temporarily unavailable, retry verification with the same decision ID before its cached record expires; the default response TTL is 60 minutes after full body consumption. Do not repeat the inference merely to fetch its receipt.

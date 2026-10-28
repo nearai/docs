@@ -1,14 +1,14 @@
 ---
 title: "SDK"
 icon: "braces"
-description: "Use the JavaScript, Python, Rust, and Go SDKs for verified, encrypted Chat Completions."
+description: "Use SDK 0.2.0 for verified Chat Completions, Responses, and System One decisions in four languages."
 ---
 
-NEAR AI Inference SDK is available for JavaScript, Python, Rust, and Go. All four provide an OpenAI-compatible Chat Completions client, attestation verification, optional encryption, and explicit response-signature verification.
+NEAR AI Inference SDK **0.2.0** is available for JavaScript, Python, Rust, and Go. All four support Chat Completions, Responses, and Jev System One decisions with attestation checks and explicit response-signature verification. Chat also supports optional field-level end-to-end encryption.
 
 <CardGroup cols={2}>
   <Card title="JavaScript" icon="braces" href="/cloud/inference-sdk/javascript">
-    Install from npm and get started with Node.js 24 or later.
+    Install from npm and get started with Node.js 24.22.1 or later.
   </Card>
   <Card title="Python" icon="code" href="/cloud/inference-sdk/python">
     Install from PyPI and get started with Python 3.12 or later.
@@ -17,7 +17,7 @@ NEAR AI Inference SDK is available for JavaScript, Python, Rust, and Go. All fou
     Install from crates.io and get started with Rust stable and Cargo.
   </Card>
   <Card title="Go" icon="code" href="/cloud/inference-sdk/go">
-    Install with go get and get started with Go 1.25.8 or later.
+    Install with go get and get started with Go 1.26.10 or later.
   </Card>
 </CardGroup>
 
@@ -25,24 +25,34 @@ NEAR AI Inference SDK is available for JavaScript, Python, Rust, and Go. All fou
 
 <CodeGroup>
 ```bash JavaScript
-npm install @nearai/inference-sdk
+npm install @nearai/inference-sdk@0.2.0
 ```
 
 ```bash Python
-pip install nearai-inference-sdk
+pip install nearai-inference-sdk==0.2.0
 ```
 
 ```toml Rust
 [dependencies]
-nearai-inference-sdk = "0.1"
+nearai-inference-sdk = "0.2.0"
 ```
 
 ```bash Go
-go get github.com/nearai/inference-sdk/go@v0.1.0
+go get github.com/nearai/inference-sdk/go@v0.2.0
 ```
 </CodeGroup>
 
-Packages: [npm](https://www.npmjs.com/package/@nearai/inference-sdk) · [PyPI](https://pypi.org/project/nearai-inference-sdk/) · [crates.io](https://crates.io/crates/nearai-inference-sdk) · [Go release](https://github.com/nearai/inference-sdk/releases/tag/go/v0.1.0).
+Packages: [npm](https://www.npmjs.com/package/@nearai/inference-sdk) · [PyPI](https://pypi.org/project/nearai-inference-sdk/) · [crates.io](https://crates.io/crates/nearai-inference-sdk) · [Go release](https://github.com/nearai/inference-sdk/releases/tag/v0.2.0).
+
+## Supported APIs
+
+| API | SDK support | Official SDK integration | Encryption |
+| --- | --- | --- | --- |
+| Chat Completions | JSON and streaming in all four languages | OpenAI JavaScript, Python, and Go | Optional E2EE and OHTTP |
+| [Responses](/cloud/inference-sdk/responses) | Stateless creation, JSON and streaming in all four languages | OpenAI JavaScript, Python, and Go | Optional OHTTP; no field E2EE |
+| [System One](/cloud/inference-sdk/system-one) | JSON decisions in all four languages | Jev JavaScript and Python | HTTPS; no E2EE or OHTTP |
+
+Rust uses the native client and reqwest transport. Anthropic Messages verification is not included in 0.2.0.
 
 ## E2EE
 
@@ -50,9 +60,9 @@ End-to-end encryption is disabled by default. Enable it with `e2ee: true` in Jav
 
 ## Verification
 
-The clients verify Gateway evidence before sending Chat and verify model evidence where supported. In Python, Rust, and Go, model verification requires a NEAR vLLM deployment with attestation enabled; other providers use Gateway-only verification. The JavaScript SDK also supports Chutes model attestation.
+The clients verify Gateway evidence before sending inference requests and verify model evidence where supported. In Python, Rust, and Go, model verification requires a NEAR vLLM deployment with attestation enabled; other providers use Gateway-only verification. The JavaScript SDK also supports Chutes model attestation.
 
-After receiving a completion, call `verifyResponse(completion.id)` in JavaScript, `await client.verify_response(completion.id)` in Python, `client.verify_response(id).await?` in Rust, or `client.VerifyResponse(ctx, id)` in Go before using the answer as verified. For streaming, consume the entire stream first. Deployment verification alone does not verify a particular response.
+After receiving a response, call `verifyResponse(id)` in JavaScript, `await client.verify_response(id)` in Python, `client.verify_response(id).await?` in Rust, or `client.VerifyResponse(ctx, id)` in Go before using the answer as verified. Use the Chat or Responses `id`, or the System One decision ID from `X-Generation-Id`. For streaming, consume the entire stream first. Deployment verification alone does not verify a particular response.
 
 A `provider_tee` signature binds the exact request and response bytes to a verified model signer. A `gateway` signature binds those bytes to a verified Gateway signer; it does not prove that an attested model generated them.
 
@@ -60,7 +70,20 @@ See [Verification](/cloud/verification) for evidence, policies, and verification
 
 ## OHTTP
 
-All four SDKs support optional OHTTP to encapsulate the Chat HTTP exchange to the attested Gateway. It is disabled by default and requires Ed25519. E2EE protects supported fields to the model independently. See the [JavaScript](/cloud/inference-sdk/javascript#ohttp), [Python](/cloud/inference-sdk/python#ohttp), [Rust](/cloud/inference-sdk/rust#ohttp), or [Go](/cloud/inference-sdk/go#ohttp) configuration.
+All four SDKs support optional OHTTP to encapsulate Chat and Responses HTTP exchanges to the attested Gateway. It is disabled by default and requires Ed25519. E2EE protects supported fields to the model independently. See the [JavaScript](/cloud/inference-sdk/javascript#ohttp), [Python](/cloud/inference-sdk/python#ohttp), [Rust](/cloud/inference-sdk/rust#ohttp), or [Go](/cloud/inference-sdk/go#ohttp) configuration.
+
+## Deployment image provenance
+
+All four SDKs can verify image build provenance, including Compose Manager deployment-control evidence. Configure policies to check recorded deployment actions, compose files, required image builds, and the Compose Manager startup image. These checks authenticate recorded deployment intent; they do not establish which containers or model weights are currently running. See the [image provenance examples](https://github.com/nearai/inference-sdk/tree/v0.2.0/examples#image-provenance) and language verification guides.
+
+## Upgrade from 0.1.0
+
+- Direct clients now default E2EE to disabled, matching Gateway clients. Explicitly enable it for applications that relied on implicit encryption.
+- Use `id` on JavaScript verification results. `completionId` remains available but is deprecated; TypeScript code constructing results must include `id`.
+- Response retention is TTL-based, with no capacity limit. Remove former cache-capacity and request/response size-limit options. Applications control inference retries; retry a temporarily unavailable receipt using the same response ID without repeating inference.
+- JavaScript requires Node.js 24.22.1+; Go requires Go 1.26.10+. Rust adds `TcbStatus` variants, so update exhaustive matches and run `cargo update` for transitive fixes.
+
+See the [0.2.0 release notes](https://github.com/nearai/inference-sdk/releases/tag/v0.2.0) for the full upgrade details.
 
 ## Examples
 

@@ -1,7 +1,7 @@
 ---
 title: "Rust"
 icon: "code"
-description: "Use the Rust SDK for verified, encrypted Chat Completions."
+description: "Use the Rust SDK for verified Chat Completions, Responses, and System One decisions."
 ---
 
 ## Install
@@ -10,7 +10,7 @@ The SDK is available on [crates.io](https://crates.io/crates/nearai-inference-sd
 
 ```toml Cargo.toml
 [dependencies]
-nearai-inference-sdk = "0.1"
+nearai-inference-sdk = "0.2.0"
 serde_json = "1"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 ```
@@ -69,15 +69,19 @@ Response-signature verification is explicit: call `client.verify_response(id).aw
 
 These checks do not establish a complete chain through Gateway transformations. See [Verification](/cloud/verification) for evidence boundaries and policies.
 
-Successful deployment checks are cached for 60 minutes by default. Set `attestation_cache_ttl: std::time::Duration::ZERO` in `InferenceClientOptions` to verify deployments for every request. Response records have a separate 60-minute lifetime beginning after full body consumption and can also be evicted by cache limits. Verify responses before their records expire or are evicted.
+Successful deployment checks are cached for 60 minutes by default. Set `attestation_cache_ttl: std::time::Duration::ZERO` in `InferenceClientOptions` to verify deployments for every request. Response records have a separate 60-minute lifetime beginning after full body consumption, with no capacity limit. Verify responses before their records expire.
 
-Optionally call `client.verify(model).await?` before the first Chat request. It shares Chat's cache and in-flight work and returns verified evidence with its original verification timestamp. It does not verify a future response signature. Deployment and image provenance policies let your application require approved deployments; the SDK has no default deployment allowlist. See the [Rust verification guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md).
+Optionally call `client.verify(model).await?` before the first Chat request. It shares the per-model attestation cache and in-flight verification work and returns verified evidence with its original verification timestamp. It does not verify a future response signature. Deployment and image provenance policies let your application require approved deployments; the SDK has no default deployment allowlist. See the [Rust verification guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md).
 
 ### Streaming and HTTP transport
 
 Use `chat_request()` with `"stream": true`, then `send(reqwest::Request)` to obtain an `InferenceResponse`. Consume its `body` through HTTP EOF, including bytes after SSE `[DONE]`, before calling `verify_response()` with the completion ID from an SSE data event. Dropping a partial stream leaves no verifiable receipt. Output displayed before verification succeeds is not yet signature-verified.
 
-Rust exposes its own reqwest transport API rather than an OpenAI SDK adapter. Body chunks are SSE bytes and need not correspond to complete events or UTF-8 strings. The [streaming guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md#streaming) and [Gateway client example](https://github.com/nearai/inference-sdk/blob/main/examples/example-rs/src/gateway/client.rs) show how to consume responses and verify receipts. Only Chat Completions are supported; the Responses API is not supported.
+Rust exposes its own reqwest transport API rather than an OpenAI SDK adapter. Body chunks are SSE bytes and need not correspond to complete events or UTF-8 strings. The [streaming guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md#streaming) and [Gateway client example](https://github.com/nearai/inference-sdk/blob/main/examples/example-rs/src/gateway/client.rs) show how to consume responses and verify receipts. Use `create_response()` for Responses JSON, or `response_request()` with `send()` for Responses streaming.
+
+## Responses and System One
+
+SDK 0.2.0 supports [verified Responses](/cloud/inference-sdk/responses) and [System One decisions](/cloud/inference-sdk/system-one) through the Gateway. The guides include complete examples and official SDK integrations. Responses supports JSON and streaming with Gateway receipts; System One returns JSON decisions and uses the `X-Generation-Id` header for receipt verification.
 
 ## OHTTP
 
@@ -95,7 +99,7 @@ let client = InferenceClient::with_options(InferenceClientOptions {
 Use these options in the completion example above. OHTTP requires the default Ed25519 algorithm and cannot be used with `SigningAlgo::Ecdsa`. E2EE is configured independently. Missing or invalid Gateway OHTTP evidence blocks Chat.
 
 <Note>
-  OHTTP applies only to Chat. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
+  OHTTP supports Chat and Responses through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
 </Note>
 
 ## Advanced APIs

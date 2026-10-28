@@ -10,14 +10,14 @@ description: "Experimental SDK notes for direct model endpoints."
 
 Independent requests to the same direct hostname can reach different serving instances. An attestation report does not establish deployment evidence for a later completion, and a later signature lookup can return `404`. Do not use direct response signatures as a production verification gate.
 
-Use `DirectInferenceClient` only when maintaining an existing direct integration.
+Use `DirectInferenceClient` only when maintaining an existing direct integration. In 0.2.0, direct clients in all four languages default E2EE to disabled. Set the E2EE option explicitly when migrating an application that relied on implicit encryption.
 
 ## Install
 
-The package requires Node.js 24 or later.
+The package requires Node.js 24.22.1 or later.
 
 ```bash
-npm install @nearai/inference-sdk
+npm install @nearai/inference-sdk@0.2.0
 ```
 
 ## Send and verify an E2EE Chat Completion
