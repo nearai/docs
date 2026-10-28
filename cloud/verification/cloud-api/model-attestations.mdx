@@ -59,8 +59,14 @@ Perform these checks on every returned candidate before sending a completion:
 
 After receiving a `provider_tee` response signature, select the one retained report whose signer identity and algorithm match the signature. If the match is absent or ambiguous, reject the response as unverified.
 
+## Instance coverage and signing identity
+
+The Gateway currently tries the providers for the requested model and provider filter in order and returns the first successful model report in `model_attestations[]`. It removes the upstream `all_attestations` field rather than aggregating reports from every instance. See the [Gateway report collection implementation](https://github.com/nearai/cloud-api/blob/69e359839e70039ea42d5121d075cae53a8a7aa7/crates/services/src/inference_provider_pool/mod.rs).
+
+Signing-key scope is separate from report coverage. Replicas can share a signing key, but replicas under different KMS roots can have different keys. A matching signer identifies a key holder; it does not uniquely identify a serving instance or its measured configuration. See the [key-affinity implementation](https://github.com/nearai/cloud-api/pull/991).
+
 <Warning>
-  `model_attestations[]` is not an inventory of every model instance behind a URL. Instances of the same model share one signing key, including instances with different measured configurations, so a matching signer does not establish that the report and the completion came from the same serving instance.
+  Verifying every returned report does not establish that every instance of the requested model has been checked. A policy that approves a group of instances sharing a key needs complete evidence for the possible recipients and enforcement that keeps requests within that approved group. This response does not establish those guarantees.
 </Warning>
 
 ## Relationship to NEAR AI Cloud gateway TLS
