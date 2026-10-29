@@ -91,14 +91,14 @@
                   "cloud/inference-sdk/javascript",
                   "cloud/inference-sdk/python",
                   "cloud/inference-sdk/rust",
-                  "cloud/inference-sdk/go",
-                  {
-                    "group": "Widget",
-                    "icon": "panel-right",
-                    "pages": [
-                      "cloud/inference-sdk/widget/embedded"
-                    ]
-                  }
+                  "cloud/inference-sdk/go"
+                ]
+              },
+              {
+                "group": "Widget",
+                "icon": "panel-right",
+                "pages": [
+                  "cloud/inference-sdk/widget/embedded"
                 ]
               }
             ]
