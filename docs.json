@@ -93,6 +93,13 @@
                   "cloud/inference-sdk/rust",
                   "cloud/inference-sdk/go"
                 ]
+              },
+              {
+                "group": "Widget",
+                "icon": "panel-right",
+                "pages": [
+                  "cloud/inference-sdk/widget/embedded"
+                ]
               }
             ]
           },
