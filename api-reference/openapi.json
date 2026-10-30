@@ -16741,6 +16741,16 @@
               "type"
             ],
             "properties": {
+              "count": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "int32",
+                "minimum": 0,
+                "maximum": 20,
+                "description": "Maximum results per search. Zero returns no results without calling the search provider."
+              },
               "type": {
                 "type": "string",
                 "enum": [
@@ -19124,6 +19134,61 @@
                 "type": "string",
                 "enum": [
                   "function"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "count": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "int32",
+                "minimum": 0,
+                "maximum": 20,
+                "description": "Maximum results per search. Zero returns no results without calling the search provider."
+              },
+              "filters": {},
+              "search_context_size": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "web_search"
+                ]
+              },
+              "user_location": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/UserLocation"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "web_context_search"
                 ]
               }
             }
