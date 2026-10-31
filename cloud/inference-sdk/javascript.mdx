@@ -1,7 +1,7 @@
 ---
 title: "JavaScript"
 icon: "braces"
-description: "Use the JavaScript SDK for verified Chat Completions, Responses, and System One decisions."
+description: "Use the JavaScript SDK for verified Chat Completions, Responses, Messages, and System One decisions."
 ---
 
 ## Install
@@ -18,13 +18,16 @@ Set your API key in the environment:
 export NEARAI_API_KEY="your-api-key"
 ```
 
-Save the example below as `chat.mjs` and run it with `node chat.mjs`.
+## Examples
 
-## E2EE
+Save an example as `example.mjs` and run it with `node example.mjs`.
 
-End-to-end encryption (E2EE) is disabled by default in `InferenceClient`. Set `e2ee: true` to enable it for a model with supported model attestation. When enabled, the SDK verifies the required attestation evidence, encrypts supported Chat fields to a key from the verified model evidence, and decrypts the response automatically.
+<Tabs>
+<Tab title="Chat Completions" id="chat-completions">
 
-```js
+Call a supported NEAR TEE model with E2EE enabled, then verify the completion.
+
+```javascript
 import { InferenceClient } from '@nearai/inference-sdk/node';
 
 const baseUrl = 'https://cloud-api.near.ai/v1';
@@ -48,6 +51,141 @@ const verified = await client.verifyResponse(completion.id);
 console.log(`Verified ${verified.signatureKind} response.`);
 console.log(completion.choices[0]?.message.content);
 ```
+
+</Tab>
+<Tab title="Responses" id="responses">
+
+Use a Responses model with `store: false` and E2EE disabled. See [Stateless Responses](/cloud/guides/stateless-responses) for conversation history and tool calls.
+
+```bash
+npm install openai
+```
+
+```javascript
+import OpenAI from "openai";
+import { InferenceClient } from "@nearai/inference-sdk/node";
+
+const apiKey = process.env.NEARAI_API_KEY;
+if (!apiKey) throw new Error("Set NEARAI_API_KEY first.");
+
+const inferenceClient = new InferenceClient({
+  apiKey,
+  baseUrl: "https://cloud-api.near.ai/v1",
+  e2ee: false,
+});
+
+const openai = new OpenAI({
+  apiKey,
+  baseURL: inferenceClient.getBaseUrl(),
+  fetch: inferenceClient.fetch,
+  maxRetries: 0,
+});
+
+const response = await openai.responses.create({
+  model: "openai/gpt-6-astra",
+  input: "Hello!",
+  store: false,
+});
+
+// Verify before displaying the answer.
+const verified = await inferenceClient.verifyResponse(response.id);
+console.log(response.output_text);
+console.log("Verified signer:", verified.signatureKind);
+```
+
+</Tab>
+<Tab title="Messages" id="messages">
+
+Call an Anthropic model through the Messages API with E2EE disabled. Pass `InferenceClient.fetch` to the official Anthropic client.
+
+```bash
+npm install @anthropic-ai/sdk
+```
+
+```javascript
+import Anthropic from "@anthropic-ai/sdk";
+import { InferenceClient } from "@nearai/inference-sdk/node";
+
+const apiKey = process.env.NEARAI_API_KEY;
+if (!apiKey) throw new Error("Set NEARAI_API_KEY first.");
+
+const inference = new InferenceClient({
+  apiKey,
+  baseUrl: "https://cloud-api.near.ai/v1",
+  e2ee: false,
+});
+const anthropic = new Anthropic({
+  apiKey,
+  baseURL: "https://cloud-api.near.ai",
+  fetch: inference.fetch,
+  maxRetries: 0,
+});
+
+const response = await anthropic.messages.create({
+  model: "anthropic/claude-opus-4-6",
+  max_tokens: 128,
+  messages: [{ role: "user", content: "Hello!" }],
+});
+
+// Verify before displaying the answer.
+const verified = await inference.verifyResponse(response.id);
+console.log(response.content
+  .filter((block) => block.type === "text")
+  .map((block) => block.text)
+  .join(""));
+console.log("Verified signer:", verified.signatureKind);
+```
+
+</Tab>
+<Tab title="System One" id="system-one">
+
+Ask Jev a structured question with E2EE and OHTTP disabled. The Jev client uses the API root without `/v1`; keep compression and automatic retries disabled as shown.
+
+```bash
+npm install @typesafe-ai/sdk
+```
+
+```javascript
+import { InferenceClient } from "@nearai/inference-sdk/node";
+import { TypeSafeClient, noul } from "@typesafe-ai/sdk";
+
+const apiKey = process.env.NEARAI_API_KEY;
+if (!apiKey) throw new Error("Set NEARAI_API_KEY first.");
+
+const inference = new InferenceClient({
+  apiKey,
+  baseUrl: "https://cloud-api.near.ai/v1",
+  e2ee: false,
+  ohttp: false,
+});
+const jev = new TypeSafeClient({
+  apiKey,
+  baseURL: "https://cloud-api.near.ai",
+  fetch: inference.fetch,
+  compression: false,
+  retry: { maxRetries: 0 },
+});
+
+const { data, response } = await jev.systemOne({
+  model: "typesafe/jev-1.13",
+  state: { message: "I was charged twice. Please help." },
+  questions: { billing: noul("Is this about billing?") },
+}).withResponse();
+
+// Use the NEAR receipt ID, which is separate from Jev's requestId.
+const id = response.headers.get("X-Generation-Id");
+if (!id) throw new Error("Missing System One receipt ID.");
+const verified = await inference.verifyResponse(id);
+console.log(data.answers);
+console.log("Verified signer:", verified.signatureKind);
+```
+
+</Tab>
+</Tabs>
+
+## E2EE
+
+End-to-end encryption is disabled by default. Set `e2ee: true` to encrypt supported Chat fields to a verified model key and decrypt the response automatically. E2EE requires a supported NEAR TEE model; leave it disabled for other models and APIs.
 
 ## Verification
 
@@ -86,11 +224,7 @@ For Node, import from `@nearai/inference-sdk/node`. It verifies the Gateway TLS 
 
 Response records expire after 60 minutes by default. Verify each response before its record expires or you dispose of the client.
 
-For a manual verification flow or a custom policy, see [Verification](/cloud/verification).
-
-## Responses and System One
-
-For other APIs, follow the [Responses](/cloud/inference-sdk/responses) or [System One](/cloud/inference-sdk/system-one) guide.
+See the [SDK overview](/cloud/inference-sdk#verification) for receipt IDs and signature kinds, or [Verification](/cloud/verification) for custom policies.
 
 ## OHTTP
 
@@ -108,10 +242,10 @@ const client = new InferenceClient({
 The Chat and `verifyResponse()` calls stay the same. Before sending Chat, the SDK verifies the Gateway's signed OHTTP configuration; a missing or invalid configuration blocks the request. OHTTP encapsulates the exchange to the Gateway, while E2EE encrypts supported Chat fields to the verified model key.
 
 <Note>
-  OHTTP supports Chat and Responses through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The configured endpoint or proxy must expose `/ohttp` at the same origin. Authorization and custom headers sent on the outer request, along with the client's network address, are not hidden by OHTTP.
+  OHTTP supports Chat Completions, Responses, and Messages through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The configured endpoint or proxy must expose `/ohttp` at the same origin. Authorization and custom headers sent on the outer request, along with the client's network address, are not hidden by OHTTP.
 </Note>
 
-## Examples
+## Examples and reference
 
 See the [Inference SDK examples and setup instructions](https://github.com/nearai/inference-sdk/tree/main/examples) for runnable projects.
 

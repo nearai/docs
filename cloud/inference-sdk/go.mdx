@@ -1,7 +1,7 @@
 ---
 title: "Go"
 icon: "code"
-description: "Use the Go SDK for verified Chat Completions, Responses, and System One decisions."
+description: "Use the Go SDK for verified Chat Completions, Responses, Messages, and System One decisions."
 ---
 
 ## Install
@@ -14,11 +14,16 @@ go get github.com/nearai/inference-sdk/go
 export NEARAI_API_KEY="your-api-key"
 ```
 
-## Send and verify a completion
+## Examples
 
-Save this as `main.go` and run `go run .`:
+Save an example as `main.go` and run it with `go run .`.
 
-```go main.go
+<Tabs>
+<Tab title="Chat Completions" id="chat-completions">
+
+Call a supported NEAR TEE model with E2EE enabled, then verify the completion.
+
+```go
 package main
 
 import (
@@ -82,7 +87,236 @@ func run() error {
 }
 ```
 
-The client connects to `https://cloud-api.near.ai/v1` by default. Reuse it across requests and call `Close()` when finished.
+</Tab>
+<Tab title="Responses" id="responses">
+
+Use a Responses model with `store: false` and E2EE disabled. See [Stateless Responses](/cloud/guides/stateless-responses) for conversation history and tool calls.
+
+```bash
+go get github.com/openai/openai-go/v3
+```
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+    "os"
+    "time"
+
+    nearai "github.com/nearai/inference-sdk/go"
+    "github.com/openai/openai-go/v3"
+    "github.com/openai/openai-go/v3/option"
+    "github.com/openai/openai-go/v3/responses"
+)
+
+func main() {
+    if err := run(); err != nil {
+        log.Fatal(err)
+    }
+}
+
+func run() error {
+    apiKey := os.Getenv("NEARAI_API_KEY")
+    if apiKey == "" {
+        return fmt.Errorf("set NEARAI_API_KEY first")
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+    defer cancel()
+
+    client, err := nearai.NewInferenceClient(nearai.InferenceOptions{
+        ClientOptions: nearai.ClientOptions{
+            APIKey: apiKey,
+            BaseURL: "https://cloud-api.near.ai/v1",
+        },
+        E2EE: false,
+    })
+    if err != nil {
+        return err
+    }
+    defer client.Close()
+
+    ai := openai.NewClient(
+        option.WithAPIKey(apiKey),
+        option.WithBaseURL(client.BaseURL()),
+        option.WithHTTPClient(client.HTTPClient()),
+        option.WithMaxRetries(0),
+    )
+    response, err := ai.Responses.New(ctx, responses.ResponseNewParams{
+        Model: "openai/gpt-6-astra",
+        Input: responses.ResponseNewParamsInputUnion{OfString: openai.String("Hello!")},
+        Store: openai.Bool(false),
+    })
+    if err != nil {
+        return err
+    }
+    if response.ID == "" {
+        return fmt.Errorf("response has no ID")
+    }
+
+    // Verify before displaying the answer.
+    verified, err := client.VerifyResponse(ctx, response.ID)
+    if err != nil {
+        return err
+    }
+    fmt.Println(response.OutputText())
+    fmt.Println("Verified signer:", verified.SignatureKind)
+    return nil
+}
+```
+
+</Tab>
+<Tab title="Messages" id="messages">
+
+Call an Anthropic model through the Messages API with E2EE disabled.
+
+```go
+package main
+
+import (
+    "context"
+    "encoding/json"
+    "fmt"
+    "log"
+    "os"
+    "time"
+
+    nearai "github.com/nearai/inference-sdk/go"
+)
+
+func main() {
+    if err := run(); err != nil {
+        log.Fatal(err)
+    }
+}
+
+func run() error {
+    apiKey := os.Getenv("NEARAI_API_KEY")
+    if apiKey == "" {
+        return fmt.Errorf("set NEARAI_API_KEY first")
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+    defer cancel()
+    client, err := nearai.NewInferenceClient(nearai.InferenceOptions{
+        ClientOptions: nearai.ClientOptions{
+            APIKey: apiKey,
+            BaseURL: "https://cloud-api.near.ai/v1",
+        },
+        E2EE: false,
+    })
+    if err != nil {
+        return err
+    }
+    defer client.Close()
+
+    raw, err := client.CreateMessage(ctx, map[string]any{
+        "model": "anthropic/claude-opus-4-6",
+        "max_tokens": 128,
+        "messages": []map[string]string{{"role": "user", "content": "Hello!"}},
+    })
+    if err != nil {
+        return err
+    }
+    var response struct {
+        ID string
+        Content []struct { Type, Text string }
+    }
+    if err := json.Unmarshal(raw, &response); err != nil {
+        return err
+    }
+    if response.ID == "" {
+        return fmt.Errorf("message has no ID")
+    }
+
+    // Verify before displaying the answer.
+    verified, err := client.VerifyResponse(ctx, response.ID)
+    if err != nil {
+        return err
+    }
+    for _, block := range response.Content {
+        if block.Type == "text" {
+            fmt.Println(block.Text)
+        }
+    }
+    fmt.Println("Verified signer:", verified.SignatureKind)
+    return nil
+}
+```
+
+</Tab>
+<Tab title="System One" id="system-one">
+
+Ask Jev a structured question with E2EE and OHTTP disabled.
+
+```go
+package main
+
+import (
+    "context"
+    "encoding/json"
+    "fmt"
+    "log"
+    "os"
+    "time"
+
+    nearai "github.com/nearai/inference-sdk/go"
+)
+
+func main() {
+    if err := run(); err != nil {
+        log.Fatal(err)
+    }
+}
+
+func run() error {
+    apiKey := os.Getenv("NEARAI_API_KEY")
+    if apiKey == "" {
+        return fmt.Errorf("set NEARAI_API_KEY first")
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+    defer cancel()
+    client, err := nearai.NewInferenceClient(nearai.InferenceOptions{
+        ClientOptions: nearai.ClientOptions{
+            APIKey: apiKey,
+            BaseURL: "https://cloud-api.near.ai/v1",
+        },
+        E2EE: false,
+        OHTTP: false,
+    })
+    if err != nil {
+        return err
+    }
+    defer client.Close()
+
+    result, err := client.CreateSystemOne(ctx, nearai.SystemOneRequest{
+        Model: "typesafe/jev-1.13",
+        State: map[string]string{"message": "I was charged twice. Please help."},
+        Questions: map[string]nearai.SystemOneQuestion{
+            "billing": {Type: "noul", Instructions: "Is this about billing?"},
+        },
+    })
+    if err != nil {
+        return err
+    }
+    // DecisionID is captured from X-Generation-Id.
+    verified, err := client.VerifyResponse(ctx, result.DecisionID)
+    if err != nil {
+        return err
+    }
+    answers, err := json.MarshalIndent(result.Data.Answers, "", "  ")
+    if err != nil {
+        return err
+    }
+    fmt.Println(string(answers))
+    fmt.Println("Verified signer:", verified.SignatureKind)
+    return nil
+}
+```
+
+</Tab>
+</Tabs>
 
 ## E2EE
 
@@ -96,8 +330,7 @@ Before sending Chat, the client verifies the Gateway and every returned model re
 
 Response-signature verification is explicit: call `client.VerifyResponse(ctx, completionID)` after fully consuming the response. The client retains exact request and response bytes automatically, including encrypted wire bytes when E2EE is enabled.
 
-- `provider_tee`: a verified model signer signed the exact request and response bytes.
-- `gateway`: a verified Gateway signer signed those bytes; this does not prove that an attested model generated them.
+See [Verification](/cloud/inference-sdk#verification) for receipt IDs and signature kinds.
 
 Response records expire 60 minutes after the full response is read, by default. Verify each response before its record expires or the client closes.
 
@@ -128,16 +361,12 @@ Use `client` from the completion example and the same API key. The transport sup
 
 For streaming, consume the stream, check `stream.Err()`, and close it before calling `client.VerifyResponse(ctx, completionID)`. Use a completion ID from the stream. See the [OpenAI streaming example](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/gateway/openai/main.go).
 
-## Responses and System One
-
-For other APIs, follow the [Responses](/cloud/inference-sdk/responses) or [System One](/cloud/inference-sdk/system-one) guide.
-
 ## OHTTP
 
 Set `OHTTP: true` in `InferenceOptions` to encapsulate the Chat HTTP exchange to the attested Gateway. OHTTP is disabled by default and requires Ed25519, the default signing algorithm. Configure E2EE independently. Missing or invalid Gateway OHTTP evidence blocks Chat.
 
 <Note>
-  OHTTP supports Chat and Responses through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
+  OHTTP supports Chat Completions, Responses, and Messages through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
 </Note>
 
 ## Examples and reference

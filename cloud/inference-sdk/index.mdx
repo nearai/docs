@@ -1,7 +1,7 @@
 ---
 title: "SDK"
 icon: "braces"
-description: "Call NEAR AI Cloud and verify responses in JavaScript, Python, Rust, and Go."
+description: "Call NEAR AI Cloud inference and verify responses in JavaScript, Python, Rust, and Go."
 ---
 
 Use the NEAR AI Inference SDK to call models, verify attestation evidence, and check response signatures. Choose your language to get started:
@@ -43,34 +43,44 @@ go get github.com/nearai/inference-sdk/go
 
 ## Supported APIs
 
-All four languages support these APIs. Chat Completions and Responses also support streaming.
+All four languages support these APIs. Chat Completions, Responses, and Messages also support streaming. Choose an API in your language guide for a complete example.
 
 | API | Official SDK integration | Encryption |
 | --- | --- | --- |
 | Chat Completions | OpenAI JavaScript, Python, and Go | Optional E2EE and OHTTP |
-| [Responses](/cloud/inference-sdk/responses) | OpenAI JavaScript, Python, and Go | Optional OHTTP |
-| [System One](/cloud/inference-sdk/system-one) | Jev JavaScript and Python | HTTPS |
+| Responses | OpenAI JavaScript, Python, and Go | Optional OHTTP |
+| Messages | Anthropic JavaScript and Python | Optional OHTTP |
+| System One | Jev JavaScript and Python | HTTPS |
 
-Rust uses the native NEAR AI client.
+Rust uses the native NEAR AI client. Go also uses the native client for Messages and System One.
 
 ## E2EE
 
-End-to-end encryption (E2EE) encrypts supported Chat fields to a verified model key. It is disabled by default and requires a supported NEAR TEE model. Enable it in your language's client options; Responses and System One do not support field E2EE.
+End-to-end encryption (E2EE) encrypts supported Chat fields to a verified model key. It is disabled by default and requires a supported NEAR TEE model. Enable it in your language's client options; leave it disabled for Responses, Messages, and System One.
 
 ## Verification
 
-The SDK verifies Gateway attestation before sending a request and model attestation where supported. After receiving the answer, call `verifyResponse()` or your language's equivalent to verify its signature. For streaming, consume the entire stream first.
+The SDK verifies Gateway attestation before sending a request and model attestation where supported. After receiving the answer, call `verifyResponse()` or your language's equivalent before using the output. For streaming, consume the entire stream first.
+
+| API | ID to verify |
+| --- | --- |
+| Chat Completions | Completion `id`, including an ID from the stream |
+| Responses | Response `id`; for streaming, `event.response.id` from `response.created` |
+| Messages | Message `id`; for streaming, `event.message.id` from `message_start` |
+| System One | `X-Generation-Id` response header; Rust and Go expose it as `decision_id` and `DecisionID` |
+
+System One's receipt ID is separate from Jev's request ID. If a receipt is temporarily unavailable, retry verification with the same ID. Response records expire after 60 minutes by default; verify before expiry or closing the client.
 
 Check the returned signature kind:
 
 - `provider_tee`: the verified model signer signed the request and response bytes.
 - `gateway`: the verified Gateway signed those bytes. This does not verify model TEE execution.
 
-The language guides show how to verify each response. See [Verification](/cloud/verification) for custom policies and evidence requirements.
+Responses and Messages use Gateway signatures. See [Verification](/cloud/verification) for custom policies and evidence requirements.
 
 ## OHTTP
 
-OHTTP adds encryption between the client and the attested Gateway for Chat and Responses. It is optional, disabled by default, and requires Ed25519. See the [JavaScript](/cloud/inference-sdk/javascript#ohttp), [Python](/cloud/inference-sdk/python#ohttp), [Rust](/cloud/inference-sdk/rust#ohttp), or [Go](/cloud/inference-sdk/go#ohttp) configuration.
+OHTTP adds encryption between the client and the attested Gateway for Chat Completions, Responses, and Messages. It is optional, disabled by default, and requires Ed25519. See the [JavaScript](/cloud/inference-sdk/javascript#ohttp), [Python](/cloud/inference-sdk/python#ohttp), [Rust](/cloud/inference-sdk/rust#ohttp), or [Go](/cloud/inference-sdk/go#ohttp) configuration.
 
 ## Examples
 

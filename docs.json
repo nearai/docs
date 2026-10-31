@@ -91,9 +91,7 @@
                   "cloud/inference-sdk/javascript",
                   "cloud/inference-sdk/python",
                   "cloud/inference-sdk/rust",
-                  "cloud/inference-sdk/go",
-                  "cloud/inference-sdk/responses",
-                  "cloud/inference-sdk/system-one"
+                  "cloud/inference-sdk/go"
                 ]
               }
             ]

@@ -1,7 +1,7 @@
 ---
 title: "Python"
 icon: "code"
-description: "Use the asynchronous Python SDK for verified Chat Completions, Responses, and System One decisions."
+description: "Use the asynchronous Python SDK for verified Chat Completions, Responses, Messages, and System One decisions."
 ---
 
 ## Install
@@ -13,11 +13,16 @@ pip install nearai-inference-sdk
 export NEARAI_API_KEY="your-api-key"
 ```
 
-## Send and verify a completion
+## Examples
 
-Save this example as `chat.py` and run it with `python chat.py`:
+Save an example as `example.py` and run it with `python example.py`.
 
-```python chat.py
+<Tabs>
+<Tab title="Chat Completions" id="chat-completions">
+
+Call a supported NEAR TEE model with E2EE enabled, then verify the completion.
+
+```python
 import asyncio
 import os
 
@@ -42,7 +47,148 @@ async def main():
 asyncio.run(main())
 ```
 
-The client connects to `https://cloud-api.near.ai/v1` by default. Reuse a client for multiple requests; the async context manager closes its HTTP connections when finished.
+</Tab>
+<Tab title="Responses" id="responses">
+
+Use a Responses model with `store: false` and E2EE disabled. See [Stateless Responses](/cloud/guides/stateless-responses) for conversation history and tool calls.
+
+```bash
+pip install openai
+```
+
+```python
+import asyncio
+import os
+
+from openai import AsyncOpenAI
+from nearai_inference_sdk import InferenceClient
+
+
+async def main():
+    api_key = os.environ["NEARAI_API_KEY"]
+
+    async with InferenceClient(
+        api_key,
+        base_url="https://cloud-api.near.ai/v1",
+        e2ee=False,
+    ) as inference_client:
+        async with AsyncOpenAI(
+            api_key=api_key,
+            base_url="https://cloud-api.near.ai/v1/",
+            http_client=inference_client.http_client,
+            max_retries=0,
+        ) as client:
+            response = await client.responses.create(
+                model="openai/gpt-6-astra",
+                input="Hello!",
+                store=False,
+            )
+
+            # Verify before displaying the answer.
+            verified = await inference_client.verify_response(response.id)
+            print(response.output_text)
+            print("Verified signer:", verified.signature_kind)
+
+
+asyncio.run(main())
+```
+
+</Tab>
+<Tab title="Messages" id="messages">
+
+Call an Anthropic model through the Messages API with E2EE disabled. Pass `InferenceClient.http_client` to the official Anthropic client.
+
+```bash
+pip install anthropic
+```
+
+```python
+import asyncio
+import os
+
+from anthropic import AsyncAnthropic
+from nearai_inference_sdk import InferenceClient
+
+
+async def main():
+    api_key = os.environ["NEARAI_API_KEY"]
+    async with InferenceClient(
+        api_key,
+        base_url="https://cloud-api.near.ai/v1",
+        e2ee=False,
+    ) as inference:
+        async with AsyncAnthropic(
+            api_key=api_key,
+            base_url="https://cloud-api.near.ai",
+            http_client=inference.http_client,
+            max_retries=0,
+        ) as anthropic:
+            response = await anthropic.messages.create(
+                model="anthropic/claude-opus-4-6",
+                max_tokens=128,
+                messages=[{"role": "user", "content": "Hello!"}],
+            )
+
+            # Verify before displaying the answer.
+            verified = await inference.verify_response(response.id)
+            print("".join(block.text for block in response.content if block.type == "text"))
+            print("Verified signer:", verified.signature_kind)
+
+
+asyncio.run(main())
+```
+
+</Tab>
+<Tab title="System One" id="system-one">
+
+Ask Jev a structured question with E2EE and OHTTP disabled. The Jev client uses the API root without `/v1`; keep compression and automatic retries disabled as shown.
+
+```bash
+pip install typesafe-sdk
+```
+
+```python
+import asyncio
+import os
+
+from nearai_inference_sdk import InferenceClient
+from typesafe_sdk import AsyncTypeSafeClient, Noul, RetryPolicy
+
+
+async def main():
+    api_key = os.environ["NEARAI_API_KEY"]
+    async with InferenceClient(
+        api_key,
+        base_url="https://cloud-api.near.ai/v1",
+        e2ee=False,
+        ohttp=False,
+    ) as inference:
+        async with AsyncTypeSafeClient(
+            api_key=api_key,
+            base_url="https://cloud-api.near.ai",
+            http_client=inference.httpx2_client,
+            compression=False,
+            retry=RetryPolicy(max_retries=0),
+        ) as jev:
+            result = await jev.system_one(
+                model="typesafe/jev-1.13",
+                state={"message": "I was charged twice. Please help."},
+                questions={"billing": Noul(instructions="Is this about billing?")},
+            )
+            # Use the NEAR receipt ID, not Jev's request_id.
+            receipt_id = result.raw_http_response.headers.get("X-Generation-Id")
+            if not receipt_id:
+                raise RuntimeError("Missing System One receipt ID.")
+            verified = await inference.verify_response(receipt_id)
+            print(result.answers)
+            print("Verified signer:", verified.signature_kind)
+
+
+asyncio.run(main())
+```
+
+</Tab>
+</Tabs>
 
 ## E2EE
 
@@ -56,8 +202,7 @@ Before sending Chat, the client verifies the Gateway and, for supported NEAR TEE
 
 Response-signature verification is explicit: call `await client.verify_response(completion.id)` after receiving the completion. It verifies the exact request and response bytes retained by the client against the relevant verified evidence.
 
-- `provider_tee`: a verified model signer signed the exact request and response bytes.
-- `gateway`: a verified Gateway signer signed those bytes; this does not prove that an attested model generated them.
+See [Verification](/cloud/inference-sdk#verification) for receipt IDs and signature kinds.
 
 Response records expire 60 minutes after the full response is read, by default. Verify each response before its record expires or the client closes.
 
@@ -87,49 +232,9 @@ await client.verify_response(completion_id)
 print("".join(parts))
 ```
 
-## Use the OpenAI SDK
+## Official SDK transports
 
-For an existing `AsyncOpenAI` integration, use `InferenceClient.http_client` as its transport. Configure the API key on the inference client, which authenticates Chat, evidence, and signature requests.
-
-```bash
-pip install nearai-inference-sdk openai
-```
-
-```python chat_openai.py
-import asyncio
-import os
-
-from openai import AsyncOpenAI
-from nearai_inference_sdk import InferenceClient
-
-
-async def main():
-    api_key = os.environ["NEARAI_API_KEY"]
-    async with InferenceClient(api_key, e2ee=True) as inference_client:
-        async with AsyncOpenAI(
-            api_key=api_key,
-            base_url="https://cloud-api.near.ai/v1/",
-            http_client=inference_client.http_client,
-            max_retries=0,
-        ) as client:
-            completion = await client.chat.completions.create(
-                model="z-ai/glm-5.3-flash",
-                messages=[{"role": "user", "content": "Hello!"}],
-            )
-            await inference_client.verify_response(completion.id)
-            print(completion.choices[0].message.content or "")
-
-
-asyncio.run(main())
-```
-
-Run it with `python chat_openai.py`. The transport supports Chat Completions and Responses, including streaming. Use a client with `e2ee=False` for Responses. Applications control inference retries; these examples disable automatic retries.
-
-For the [official Jev SDK](/cloud/inference-sdk/system-one), use `inference_client.httpx2_client`. Use `http_client` for HTTPX clients such as the OpenAI example above.
-
-## Responses and System One
-
-For other APIs, follow the [Responses](/cloud/inference-sdk/responses) or [System One](/cloud/inference-sdk/system-one) guide.
+Use `InferenceClient.http_client` with the OpenAI and Anthropic clients, and `httpx2_client` with the Jev client. The Responses example also works as an OpenAI transport setup for Chat Completions; call `client.chat.completions.create(...)` and enable E2EE only for supported models.
 
 ## OHTTP
 
@@ -148,7 +253,7 @@ async with InferenceClient(api_key, e2ee=True, ohttp=True) as client:
 OHTTP requires the default Ed25519 algorithm and cannot be used with `signing_algo="ecdsa"`. E2EE is configured independently. Missing or invalid Gateway OHTTP evidence blocks the Chat request.
 
 <Note>
-  OHTTP supports Chat and Responses through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
+  OHTTP supports Chat Completions, Responses, and Messages through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
 </Note>
 
 ## Examples and reference

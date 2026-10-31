@@ -1,7 +1,7 @@
 ---
 title: "Rust"
 icon: "code"
-description: "Use the Rust SDK for verified Chat Completions, Responses, and System One decisions."
+description: "Use the Rust SDK for verified Chat Completions, Responses, Messages, and System One decisions."
 ---
 
 ## Install
@@ -18,11 +18,16 @@ Set your API key in your server environment:
 export NEARAI_API_KEY="your-api-key"
 ```
 
-## Send and verify a completion
+## Examples
 
-Save this example as `src/main.rs` and run it with `cargo run`:
+These examples assume a project with Tokio and serde_json. Use them in `src/main.rs`.
 
-```rust src/main.rs
+<Tabs>
+<Tab title="Chat Completions" id="chat-completions">
+
+Call a supported NEAR TEE model with E2EE enabled, then verify the completion.
+
+```rust
 use nearai_inference_sdk::{InferenceClient, InferenceClientOptions};
 use serde_json::json;
 
@@ -47,7 +52,106 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-The client connects to `https://cloud-api.near.ai/v1` by default. Reuse it across requests.
+</Tab>
+<Tab title="Responses" id="responses">
+
+Use a Responses model with `store: false` and E2EE disabled. See [Stateless Responses](/cloud/guides/stateless-responses) for conversation history and tool calls.
+
+```rust
+use nearai_inference_sdk::{InferenceClient, InferenceClientOptions};
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = InferenceClient::with_options(InferenceClientOptions {
+        api_key: Some(std::env::var("NEARAI_API_KEY")?),
+        base_url: "https://cloud-api.near.ai/v1".into(),
+        e2ee: false,
+        ..Default::default()
+    })?;
+    let response = client.create_response(json!({
+        "model": r#"openai/gpt-6-astra"#,
+        "input": "Hello!",
+        "store": false
+    })).await?;
+
+    // Verify before displaying the answer.
+    let id = response["id"].as_str().ok_or("response has no ID")?;
+    let verified = client.verify_response(id).await?;
+    println!("{}", response["output"]);
+    println!("Verified signer: {:?}", verified.signature_kind());
+    Ok(())
+}
+```
+
+</Tab>
+<Tab title="Messages" id="messages">
+
+Call an Anthropic model through the Messages API with E2EE disabled.
+
+```rust
+use nearai_inference_sdk::{InferenceClient, InferenceClientOptions};
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = InferenceClient::with_options(InferenceClientOptions {
+        api_key: Some(std::env::var("NEARAI_API_KEY")?),
+        base_url: "https://cloud-api.near.ai/v1".into(),
+        e2ee: false,
+        ..Default::default()
+    })?;
+    let response = client.create_message(json!({
+        "model": r#"anthropic/claude-opus-4-6"#,
+        "max_tokens": 128,
+        "messages": [{"role": "user", "content": "Hello!"}]
+    })).await?;
+
+    // Verify before displaying the answer.
+    let id = response["id"].as_str().ok_or("message has no ID")?;
+    let verified = client.verify_response(id).await?;
+    println!("{}", response["content"]);
+    println!("Verified signer: {:?}", verified.signature_kind());
+    Ok(())
+}
+```
+
+</Tab>
+<Tab title="System One" id="system-one">
+
+Ask Jev a structured question with E2EE and OHTTP disabled.
+
+```rust
+use nearai_inference_sdk::{InferenceClient, InferenceClientOptions};
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = InferenceClient::with_options(InferenceClientOptions {
+        api_key: Some(std::env::var("NEARAI_API_KEY")?),
+        base_url: "https://cloud-api.near.ai/v1".into(),
+        e2ee: false,
+        ohttp: false,
+        ..Default::default()
+    })?;
+    let result = client.systemone_create(&json!({
+        "model": r#"typesafe/jev-1.13"#,
+        "state": {"message": "I was charged twice. Please help."},
+        "questions": {
+            "billing": {"type": "noul", "instructions": "Is this about billing?"}
+        }
+    })).await?;
+
+    // decision_id is captured from X-Generation-Id.
+    let verified = client.verify_response(&result.decision_id).await?;
+    println!("{}", serde_json::to_string_pretty(&result.data.answers)?);
+    println!("Verified signer: {:?}", verified.signature_kind());
+    Ok(())
+}
+```
+
+</Tab>
+</Tabs>
 
 ## E2EE
 
@@ -61,8 +165,7 @@ Before sending Chat, the client verifies the Gateway and every returned model re
 
 Response-signature verification is explicit: call `client.verify_response(id).await?` after receiving the completion. The client retains the exact request and response bytes automatically, including encrypted wire bytes when E2EE is enabled.
 
-- `ProviderTee`: a verified model signer signed the exact request and response bytes.
-- `Gateway`: a verified Gateway signer signed those bytes; this does not prove that an attested model generated them.
+See [Verification](/cloud/inference-sdk#verification) for receipt IDs and signature kinds.
 
 Response records expire 60 minutes after the full response is read, by default. Verify each response before its record expires.
 
@@ -73,10 +176,6 @@ To check a deployment without sending a prompt, call `client.verify(model).await
 Use `chat_request()` with `"stream": true`, then `send(reqwest::Request)` to obtain an `InferenceResponse`. Consume its `body` through HTTP EOF, including bytes after SSE `[DONE]`, before calling `verify_response()` with the completion ID from an SSE data event. Dropping a partial stream leaves no verifiable receipt. Output displayed before verification succeeds is not yet signature-verified.
 
 Rust exposes its own reqwest transport API rather than an OpenAI SDK adapter. Body chunks are SSE bytes and need not correspond to complete events or UTF-8 strings. The [streaming guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md#streaming) and [Gateway client example](https://github.com/nearai/inference-sdk/blob/main/examples/example-rs/src/gateway/client.rs) show how to consume responses and verify receipts. Use `create_response()` for Responses JSON, or `response_request()` with `send()` for Responses streaming.
-
-## Responses and System One
-
-For other APIs, follow the [Responses](/cloud/inference-sdk/responses) or [System One](/cloud/inference-sdk/system-one) guide.
 
 ## OHTTP
 
@@ -94,7 +193,7 @@ let client = InferenceClient::with_options(InferenceClientOptions {
 Use these options in the completion example above. OHTTP requires the default Ed25519 algorithm and cannot be used with `SigningAlgo::Ecdsa`. E2EE is configured independently. Missing or invalid Gateway OHTTP evidence blocks Chat.
 
 <Note>
-  OHTTP supports Chat and Responses through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
+  OHTTP supports Chat Completions, Responses, and Messages through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
 </Note>
 
 ## Examples and reference
