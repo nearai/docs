@@ -57,38 +57,26 @@ console.log(completion.choices[0]?.message.content);
 
 Use a Responses model with `store: false` and E2EE disabled. See [Stateless Responses](/cloud/guides/stateless-responses) for conversation history and tool calls.
 
-```bash
-npm install openai
-```
-
 ```javascript
-import OpenAI from "openai";
 import { InferenceClient } from "@nearai/inference-sdk/node";
 
 const apiKey = process.env.NEARAI_API_KEY;
 if (!apiKey) throw new Error("Set NEARAI_API_KEY first.");
 
-const inferenceClient = new InferenceClient({
+const client = new InferenceClient({
   apiKey,
   baseUrl: "https://cloud-api.near.ai/v1",
   e2ee: false,
 });
 
-const openai = new OpenAI({
-  apiKey,
-  baseURL: inferenceClient.getBaseUrl(),
-  fetch: inferenceClient.fetch,
-  maxRetries: 0,
-});
-
-const response = await openai.responses.create({
+const response = await client.responses.create({
   model: "openai/gpt-6-astra",
   input: "Hello!",
   store: false,
 });
 
 // Verify before displaying the answer.
-const verified = await inferenceClient.verifyResponse(response.id);
+const verified = await client.verifyResponse(response.id);
 console.log(response.output_text);
 console.log("Verified signer:", verified.signatureKind);
 ```
@@ -96,39 +84,28 @@ console.log("Verified signer:", verified.signatureKind);
 </Tab>
 <Tab title="Messages" id="messages">
 
-Call an Anthropic model through the Messages API with E2EE disabled. Pass `InferenceClient.fetch` to the official Anthropic client.
-
-```bash
-npm install @anthropic-ai/sdk
-```
+Call an Anthropic model through the Messages API with E2EE disabled.
 
 ```javascript
-import Anthropic from "@anthropic-ai/sdk";
 import { InferenceClient } from "@nearai/inference-sdk/node";
 
 const apiKey = process.env.NEARAI_API_KEY;
 if (!apiKey) throw new Error("Set NEARAI_API_KEY first.");
 
-const inference = new InferenceClient({
+const client = new InferenceClient({
   apiKey,
   baseUrl: "https://cloud-api.near.ai/v1",
   e2ee: false,
 });
-const anthropic = new Anthropic({
-  apiKey,
-  baseURL: "https://cloud-api.near.ai",
-  fetch: inference.fetch,
-  maxRetries: 0,
-});
 
-const response = await anthropic.messages.create({
+const response = await client.messages.create({
   model: "anthropic/claude-opus-4-6",
   max_tokens: 128,
   messages: [{ role: "user", content: "Hello!" }],
 });
 
 // Verify before displaying the answer.
-const verified = await inference.verifyResponse(response.id);
+const verified = await client.verifyResponse(response.id);
 console.log(response.content
   .filter((block) => block.type === "text")
   .map((block) => block.text)
@@ -139,44 +116,32 @@ console.log("Verified signer:", verified.signatureKind);
 </Tab>
 <Tab title="System One" id="system-one">
 
-Ask Jev a structured question with E2EE and OHTTP disabled. The Jev client uses the API root without `/v1`; keep compression and automatic retries disabled as shown.
-
-```bash
-npm install @typesafe-ai/sdk
-```
+Ask Jev a structured question with E2EE and OHTTP disabled.
 
 ```javascript
 import { InferenceClient } from "@nearai/inference-sdk/node";
-import { TypeSafeClient, noul } from "@typesafe-ai/sdk";
 
 const apiKey = process.env.NEARAI_API_KEY;
 if (!apiKey) throw new Error("Set NEARAI_API_KEY first.");
 
-const inference = new InferenceClient({
+const client = new InferenceClient({
   apiKey,
   baseUrl: "https://cloud-api.near.ai/v1",
   e2ee: false,
   ohttp: false,
 });
-const jev = new TypeSafeClient({
-  apiKey,
-  baseURL: "https://cloud-api.near.ai",
-  fetch: inference.fetch,
-  compression: false,
-  retry: { maxRetries: 0 },
-});
 
-const { data, response } = await jev.systemOne({
+const result = await client.systemone.create({
   model: "typesafe/jev-1.13",
   state: { message: "I was charged twice. Please help." },
-  questions: { billing: noul("Is this about billing?") },
-}).withResponse();
+  questions: {
+    billing: { type: "noul", instructions: "Is this about billing?" },
+  },
+});
 
-// Use the NEAR receipt ID, which is separate from Jev's requestId.
-const id = response.headers.get("X-Generation-Id");
-if (!id) throw new Error("Missing System One receipt ID.");
-const verified = await inference.verifyResponse(id);
-console.log(data.answers);
+// decisionId is captured from X-Generation-Id.
+const verified = await client.verifyResponse(result.decisionId);
+console.log(result.data.answers);
 console.log("Verified signer:", verified.signatureKind);
 ```
 
@@ -250,5 +215,7 @@ The Chat and `verifyResponse()` calls stay the same. Before sending Chat, the SD
 See the [Inference SDK examples and setup instructions](https://github.com/nearai/inference-sdk/tree/main/examples) for runnable projects.
 
 - [InferenceClient](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/client.ts): streaming and non-streaming Chat, response verification, and Gateway image provenance checks.
-- [OpenAI SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/client-openai-sdk.ts): use `InferenceClient.fetch` with the OpenAI client.
+- OpenAI SDK integration: [Chat Completions](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/client-openai-sdk.ts) and [Responses](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/responses-openai-sdk.ts).
+- [Anthropic SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/messages-anthropic-sdk.ts).
+- [Jev SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/jev-sdk.ts).
 - [Manual verification and E2EE](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/bare.ts): work directly with attestation, encryption, and signature-verification helpers.

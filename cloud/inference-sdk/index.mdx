@@ -45,14 +45,12 @@ go get github.com/nearai/inference-sdk/go
 
 Choose the API listed on your model's page in the [model catalog](/cloud/models), then open its example in your language guide. All four languages support the APIs below; Chat Completions, Responses, and Messages also support streaming.
 
-| API | Official SDK integration | Encryption |
-| --- | --- | --- |
-| Chat Completions | OpenAI JavaScript, Python, and Go | Optional E2EE and OHTTP |
-| Responses | OpenAI JavaScript, Python, and Go | Optional OHTTP |
-| Messages | Anthropic JavaScript and Python | Optional OHTTP |
-| System One | Jev JavaScript and Python | HTTPS |
-
-Rust uses the native NEAR AI client. Go also uses the native client for Messages and System One.
+| API | Encryption |
+| --- | --- |
+| Chat Completions | Optional E2EE and OHTTP |
+| Responses | Optional OHTTP |
+| Messages | Optional OHTTP |
+| System One | HTTPS |
 
 ## E2EE
 
@@ -67,7 +65,7 @@ The SDK verifies Gateway attestation before sending a request and model attestat
 | Chat Completions | Completion `id`, including an ID from the stream |
 | Responses | Response `id`; for streaming, `event.response.id` from `response.created` |
 | Messages | Message `id`; for streaming, `event.message.id` from `message_start` |
-| System One | `X-Generation-Id` response header; Rust and Go expose it as `decision_id` and `DecisionID` |
+| System One | `decisionId` in JavaScript, `decision_id` in Python/Rust, `DecisionID` in Go; captured from `X-Generation-Id` |
 
 System One's receipt ID is separate from Jev's request ID. If a receipt is temporarily unavailable, retry verification with the same ID. Response records expire after 60 minutes by default; verify before expiry or closing the client.
 

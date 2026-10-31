@@ -92,24 +92,18 @@ func run() error {
 
 Use a Responses model with `store: false` and E2EE disabled. See [Stateless Responses](/cloud/guides/stateless-responses) for conversation history and tool calls.
 
-```bash
-go get github.com/openai/openai-go/v3
-```
-
 ```go
 package main
 
 import (
     "context"
+    "encoding/json"
     "fmt"
     "log"
     "os"
     "time"
 
     nearai "github.com/nearai/inference-sdk/go"
-    "github.com/openai/openai-go/v3"
-    "github.com/openai/openai-go/v3/option"
-    "github.com/openai/openai-go/v3/responses"
 )
 
 func main() {
@@ -138,18 +132,18 @@ func run() error {
     }
     defer client.Close()
 
-    ai := openai.NewClient(
-        option.WithAPIKey(apiKey),
-        option.WithBaseURL(client.BaseURL()),
-        option.WithHTTPClient(client.HTTPClient()),
-        option.WithMaxRetries(0),
-    )
-    response, err := ai.Responses.New(ctx, responses.ResponseNewParams{
-        Model: "openai/gpt-6-astra",
-        Input: responses.ResponseNewParamsInputUnion{OfString: openai.String("Hello!")},
-        Store: openai.Bool(false),
+    raw, err := client.CreateResponse(ctx, map[string]any{
+        "model": "openai/gpt-6-astra",
+        "input": "Hello!",
+        "store": false,
     })
     if err != nil {
+        return err
+    }
+    var response struct {
+        ID string `json:"id"`
+    }
+    if err := json.Unmarshal(raw, &response); err != nil {
         return err
     }
     if response.ID == "" {
@@ -161,7 +155,7 @@ func run() error {
     if err != nil {
         return err
     }
-    fmt.Println(response.OutputText())
+    fmt.Println(string(raw))
     fmt.Println("Verified signer:", verified.SignatureKind)
     return nil
 }
@@ -336,31 +330,6 @@ Response records expire 60 minutes after the full response is read, by default. 
 
 To check a deployment without sending a prompt, call `client.Verify(ctx, model)`. For custom policies and cache settings, see the [Go verification guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md).
 
-## Use the OpenAI Go SDK
-
-`InferenceClient` implements `http.RoundTripper`. To use an existing official OpenAI Go client, pass the verified HTTP client and disable automatic completion retries:
-
-```bash
-go get github.com/openai/openai-go/v3
-```
-
-```go
-// Imports:
-// "github.com/openai/openai-go/v3"
-// "github.com/openai/openai-go/v3/option"
-
-ai := openai.NewClient(
-    option.WithAPIKey(apiKey),
-    option.WithBaseURL(client.BaseURL()),
-    option.WithHTTPClient(client.HTTPClient()),
-    option.WithMaxRetries(0),
-)
-```
-
-Use `client` from the completion example and the same API key. The transport supports Chat Completions and Responses, including streaming. Disable E2EE for Responses.
-
-For streaming, consume the stream, check `stream.Err()`, and close it before calling `client.VerifyResponse(ctx, completionID)`. Use a completion ID from the stream. See the [OpenAI streaming example](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/gateway/openai/main.go).
-
 ## OHTTP
 
 Set `OHTTP: true` in `InferenceOptions` to encapsulate the Chat HTTP exchange to the attested Gateway. OHTTP is disabled by default and requires Ed25519, the default signing algorithm. Configure E2EE independently. Missing or invalid Gateway OHTTP evidence blocks Chat.
@@ -373,6 +342,8 @@ Set `OHTTP: true` in `InferenceOptions` to encapsulate the Chat HTTP exchange to
 
 - [Go verification guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md): policies, encryption, streaming, TLS binding, and errors.
 - [Go API reference](https://github.com/nearai/inference-sdk/blob/main/go/docs/api-reference.md): client options, verification functions, defaults, and result fields.
-- [Runnable Go examples](https://github.com/nearai/inference-sdk/tree/main/examples/example-go): Gateway and direct clients, standalone verification, and official OpenAI JSON/SSE integration.
+- [Runnable Go examples](https://github.com/nearai/inference-sdk/tree/main/examples/example-go): Gateway and direct clients, standalone verification, and streaming.
+- OpenAI SDK integration: [Chat Completions](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/gateway/openai/main.go) and [Responses](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/gateway/responses/main.go).
+- [Anthropic SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/gateway/anthropic/main.go).
 
 For experimental direct endpoints, see the [direct-client guide](/cloud/inference-sdk/direct).
