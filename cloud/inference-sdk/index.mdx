@@ -1,23 +1,23 @@
 ---
 title: "SDK"
 icon: "braces"
-description: "Use the JavaScript, Python, Rust, and Go SDKs for verified, encrypted Chat Completions."
+description: "Call NEAR AI Cloud inference and verify responses in JavaScript, Python, Rust, and Go."
 ---
 
-NEAR AI Inference SDK is available for JavaScript, Python, Rust, and Go. All four provide an OpenAI-compatible Chat Completions client, attestation verification, optional encryption, and explicit response-signature verification.
+Use the NEAR AI Inference SDK to call models, verify attestation evidence, and check response signatures. Choose your language to get started:
 
 <CardGroup cols={2}>
   <Card title="JavaScript" icon="braces" href="/cloud/inference-sdk/javascript">
-    Install from npm and get started with Node.js 24 or later.
+    Requires Node.js 24.22.1 or later.
   </Card>
   <Card title="Python" icon="code" href="/cloud/inference-sdk/python">
-    Install from PyPI and get started with Python 3.12 or later.
+    Requires Python 3.12 or later.
   </Card>
   <Card title="Rust" icon="code" href="/cloud/inference-sdk/rust">
-    Install from crates.io and get started with Rust stable and Cargo.
+    Use Rust stable and Cargo.
   </Card>
   <Card title="Go" icon="code" href="/cloud/inference-sdk/go">
-    Install with go get and get started with Go 1.25.8 or later.
+    Requires Go 1.26.10 or later.
   </Card>
 </CardGroup>
 
@@ -32,36 +32,55 @@ npm install @nearai/inference-sdk
 pip install nearai-inference-sdk
 ```
 
-```toml Rust
-[dependencies]
-nearai-inference-sdk = "0.1"
+```bash Rust
+cargo add nearai-inference-sdk
 ```
 
 ```bash Go
-go get github.com/nearai/inference-sdk/go@v0.1.0
+go get github.com/nearai/inference-sdk/go
 ```
 </CodeGroup>
 
-Packages: [npm](https://www.npmjs.com/package/@nearai/inference-sdk) · [PyPI](https://pypi.org/project/nearai-inference-sdk/) · [crates.io](https://crates.io/crates/nearai-inference-sdk) · [Go release](https://github.com/nearai/inference-sdk/releases/tag/go/v0.1.0).
+## Supported APIs
+
+Choose the API listed on your model's page in the [model catalog](/cloud/models), then open its example in your language guide. All four languages support the APIs below; Chat Completions, Responses, and Messages also support streaming.
+
+| API | Encryption |
+| --- | --- |
+| Chat Completions | Optional E2EE and OHTTP |
+| Responses | Optional OHTTP |
+| Messages | Optional OHTTP |
+| System One | HTTPS |
 
 ## E2EE
 
-End-to-end encryption is disabled by default. Enable it with `e2ee: true` in JavaScript and Rust, `e2ee=True` in Python, or `E2EE: true` in Go to encrypt supported Chat fields to a verified model key. E2EE requires a supported NEAR TEE model and rejects models without supported model attestation.
+End-to-end encryption (E2EE) encrypts supported Chat fields to a verified model key. It is disabled by default and requires a supported NEAR TEE model. Enable it in your language's client options; leave it disabled for Responses, Messages, and System One.
 
 ## Verification
 
-The clients verify Gateway evidence before sending Chat and verify model evidence where supported. In Python, Rust, and Go, model verification requires a NEAR vLLM deployment with attestation enabled; other providers use Gateway-only verification. The JavaScript SDK also supports Chutes model attestation.
+The SDK verifies Gateway attestation before sending a request and model attestation where supported. After receiving the answer, call `verifyResponse()` or your language's equivalent before using the output. For streaming, consume the entire stream first.
 
-After receiving a completion, call `verifyResponse(completion.id)` in JavaScript, `await client.verify_response(completion.id)` in Python, `client.verify_response(id).await?` in Rust, or `client.VerifyResponse(ctx, id)` in Go before using the answer as verified. For streaming, consume the entire stream first. Deployment verification alone does not verify a particular response.
+| API | ID to verify |
+| --- | --- |
+| Chat Completions | Completion `id`, including an ID from the stream |
+| Responses | Response `id`; for streaming, `event.response.id` from `response.created` |
+| Messages | Message `id`; for streaming, `event.message.id` from `message_start` |
+| System One | `decisionId` in JavaScript, `decision_id` in Python/Rust, `DecisionID` in Go; captured from `X-Generation-Id` |
 
-A `provider_tee` signature binds the exact request and response bytes to a verified model signer. A `gateway` signature binds those bytes to a verified Gateway signer; it does not prove that an attested model generated them.
+System One's receipt ID is separate from Jev's request ID. If a receipt is temporarily unavailable, retry verification with the same ID. Response records expire after 60 minutes by default; verify before expiry or closing the client.
 
-See [Verification](/cloud/verification) for evidence, policies, and verification limits, or follow the [JavaScript](/cloud/inference-sdk/javascript#verification), [Python](/cloud/inference-sdk/python#verification), [Rust](/cloud/inference-sdk/rust#verification), and [Go](/cloud/inference-sdk/go#verification) guides.
+Check the returned signature kind:
+
+- `provider_tee`: the verified model signer signed the request and response bytes.
+- `gateway`: the verified Gateway signed those bytes. This does not verify model TEE execution.
+
+Responses and Messages use Gateway signatures. See [Verification](/cloud/verification) for custom policies and evidence requirements.
 
 ## OHTTP
 
-All four SDKs support optional OHTTP to encapsulate the Chat HTTP exchange to the attested Gateway. It is disabled by default and requires Ed25519. E2EE protects supported fields to the model independently. See the [JavaScript](/cloud/inference-sdk/javascript#ohttp), [Python](/cloud/inference-sdk/python#ohttp), [Rust](/cloud/inference-sdk/rust#ohttp), or [Go](/cloud/inference-sdk/go#ohttp) configuration.
+OHTTP adds encryption between the client and the attested Gateway for Chat Completions, Responses, and Messages. It is optional, disabled by default, and requires Ed25519. See the [JavaScript](/cloud/inference-sdk/javascript#ohttp), [Python](/cloud/inference-sdk/python#ohttp), [Rust](/cloud/inference-sdk/rust#ohttp), or [Go](/cloud/inference-sdk/go#ohttp) configuration.
 
 ## Examples
 
-See the language guides for runnable examples, or explore the [SDK source and examples](https://github.com/nearai/inference-sdk).
+- [SDK examples](https://github.com/nearai/inference-sdk/tree/main/examples): complete projects for each language.
+- [Image provenance examples](https://github.com/nearai/inference-sdk/tree/main/examples#image-provenance): check image builds and Compose Manager deployment evidence against your policies.
