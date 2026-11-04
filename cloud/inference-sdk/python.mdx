@@ -26,21 +26,7 @@ Call a supported NEAR TEE model with E2EE enabled, then verify the completion.
 import asyncio
 import os
 
-from nearai_inference_sdk import ApiError, InferenceClient
-
-
-async def verify_receipt(client, receipt_id):
-    for delay in (0.5, 1, 2, 4):
-        try:
-            return await client.verify_response(receipt_id)
-        except ApiError as error:
-            if (
-                not error.retryable
-                and error.failure.code != "api.completion_signature_unavailable"
-            ):
-                raise
-        await asyncio.sleep(delay)
-    return await client.verify_response(receipt_id)
+from nearai_inference_sdk import InferenceClient
 
 
 async def main():
@@ -53,7 +39,7 @@ async def main():
             messages=[{"role": "user", "content": "Reply with the word ok."}],
         )
         # Verify the exact request and response bytes before using the answer.
-        verified = await verify_receipt(client, completion.id)
+        verified = await client.verify_response(completion.id)
         print(f"Verified {verified.signature_kind} response.")
         print(completion.choices[0].message.content or "")
 
@@ -70,21 +56,7 @@ Use a Responses model with `store: false` and E2EE disabled. See [Stateless Resp
 import asyncio
 import os
 
-from nearai_inference_sdk import ApiError, InferenceClient
-
-
-async def verify_receipt(client, receipt_id):
-    for delay in (0.5, 1, 2, 4):
-        try:
-            return await client.verify_response(receipt_id)
-        except ApiError as error:
-            if (
-                not error.retryable
-                and error.failure.code != "api.completion_signature_unavailable"
-            ):
-                raise
-        await asyncio.sleep(delay)
-    return await client.verify_response(receipt_id)
+from nearai_inference_sdk import InferenceClient
 
 
 async def main():
@@ -102,7 +74,7 @@ async def main():
         )
 
         # Verify before displaying the answer.
-        verified = await verify_receipt(client, response.id)
+        verified = await client.verify_response(response.id)
         print(response.output_text)
         print("Verified signer:", verified.signature_kind)
 
@@ -119,21 +91,7 @@ Call an Anthropic model through the Messages API with E2EE disabled.
 import asyncio
 import os
 
-from nearai_inference_sdk import ApiError, InferenceClient
-
-
-async def verify_receipt(client, receipt_id):
-    for delay in (0.5, 1, 2, 4):
-        try:
-            return await client.verify_response(receipt_id)
-        except ApiError as error:
-            if (
-                not error.retryable
-                and error.failure.code != "api.completion_signature_unavailable"
-            ):
-                raise
-        await asyncio.sleep(delay)
-    return await client.verify_response(receipt_id)
+from nearai_inference_sdk import InferenceClient
 
 
 async def main():
@@ -150,7 +108,7 @@ async def main():
         )
 
         # Verify before displaying the answer.
-        verified = await verify_receipt(client, response.id)
+        verified = await client.verify_response(response.id)
         print("".join(block.text for block in response.content if block.type == "text"))
         print("Verified signer:", verified.signature_kind)
 
@@ -167,21 +125,7 @@ Ask Jev a structured question with E2EE and OHTTP disabled.
 import asyncio
 import os
 
-from nearai_inference_sdk import ApiError, InferenceClient
-
-
-async def verify_receipt(client, receipt_id):
-    for delay in (0.5, 1, 2, 4):
-        try:
-            return await client.verify_response(receipt_id)
-        except ApiError as error:
-            if (
-                not error.retryable
-                and error.failure.code != "api.completion_signature_unavailable"
-            ):
-                raise
-        await asyncio.sleep(delay)
-    return await client.verify_response(receipt_id)
+from nearai_inference_sdk import InferenceClient
 
 
 async def main():
@@ -200,7 +144,7 @@ async def main():
             },
         })
         # decision_id is captured from X-Generation-Id.
-        verified = await verify_receipt(client, result.decision_id)
+        verified = await client.verify_response(result.decision_id)
         print(result.data["answers"])
         print("Verified signer:", verified.signature_kind)
 
@@ -218,10 +162,6 @@ End-to-end encryption is disabled by default. `e2ee=True` encrypts supported Cha
 E2EE requires a NEAR vLLM model with attestation enabled. Other providers use Gateway-only verification; set `e2ee=False` for those models.
 
 ## Verification
-
-The snippets below reuse the `verify_receipt` helper from the examples above.
-
-The examples retry temporary receipt lookup failures on the same client and response ID, with at most five attempts and delays of 0.5, 1, 2, and 4 seconds. They never repeat inference. Signature mismatches and other permanent failures stop immediately, before output is displayed.
 
 Before sending Chat, the client verifies the Gateway and, for supported NEAR TEE models, every returned model report. Gateway TLS identity verification is enabled by default and subsequent requests are pinned to that identity. Failed required checks stop the request.
 
@@ -253,7 +193,7 @@ async for chunk in stream:
 
 if completion_id is None:
     raise RuntimeError("Stream returned no completion ID")
-await verify_receipt(client, completion_id)
+await client.verify_response(completion_id)
 print("".join(parts))
 ```
 
@@ -267,7 +207,7 @@ async with InferenceClient(api_key, e2ee=True, ohttp=True) as client:
         model="z-ai/glm-5.3-flash",
         messages=[{"role": "user", "content": "Hello!"}],
     )
-    await verify_receipt(client, completion.id)
+    await client.verify_response(completion.id)
     print(completion.choices[0].message.content or "")
 ```
 

@@ -28,24 +28,7 @@ Choose the tab matching your model's API. Save the example as `example.mjs` and 
 Call a supported NEAR TEE model with E2EE enabled, then verify the completion.
 
 ```javascript
-import { InferenceClient, isApiError } from '@nearai/inference-sdk/node';
-
-async function verifyReceipt(client, id) {
-  for (const delay of [500, 1000, 2000, 4000]) {
-    try {
-      return await client.verifyResponse(id);
-    } catch (error) {
-      if (
-        !isApiError(error) ||
-        (!error.retryable && error.failure.code !== "api.completion_signature_unavailable")
-      ) {
-        throw error;
-      }
-    }
-    await new Promise((resolve) => setTimeout(resolve, delay));
-  }
-  return client.verifyResponse(id);
-}
+import { InferenceClient } from '@nearai/inference-sdk/node';
 
 const baseUrl = 'https://cloud-api.near.ai/v1';
 const model = 'z-ai/glm-5.3-flash';
@@ -64,7 +47,7 @@ const completion = await client.chat.completions.create({
 });
 
 // Verify the response signature before displaying the answer.
-const verified = await verifyReceipt(client, completion.id);
+const verified = await client.verifyResponse(completion.id);
 console.log(`Verified ${verified.signatureKind} response.`);
 console.log(completion.choices[0]?.message.content);
 ```
@@ -75,24 +58,7 @@ console.log(completion.choices[0]?.message.content);
 Use a Responses model with `store: false` and E2EE disabled. See [Stateless Responses](/cloud/guides/stateless-responses) for conversation history and tool calls.
 
 ```javascript
-import { InferenceClient, isApiError } from "@nearai/inference-sdk/node";
-
-async function verifyReceipt(client, id) {
-  for (const delay of [500, 1000, 2000, 4000]) {
-    try {
-      return await client.verifyResponse(id);
-    } catch (error) {
-      if (
-        !isApiError(error) ||
-        (!error.retryable && error.failure.code !== "api.completion_signature_unavailable")
-      ) {
-        throw error;
-      }
-    }
-    await new Promise((resolve) => setTimeout(resolve, delay));
-  }
-  return client.verifyResponse(id);
-}
+import { InferenceClient } from "@nearai/inference-sdk/node";
 
 const apiKey = process.env.NEARAI_API_KEY;
 if (!apiKey) throw new Error("Set NEARAI_API_KEY first.");
@@ -110,7 +76,7 @@ const response = await client.responses.create({
 });
 
 // Verify before displaying the answer.
-const verified = await verifyReceipt(client, response.id);
+const verified = await client.verifyResponse(response.id);
 console.log(response.output_text);
 console.log("Verified signer:", verified.signatureKind);
 ```
@@ -121,24 +87,7 @@ console.log("Verified signer:", verified.signatureKind);
 Call an Anthropic model through the Messages API with E2EE disabled.
 
 ```javascript
-import { InferenceClient, isApiError } from "@nearai/inference-sdk/node";
-
-async function verifyReceipt(client, id) {
-  for (const delay of [500, 1000, 2000, 4000]) {
-    try {
-      return await client.verifyResponse(id);
-    } catch (error) {
-      if (
-        !isApiError(error) ||
-        (!error.retryable && error.failure.code !== "api.completion_signature_unavailable")
-      ) {
-        throw error;
-      }
-    }
-    await new Promise((resolve) => setTimeout(resolve, delay));
-  }
-  return client.verifyResponse(id);
-}
+import { InferenceClient } from "@nearai/inference-sdk/node";
 
 const apiKey = process.env.NEARAI_API_KEY;
 if (!apiKey) throw new Error("Set NEARAI_API_KEY first.");
@@ -156,7 +105,7 @@ const response = await client.messages.create({
 });
 
 // Verify before displaying the answer.
-const verified = await verifyReceipt(client, response.id);
+const verified = await client.verifyResponse(response.id);
 console.log(response.content
   .filter((block) => block.type === "text")
   .map((block) => block.text)
@@ -170,24 +119,7 @@ console.log("Verified signer:", verified.signatureKind);
 Ask Jev a structured question with E2EE and OHTTP disabled.
 
 ```javascript
-import { InferenceClient, isApiError } from "@nearai/inference-sdk/node";
-
-async function verifyReceipt(client, id) {
-  for (const delay of [500, 1000, 2000, 4000]) {
-    try {
-      return await client.verifyResponse(id);
-    } catch (error) {
-      if (
-        !isApiError(error) ||
-        (!error.retryable && error.failure.code !== "api.completion_signature_unavailable")
-      ) {
-        throw error;
-      }
-    }
-    await new Promise((resolve) => setTimeout(resolve, delay));
-  }
-  return client.verifyResponse(id);
-}
+import { InferenceClient } from "@nearai/inference-sdk/node";
 
 const apiKey = process.env.NEARAI_API_KEY;
 if (!apiKey) throw new Error("Set NEARAI_API_KEY first.");
@@ -208,7 +140,7 @@ const result = await client.systemone.create({
 });
 
 // decisionId is captured from X-Generation-Id.
-const verified = await verifyReceipt(client, result.decisionId);
+const verified = await client.verifyResponse(result.decisionId);
 console.log(result.data.answers);
 console.log("Verified signer:", verified.signatureKind);
 ```
@@ -222,14 +154,10 @@ End-to-end encryption is disabled by default. Set `e2ee: true` to encrypt suppor
 
 ## Verification
 
-The snippets below reuse the `verifyReceipt` helper from the examples above.
-
-The examples retry temporary receipt lookup failures on the same client and response ID, with at most five attempts and delays of 0.5, 1, 2, and 4 seconds. They never repeat inference. Signature mismatches and other permanent failures stop immediately, before output is displayed.
-
 `InferenceClient` verifies the Gateway and every returned NEAR model-attestation candidate before sending an E2EE Chat Completion. Call `verifyResponse()` after a completion to verify its response signature with the request and response bytes captured by the client.
 
 ```js
-const receipt = await verifyReceipt(client, completion.id);
+const receipt = await client.verifyResponse(completion.id);
 console.log(`Verified ${receipt.signatureKind} response.`);
 ```
 
