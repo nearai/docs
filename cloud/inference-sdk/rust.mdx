@@ -31,6 +31,22 @@ Call a supported NEAR TEE model with E2EE enabled, then verify the completion.
 use nearai_inference_sdk::{InferenceClient, InferenceClientOptions};
 use serde_json::json;
 
+async fn verify_receipt(
+    client: &InferenceClient,
+    id: &str,
+) -> Result<nearai_inference_sdk::VerifiedCompletionResult, nearai_inference_sdk::InferenceError> {
+    for delay in [500, 1000, 2000, 4000] {
+        match client.verify_response(id).await {
+            Err(error) if error.retryable()
+                || error.code() == "api.completion_signature_unavailable" => {
+                tokio::time::sleep(std::time::Duration::from_millis(delay)).await;
+            }
+            result => return result,
+        }
+    }
+    client.verify_response(id).await
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = InferenceClient::with_options(InferenceClientOptions {
@@ -45,7 +61,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Verify the exact request and response bytes before using the answer.
     let id = completion["id"].as_str().ok_or("Completion has no ID")?;
-    let verified = client.verify_response(id).await?;
+    let verified = verify_receipt(&client, id).await?;
     println!("Verified {:?} response", verified.signature_kind());
     println!("{}", completion["choices"][0]["message"]["content"]);
     Ok(())
@@ -60,6 +76,22 @@ Use a Responses model with `store: false` and E2EE disabled. See [Stateless Resp
 ```rust
 use nearai_inference_sdk::{InferenceClient, InferenceClientOptions};
 use serde_json::json;
+
+async fn verify_receipt(
+    client: &InferenceClient,
+    id: &str,
+) -> Result<nearai_inference_sdk::VerifiedCompletionResult, nearai_inference_sdk::InferenceError> {
+    for delay in [500, 1000, 2000, 4000] {
+        match client.verify_response(id).await {
+            Err(error) if error.retryable()
+                || error.code() == "api.completion_signature_unavailable" => {
+                tokio::time::sleep(std::time::Duration::from_millis(delay)).await;
+            }
+            result => return result,
+        }
+    }
+    client.verify_response(id).await
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -77,7 +109,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Verify before displaying the answer.
     let id = response["id"].as_str().ok_or("response has no ID")?;
-    let verified = client.verify_response(id).await?;
+    let verified = verify_receipt(&client, id).await?;
     println!("{}", response["output"]);
     println!("Verified signer: {:?}", verified.signature_kind());
     Ok(())
@@ -92,6 +124,22 @@ Call an Anthropic model through the Messages API with E2EE disabled.
 ```rust
 use nearai_inference_sdk::{InferenceClient, InferenceClientOptions};
 use serde_json::json;
+
+async fn verify_receipt(
+    client: &InferenceClient,
+    id: &str,
+) -> Result<nearai_inference_sdk::VerifiedCompletionResult, nearai_inference_sdk::InferenceError> {
+    for delay in [500, 1000, 2000, 4000] {
+        match client.verify_response(id).await {
+            Err(error) if error.retryable()
+                || error.code() == "api.completion_signature_unavailable" => {
+                tokio::time::sleep(std::time::Duration::from_millis(delay)).await;
+            }
+            result => return result,
+        }
+    }
+    client.verify_response(id).await
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -109,7 +157,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Verify before displaying the answer.
     let id = response["id"].as_str().ok_or("message has no ID")?;
-    let verified = client.verify_response(id).await?;
+    let verified = verify_receipt(&client, id).await?;
     println!("{}", response["content"]);
     println!("Verified signer: {:?}", verified.signature_kind());
     Ok(())
@@ -124,6 +172,22 @@ Ask Jev a structured question with E2EE and OHTTP disabled.
 ```rust
 use nearai_inference_sdk::{InferenceClient, InferenceClientOptions};
 use serde_json::json;
+
+async fn verify_receipt(
+    client: &InferenceClient,
+    id: &str,
+) -> Result<nearai_inference_sdk::VerifiedCompletionResult, nearai_inference_sdk::InferenceError> {
+    for delay in [500, 1000, 2000, 4000] {
+        match client.verify_response(id).await {
+            Err(error) if error.retryable()
+                || error.code() == "api.completion_signature_unavailable" => {
+                tokio::time::sleep(std::time::Duration::from_millis(delay)).await;
+            }
+            result => return result,
+        }
+    }
+    client.verify_response(id).await
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -143,7 +207,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     })).await?;
 
     // decision_id is captured from X-Generation-Id.
-    let verified = client.verify_response(&result.decision_id).await?;
+    let verified = verify_receipt(&client, &result.decision_id).await?;
     println!("{}", serde_json::to_string_pretty(&result.data.answers)?);
     println!("Verified signer: {:?}", verified.signature_kind());
     Ok(())
@@ -160,6 +224,8 @@ End-to-end encryption is disabled by default. Set `e2ee: true` to encrypt suppor
 E2EE requires a NEAR vLLM model with attestation enabled. Other providers use Gateway-only verification; set `e2ee: false` for those models.
 
 ## Verification
+
+The examples retry temporary receipt lookup failures on the same client and response ID, with at most five attempts and delays of 0.5, 1, 2, and 4 seconds. They never repeat inference. Signature mismatches and other permanent failures stop immediately, before output is displayed.
 
 Before sending Chat, the client verifies the Gateway and every returned model report for supported models. Gateway TLS identity verification is enabled by default and subsequent requests are pinned to that identity. Normal HTTPS certificate validation remains enabled. Failed required checks stop the request.
 

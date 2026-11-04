@@ -29,6 +29,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -36,6 +37,25 @@ import (
 
 	nearai "github.com/nearai/inference-sdk/go"
 )
+
+func verifyReceipt(ctx context.Context, client *nearai.InferenceClient, id string) (nearai.VerifiedCompletionResult, error) {
+	delays := []time.Duration{500 * time.Millisecond, time.Second, 2 * time.Second, 4 * time.Second}
+	for attempt := 0; ; attempt++ {
+		receipt, err := client.VerifyResponse(ctx, id)
+		var sdkErr *nearai.Error
+		if err == nil || attempt == len(delays) || !errors.As(err, &sdkErr) ||
+			(!sdkErr.Retryable && sdkErr.Code != "api.completion_signature_unavailable") {
+			return receipt, err
+		}
+		timer := time.NewTimer(delays[attempt])
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return nearai.VerifiedCompletionResult{}, ctx.Err()
+		case <-timer.C:
+		}
+	}
+}
 
 func main() {
 	if err := run(); err != nil {
@@ -77,7 +97,7 @@ func run() error {
 		return fmt.Errorf("completion has no ID")
 	}
 
-	verified, err := client.VerifyResponse(ctx, completion.ID)
+	verified, err := verifyReceipt(ctx, client, completion.ID)
 	if err != nil {
 		return err
 	}
@@ -98,6 +118,7 @@ package main
 import (
     "context"
     "encoding/json"
+    "errors"
     "fmt"
     "log"
     "os"
@@ -105,6 +126,25 @@ import (
 
     nearai "github.com/nearai/inference-sdk/go"
 )
+
+func verifyReceipt(ctx context.Context, client *nearai.InferenceClient, id string) (nearai.VerifiedCompletionResult, error) {
+    delays := []time.Duration{500 * time.Millisecond, time.Second, 2 * time.Second, 4 * time.Second}
+    for attempt := 0; ; attempt++ {
+        receipt, err := client.VerifyResponse(ctx, id)
+        var sdkErr *nearai.Error
+        if err == nil || attempt == len(delays) || !errors.As(err, &sdkErr) ||
+            (!sdkErr.Retryable && sdkErr.Code != "api.completion_signature_unavailable") {
+            return receipt, err
+        }
+        timer := time.NewTimer(delays[attempt])
+        select {
+        case <-ctx.Done():
+            timer.Stop()
+            return nearai.VerifiedCompletionResult{}, ctx.Err()
+        case <-timer.C:
+        }
+    }
+}
 
 func main() {
     if err := run(); err != nil {
@@ -151,7 +191,7 @@ func run() error {
     }
 
     // Verify before displaying the answer.
-    verified, err := client.VerifyResponse(ctx, response.ID)
+    verified, err := verifyReceipt(ctx, client, response.ID)
     if err != nil {
         return err
     }
@@ -172,6 +212,7 @@ package main
 import (
     "context"
     "encoding/json"
+    "errors"
     "fmt"
     "log"
     "os"
@@ -179,6 +220,25 @@ import (
 
     nearai "github.com/nearai/inference-sdk/go"
 )
+
+func verifyReceipt(ctx context.Context, client *nearai.InferenceClient, id string) (nearai.VerifiedCompletionResult, error) {
+    delays := []time.Duration{500 * time.Millisecond, time.Second, 2 * time.Second, 4 * time.Second}
+    for attempt := 0; ; attempt++ {
+        receipt, err := client.VerifyResponse(ctx, id)
+        var sdkErr *nearai.Error
+        if err == nil || attempt == len(delays) || !errors.As(err, &sdkErr) ||
+            (!sdkErr.Retryable && sdkErr.Code != "api.completion_signature_unavailable") {
+            return receipt, err
+        }
+        timer := time.NewTimer(delays[attempt])
+        select {
+        case <-ctx.Done():
+            timer.Stop()
+            return nearai.VerifiedCompletionResult{}, ctx.Err()
+        case <-timer.C:
+        }
+    }
+}
 
 func main() {
     if err := run(); err != nil {
@@ -225,7 +285,7 @@ func run() error {
     }
 
     // Verify before displaying the answer.
-    verified, err := client.VerifyResponse(ctx, response.ID)
+    verified, err := verifyReceipt(ctx, client, response.ID)
     if err != nil {
         return err
     }
@@ -250,6 +310,7 @@ package main
 import (
     "context"
     "encoding/json"
+    "errors"
     "fmt"
     "log"
     "os"
@@ -257,6 +318,25 @@ import (
 
     nearai "github.com/nearai/inference-sdk/go"
 )
+
+func verifyReceipt(ctx context.Context, client *nearai.InferenceClient, id string) (nearai.VerifiedCompletionResult, error) {
+    delays := []time.Duration{500 * time.Millisecond, time.Second, 2 * time.Second, 4 * time.Second}
+    for attempt := 0; ; attempt++ {
+        receipt, err := client.VerifyResponse(ctx, id)
+        var sdkErr *nearai.Error
+        if err == nil || attempt == len(delays) || !errors.As(err, &sdkErr) ||
+            (!sdkErr.Retryable && sdkErr.Code != "api.completion_signature_unavailable") {
+            return receipt, err
+        }
+        timer := time.NewTimer(delays[attempt])
+        select {
+        case <-ctx.Done():
+            timer.Stop()
+            return nearai.VerifiedCompletionResult{}, ctx.Err()
+        case <-timer.C:
+        }
+    }
+}
 
 func main() {
     if err := run(); err != nil {
@@ -295,7 +375,7 @@ func run() error {
         return err
     }
     // DecisionID is captured from X-Generation-Id.
-    verified, err := client.VerifyResponse(ctx, result.DecisionID)
+    verified, err := verifyReceipt(ctx, client, result.DecisionID)
     if err != nil {
         return err
     }
@@ -319,6 +399,8 @@ Gateway E2EE is disabled by default. Set `E2EE: true` to encrypt supported Chat 
 E2EE requires a NEAR vLLM model with attestation enabled. Other providers use Gateway-only verification; leave E2EE disabled for those models.
 
 ## Verification
+
+The examples retry temporary receipt lookup failures on the same client and response ID, with at most five attempts and delays of 0.5, 1, 2, and 4 seconds. They never repeat inference. Signature mismatches and other permanent failures stop immediately, before output is displayed.
 
 Before sending Chat, the client verifies the Gateway and every returned model report for supported models. Attested Gateway TLS pinning is enabled by default; normal HTTPS certificate validation remains enabled. Failed required checks stop the request.
 
