@@ -67,7 +67,7 @@ The SDK verifies Gateway attestation before sending a request and model attestat
 | Messages | Message `id`; for streaming, `event.message.id` from `message_start` |
 | System One | `decisionId` in JavaScript, `decision_id` in Python/Rust, `DecisionID` in Go; captured from `X-Generation-Id` |
 
-System One's receipt ID is separate from Jev's request ID. If a receipt is temporarily unavailable, retry verification with the same ID. Response records expire after 60 minutes by default; verify before expiry or closing the client.
+System One's receipt ID is separate from the upstream request ID. If a receipt is temporarily unavailable, retry verification with the same ID. Response records expire after 60 minutes by default; verify before expiry or closing the client.
 
 Check the returned signature kind:
 
