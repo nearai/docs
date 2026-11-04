@@ -10,11 +10,11 @@ description: "Experimental SDK notes for direct model endpoints."
 
 Independent requests to the same direct hostname can reach different serving instances. An attestation report does not establish deployment evidence for a later completion, and a later signature lookup can return `404`. Do not use direct response signatures as a production verification gate.
 
-Use `DirectInferenceClient` only when maintaining an existing direct integration.
+Direct clients default E2EE to disabled. Set `e2ee: true` to enable it, as shown below.
 
 ## Install
 
-The package requires Node.js 24 or later.
+The package requires Node.js 24.22.1 or later.
 
 ```bash
 npm install @nearai/inference-sdk
@@ -80,11 +80,11 @@ For a browser or an application proxy, import from `@nearai/inference-sdk`. Conf
 
 ## Examples
 
-See the [Inference SDK examples and setup instructions](https://github.com/nearai/inference-sdk/tree/main/examples#direct-model-endpoints) for runnable direct-endpoint projects.
+See the [Inference SDK examples and setup instructions](https://github.com/nearai/inference-sdk/tree/main/examples#entry-points) for runnable direct-endpoint projects.
 
-- [DirectInferenceClient](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/client.ts): streaming and non-streaming Chat with E2EE and response verification.
-- [OpenAI SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/client-openai-sdk.ts): use `DirectInferenceClient.fetch` with the OpenAI client.
-- [Manual verification](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/bare.ts): verify model attestations and response signatures directly. This example sends plaintext Chat bodies over HTTPS without E2EE.
+- [DirectInferenceClient](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/chat-completions.ts): streaming and non-streaming Chat with E2EE and response verification.
+- [OpenAI SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/chat-completions-with-openai-sdk.ts): use `DirectInferenceClient.fetch` with the OpenAI client.
+- [Manual verification](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/chat-completions-bare.ts): verify model attestations and response signatures directly. This example sends plaintext Chat bodies over HTTPS without E2EE.
 
 ## Next steps
 
