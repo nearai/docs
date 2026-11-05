@@ -7,10 +7,12 @@ description: "Embed the Verification Center with an HTML iframe and JavaScript."
 Add the [Verification Center](/cloud/verification/verification-center) to any web application with an HTML `<iframe>`. Send SDK verification reports to it using `postMessage`; no UI framework is required.
 
 <Note>
-  The embedded viewer displays reports verified by your application. It does not independently verify their evidence. Keep API keys in your application, outside the iframe URL and reports.
+  Your application runs verification. The embedded viewer validates and displays the reports you send; it does not independently verify their evidence. Keep API keys in your application, outside the iframe URL and reports.
 </Note>
 
 ## Before you begin
+
+This example extends an existing browser SDK inference flow. For client setup and creating completions, see the [JavaScript SDK guide](/cloud/inference-sdk/javascript).
 
 - Serve your page over HTTPS, or HTTP on `localhost` / `127.0.0.1` for development.
 - Use the same SDK client that created the completion, and finish consuming any response stream before verifying it.
@@ -36,59 +38,73 @@ Leave `src` unset until the message listener is registered.
 ></iframe>
 ```
 
-## 2. Send verification reports
+## 2. Connect the viewer
 
 Copy [prepare-report.mjs](https://github.com/nearai/nearai-cloud-ui/blob/main/examples/verify-iframe/prepare-report.mjs) into your application. This helper calls `verifyResponse()`, selects display fields, and turns SDK errors into reports that the iframe displays. The iframe also displays protocol errors and rejects expired requests.
 
-Run the following JavaScript through your application's bundler after the iframe exists. `client` is your original SDK client, and `completionId` is the completed response's `completion.id`.
+Save this as `verification.js` beside `prepare-report.mjs`. Import it through your application's bundler, which resolves the helper's npm SDK import.
 
-```js
+```js verification.js
 import { getResponseVerificationReports } from './prepare-report.mjs';
 
-const iframe = document.getElementById('verification');
-const viewer = new URL('https://cloud.near.ai/verify?canRequestReports=true');
-let requestId = '';
+export function showVerification(client, completionId) {
+  const iframe = document.getElementById('verification');
+  const viewer = new URL('https://cloud.near.ai/verify?canRequestReports=true');
+  let requestId = '';
 
-async function receive(event) {
-  if (
-    event.origin !== viewer.origin ||
-    event.source !== iframe.contentWindow
-  ) return;
+  async function receive(event) {
+    if (
+      event.origin !== viewer.origin ||
+      event.source !== iframe.contentWindow
+    ) return;
 
-  const { type, version, requestId: id } = event.data ?? {};
-  if (version !== 1 || typeof id !== 'string' || !id) return;
-  if (![
-    'NEAR_AI_VERIFICATION_CENTER_READY',
-    'NEAR_AI_REQUEST_VERIFICATION_REPORT',
-  ].includes(type)) return;
+    const { type, version, requestId: id } = event.data ?? {};
+    if (version !== 1 || typeof id !== 'string' || !id) return;
+    if (![
+      'NEAR_AI_VERIFICATION_CENTER_READY',
+      'NEAR_AI_REQUEST_VERIFICATION_REPORT',
+    ].includes(type)) return;
 
-  requestId = id;
-  const reports = await getResponseVerificationReports(client, completionId);
-  if (requestId !== id) return;
-  iframe.contentWindow?.postMessage(
-    {
-      type: 'NEAR_AI_VERIFICATION_REPORT',
-      version: 1,
-      requestId: id,
-      reports,
-    },
-    viewer.origin,
-  );
+    requestId = id;
+    const reports = await getResponseVerificationReports(client, completionId);
+    if (requestId !== id) return;
+    iframe.contentWindow?.postMessage(
+      {
+        type: 'NEAR_AI_VERIFICATION_REPORT',
+        version: 1,
+        requestId: id,
+        reports,
+      },
+      viewer.origin,
+    );
+  }
+
+  window.addEventListener('message', receive);
+  iframe.src = viewer.href;
+
+  return () => {
+    requestId = '';
+    window.removeEventListener('message', receive);
+    iframe.removeAttribute('src');
+  };
 }
-
-function disconnect() {
-  requestId = '';
-  window.removeEventListener('message', receive);
-  iframe.removeAttribute('src');
-}
-
-window.addEventListener('message', receive);
-iframe.src = viewer.href;
 ```
 
-The viewer requests a report when it is ready. **Verify again** reruns verification for the same completion without generating another response; the SDK may reuse cached evidence. Call `disconnect()` before removing the iframe or switching to another completion, then reconnect for the new target.
+## 3. Open a completed response
 
-The helper shares the response signature and its associated hardware summary. Model signatures use verified status; Gateway signatures use partial status because they do not prove model execution. It omits chat content and raw evidence. Send the normalized `reports` array, rather than the raw SDK result.
+Once the iframe exists and the response is complete, call the function with the browser SDK client that made the request and the response ID:
+
+```js
+import { showVerification } from './verification.js';
+
+const disconnect = showVerification(client, completion.id);
+```
+
+The viewer requests a report when it is ready, then displays the response signature and hardware summary. **Verify again** checks the same completion without generating another response; the SDK may reuse cached evidence.
+
+Keep the returned `disconnect` function. Call `disconnect()` before removing the iframe or opening a different response, then call `showVerification()` with the new completion ID. This removes the previous listener and prevents its pending results from being sent.
+
+The helper shares the response signature and its associated hardware summary, without chat content or raw evidence. A model-signed report uses `status: "verified"`. A Gateway report uses `status: "partial"` and appears as **Gateway verified** in the viewer: it does not attest model execution. Send the normalized `reports` array, rather than the raw SDK result.
 
 ## Customize the viewer
 
