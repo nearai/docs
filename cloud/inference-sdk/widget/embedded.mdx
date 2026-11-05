@@ -40,12 +40,88 @@ Leave `src` unset until the message listener is registered.
 
 ## 2. Connect the viewer
 
-Copy [prepare-report.mjs](https://github.com/nearai/nearai-cloud-ui/blob/main/examples/verify-iframe/prepare-report.mjs) into your application. This helper calls `verifyResponse()`, selects display fields, and turns SDK errors into reports that the iframe displays. The iframe also displays protocol errors and rejects expired requests.
+Save the complete example below as `verification.js`. It verifies a response, selects the fields the viewer needs, and handles ready and refresh messages. Import it through your application's bundler to resolve the npm SDK import.
 
-Save this as `verification.js` beside `prepare-report.mjs`. Import it through your application's bundler, which resolves the helper's npm SDK import.
+<Accordion title="Complete verification.js — copy into your application">
 
 ```js verification.js
-import { getResponseVerificationReports } from './prepare-report.mjs';
+import { getSdkError, isVerificationError } from '@nearai/inference-sdk';
+
+const signingIdentity = ({ signingAlgo, signingAddress }) => ({
+  signingAlgo, signingAddress,
+});
+
+async function getReports(client, completionId) {
+  try {
+    const result = await client.verifyResponse(completionId);
+    const { signatureKind, signature, attestation } = result;
+    if (!['provider_tee', 'gateway'].includes(signatureKind))
+      throw new TypeError('Unsupported signature kind.');
+    return [{
+      schemaVersion: 1,
+      kind: 'reply',
+      completionId,
+      scope: signatureKind === 'provider_tee' ? 'model' : 'gateway',
+      status: signatureKind === 'provider_tee' ? 'verified' : 'partial',
+      signature: {
+        kind: signature.kind,
+        signer: signingIdentity(signature.signer),
+        signedText: signature.signedText,
+        signature: signature.signature,
+      },
+      attestation: {
+        signer: signingIdentity(attestation.signer),
+        tcbStatus: attestation.tcbStatus,
+        advisoryIds: [...attestation.advisoryIds],
+        deploymentProvenance: attestation.deploymentProvenance,
+        deployment: {
+          runtimeMeasurements: {
+            osImageHash: attestation.deployment.runtimeMeasurements.osImageHash,
+            composeHash: attestation.deployment.runtimeMeasurements.composeHash,
+          },
+        },
+        ...('gpuEvidence' in attestation
+          ? { gpuEvidence: attestation.gpuEvidence } : {}),
+        ...('signingPublicKey' in attestation
+          ? { signingPublicKey: attestation.signingPublicKey } : {}),
+        ...('tlsBinding' in attestation ? {
+          tlsBinding: attestation.tlsBinding.kind === 'attested'
+            ? { kind: 'attested', spkiFingerprint: attestation.tlsBinding.spkiFingerprint }
+            : { kind: 'none' },
+        } : {}),
+      },
+    }];
+  } catch (error) {
+    const sdkError = getSdkError(error);
+    const failure = sdkError?.failure;
+    const unavailable = [
+      'input.invalid', 'ohttp.attestation_required', 'quote.collateral_unavailable',
+      'policy.gpu_evidence_required', 'policy.model_attestation_required',
+      'binding.spki_fingerprint_required', 'gpu.nras_request_failed',
+      'gpu.jwks_request_failed', 'provenance.image_request_failed',
+      'e2ee.model_public_key_required',
+    ].includes(failure?.code);
+    const failed = (isVerificationError(sdkError) && !sdkError.retryable && !unavailable)
+      || failure?.code === 'api.nonce_mismatch';
+    const httpStatus = failure?.code === 'api.http_status'
+      ? failure.details.status : undefined;
+    return [{
+      schemaVersion: 1,
+      kind: 'reply',
+      completionId,
+      scope: 'unknown',
+      status: failed ? 'failed' : 'unverifiable',
+      error: {
+        code: failure?.code,
+        message: httpStatus === 401 || httpStatus === 403
+          ? `API access was denied (HTTP ${httpStatus}). Check credentials.`
+          : failed
+            ? 'The SDK rejected the signature or verification evidence.'
+            : 'Verification could not complete. Check API access and retry.',
+      },
+    }];
+  }
+}
 
 export function showVerification(client, completionId) {
   const iframe = document.getElementById('verification');
@@ -66,7 +142,7 @@ export function showVerification(client, completionId) {
     ].includes(type)) return;
 
     requestId = id;
-    const reports = await getResponseVerificationReports(client, completionId);
+    const reports = await getReports(client, completionId);
     if (requestId !== id) return;
     iframe.contentWindow?.postMessage(
       {
@@ -90,6 +166,8 @@ export function showVerification(client, completionId) {
 }
 ```
 
+</Accordion>
+
 ## 3. Open a completed response
 
 Once the iframe exists and the response is complete, call the function with the browser SDK client that made the request and the response ID:
@@ -104,7 +182,7 @@ The viewer requests a report when it is ready, then displays the response signat
 
 Keep the returned `disconnect` function. Call `disconnect()` before removing the iframe or opening a different response, then call `showVerification()` with the new completion ID. This removes the previous listener and prevents its pending results from being sent.
 
-The helper shares the response signature and its associated hardware summary, without chat content or raw evidence. A model-signed report uses `status: "verified"`. A Gateway report uses `status: "partial"` and appears as **Gateway verified** in the viewer: it does not attest model execution. Send the normalized `reports` array, rather than the raw SDK result.
+The example shares the response signature and its associated hardware summary, without chat content or raw evidence. A model-signed report uses `status: "verified"`. A Gateway report uses `status: "partial"` and appears as **Gateway verified** in the viewer: it does not attest model execution. Send the normalized `reports` array, rather than the raw SDK result.
 
 ## Customize the viewer
 
@@ -125,11 +203,10 @@ For example: `https://cloud.near.ai/verify?darkMode=true&showHeader=false&canReq
 | Blank viewer | Use HTTPS or a supported local origin. Allow `https://cloud.near.ai` in CSP `frame-src`. If sandboxed, include `allow-scripts allow-same-origin`. |
 | Completion not found | Reuse the original SDK client and finish consuming the response stream. |
 | SDK HTTP `401` or `403` | Check your application's credentials and SDK `baseUrl` (`https://cloud-api.near.ai/v1`). |
-| Invalid report | Use the adapter and echo the latest viewer request ID. Keep the origin and source checks shown above. |
-| Missing Quote, Event log, or GPU payload | The adapter shares summaries. Include detailed evidence explicitly if your application needs it. |
+| Invalid report | Use the complete example above and echo the latest viewer request ID. Keep its origin and source checks. |
 
 ## Reference
 
-- [Complete examples and connection helpers](https://github.com/nearai/nearai-cloud-ui/tree/main/examples/verify-iframe): lifecycle handling, readiness timeout, and optional Escape closing.
-- [Message protocol and report schema](https://github.com/nearai/nearai-cloud-ui/blob/main/docs/verification-iframe.md): custom reports, size limits, and hardware evidence.
-- [JavaScript SDK](/cloud/inference-sdk/javascript) and [verification policy](/cloud/verification/reference/verification-policy): create completions and choose the checks your application requires.
+- [JavaScript SDK](/cloud/inference-sdk/javascript): create completions and verify responses.
+- [Verification Center](/cloud/verification/verification-center): inspect a model or response in the standalone viewer.
+- [Verification policy](/cloud/verification/reference/verification-policy): choose the checks your application requires.
