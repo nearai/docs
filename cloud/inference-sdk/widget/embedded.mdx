@@ -34,12 +34,11 @@ Leave `src` unset until the message listener is registered.
   referrerpolicy="no-referrer"
   style="width: 100%; max-width: 720px; height: 80vh; border: 0"
 ></iframe>
-<p id="verification-status" role="status" aria-live="polite"></p>
 ```
 
 ## 2. Send verification reports
 
-Copy [prepare-report.mjs](https://github.com/nearai/nearai-cloud-ui/blob/main/examples/verify-iframe/prepare-report.mjs) into your application. This helper calls `verifyResponse()`, selects display fields, and turns SDK errors into reports.
+Copy [prepare-report.mjs](https://github.com/nearai/nearai-cloud-ui/blob/main/examples/verify-iframe/prepare-report.mjs) into your application. This helper calls `verifyResponse()`, selects display fields, and turns SDK errors into reports that the iframe displays. The iframe also displays protocol errors and rejects expired requests.
 
 Run the following JavaScript through your application's bundler after the iframe exists. `client` is your original SDK client, and `completionId` is the completed response's `completion.id`.
 
@@ -47,60 +46,37 @@ Run the following JavaScript through your application's bundler after the iframe
 import { getResponseVerificationReports } from './prepare-report.mjs';
 
 const iframe = document.getElementById('verification');
-const status = document.getElementById('verification-status');
 const viewer = new URL('https://cloud.near.ai/verify?canRequestReports=true');
-let active = true;
 let requestId = '';
 
 async function receive(event) {
   if (
-    !active ||
     event.origin !== viewer.origin ||
     event.source !== iframe.contentWindow
   ) return;
 
-  const message = event.data;
-  if (
-    !message ||
-    message.version !== 1 ||
-    typeof message.requestId !== 'string' ||
-    !message.requestId
-  ) return;
+  const { type, version, requestId: id } = event.data ?? {};
+  if (version !== 1 || typeof id !== 'string' || !id) return;
+  if (![
+    'NEAR_AI_VERIFICATION_CENTER_READY',
+    'NEAR_AI_REQUEST_VERIFICATION_REPORT',
+  ].includes(type)) return;
 
-  if (message.type === 'NEAR_AI_VERIFICATION_ERROR') {
-    if (message.requestId === requestId) {
-      requestId = '';
-      status.textContent = 'The viewer could not display the report. Try Verify again.';
-    }
-    return;
-  }
-  if (
-    message.type !== 'NEAR_AI_VERIFICATION_CENTER_READY' &&
-    message.type !== 'NEAR_AI_REQUEST_VERIFICATION_REPORT'
-  ) return;
-
-  const current = (requestId = message.requestId);
-  status.textContent = '';
-  try {
-    const reports = await getResponseVerificationReports(client, completionId);
-    if (!active || requestId !== current) return;
-    iframe.contentWindow.postMessage(
-      {
-        type: 'NEAR_AI_VERIFICATION_REPORT',
-        version: 1,
-        requestId: current,
-        reports,
-      },
-      viewer.origin,
-    );
-  } catch {
-    if (active && requestId === current)
-      status.textContent = 'The application could not prepare a verification report.';
-  }
+  requestId = id;
+  const reports = await getResponseVerificationReports(client, completionId);
+  if (requestId !== id) return;
+  iframe.contentWindow?.postMessage(
+    {
+      type: 'NEAR_AI_VERIFICATION_REPORT',
+      version: 1,
+      requestId: id,
+      reports,
+    },
+    viewer.origin,
+  );
 }
 
 function disconnect() {
-  active = false;
   requestId = '';
   window.removeEventListener('message', receive);
   iframe.removeAttribute('src');
