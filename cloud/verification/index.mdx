@@ -7,19 +7,19 @@ Verification lets your application check evidence about the services handling a 
 
 **Attestation** is hardware-signed evidence about an environment and its keys. **Verification** checks that evidence and its bindings. Your **policy** defines which evidence, deployments, and build sources you accept. For an introduction to the hardware protection, see [Private Inference](/cloud/private-inference).
 
-## Two environments, different evidence
+## Gateway and model verification
 
-Requests through `cloud-api.near.ai` pass through a Gateway before reaching a model provider. The Gateway and a model's execution environment have separate identities and attestation evidence.
+The Gateway receives your API request at `cloud-api.near.ai` and forwards it to a model service for inference. These services have different roles in the request flow:
 
 ```mermaid
 flowchart LR
     C[Your application and SDK] -->|HTTPS request| G[NEAR AI Cloud Gateway]
-    G -->|Inference request| M[Model execution environment]
+    G -->|Inference request| M[Model service]
     M -->|Model response| G
     G -->|Client-visible response| C
 ```
 
-Gateway evidence describes the service receiving your API request. Model evidence, where supported, describes a model-serving environment. Verifying the Gateway alone does not verify the model environment.
+**Gateway attestation** checks evidence about the Gateway's deployment and signing identity. **Model attestation**, where supported, checks evidence about the deployment serving the model and its signing identity. Each has its own evidence; verifying the Gateway alone does not establish the model-side result.
 
 ## Follow one request
 
