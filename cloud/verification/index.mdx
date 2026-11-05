@@ -7,8 +7,6 @@ description: "Learn why to verify an AI request, what the checks tell you, and h
 
 Before sending private data to an AI service, you may want to check that it runs on protected hardware. After it answers, you may also want to check that the reply matches what a verified service signed. Verification lets your application perform these checks as part of a request.
 
-A successful API call only tells you that a service returned an answer. Verification adds checks before you send the prompt and after you receive the reply, so your application can decide whether to use the result.
-
 ## What are you checking?
 
 There are three questions to answer:
@@ -17,9 +15,7 @@ There are three questions to answer:
 2. **Does your connection reach the service you checked?** In a supported server-side runtime, the SDK checks that the HTTPS connection reaches the Gateway identified by that evidence.
 3. **Does the reply match what a verified service signed?** The SDK checks a signed record against the exact request you sent and the reply you received, then identifies which service signed it.
 
-The **Gateway** receives your API request and forwards it. The **model service** runs inference and produces the answer. They have separate checks: verifying the Gateway alone does not verify the model service.
-
-These checks concern the service and the signed data. They do not assess whether the answer is factually correct.
+The **Gateway** receives your API request and forwards it. The **model service** runs inference and produces the answer. The SDK checks each service's evidence separately.
 
 ## Follow one request
 
@@ -35,15 +31,15 @@ Suppose your application asks a supported NEAR model to summarize a paragraph. U
     After the checks pass, the SDK sends the request to the Gateway. The Gateway forwards it to the model service, which generates a summary and returns it through the Gateway.
   </Step>
   <Step title="Your application receives the complete reply">
-    The SDK retains the request and response bytes so they can be checked later. Your application has the summary, but has not yet verified its signed record. For a streaming response, wait until the whole stream has been received.
+    The SDK retains the request and response bytes so they can be checked later. For a streaming response, wait until the whole stream has been received.
   </Step>
   <Step title="Your application asks the SDK to verify the reply">
     Call `verifyResponse(responseId)` or your language's equivalent on the same SDK client. The SDK fetches the signed response record, checks its signature against the keys it verified earlier, and compares it with the saved request and response bytes.
 
-    **Your application must make this call.** If verification fails or the record is unavailable, the reply remains unverified.
+    **Your application triggers this step.**
   </Step>
   <Step title="Your application decides whether to use the answer">
-    The result tells you whether the model service or the Gateway signed the reply. If you require a model-signed reply, a Gateway-signed reply does not meet that requirement.
+    The result tells you whether the model service or the Gateway signed the reply. Check whether that signer meets your application's requirements.
 
     Once verification succeeds and the result meets your requirements, display or use the summary.
   </Step>
@@ -60,7 +56,7 @@ Suppose your application asks a supported NEAR model to summarize a paragraph. U
   </Card>
 </CardGroup>
 
-The browser tool is useful for inspection. To check your application's exact request and response, use the SDK flow. If a check cannot complete, [Troubleshooting](/cloud/verification/troubleshooting) explains the result and what to do next.
+For help with missing evidence or failed checks, see [Troubleshooting](/cloud/verification/troubleshooting).
 
 ## Terms and verification details
 
@@ -73,6 +69,4 @@ The detailed guides use these names for the checks above:
 | Response receipt | The signed record checked against your request and response; `provider_tee` means a model-side signer, and `gateway` means the Gateway signer | [Response signatures](/cloud/verification/cloud-api/response-signatures) |
 | Deployment policy and image provenance | Additional rules for accepting particular software releases and verifying their build sources | [Verification policy](/cloud/verification/reference/verification-policy) and [image provenance](/cloud/verification/cloud-api/image-provenance) |
 
-Hardware evidence alone does not establish that the software is a release you approve. Configure a deployment policy when you need that restriction. Checking an image's build source also does not by itself verify model weights or prove which weights handled a request.
-
-The example flow above uses a server-side SDK with a supported NEAR model. Other models may have Gateway-only verification. Browsers cannot perform the same HTTPS peer-certificate check, and direct model endpoints have a separate experimental [Direct Completions](/cloud/experimental/direct-completions) workflow. See the linked guides for those differences and [Private Inference](/cloud/private-inference) for the underlying hardware protection.
+For browser support, see [TLS connection binding](/cloud/verification/cloud-api/tls). For experimental direct model endpoints, see [Direct Completions](/cloud/experimental/direct-completions). Learn about the hardware protections in [Private Inference](/cloud/private-inference).
