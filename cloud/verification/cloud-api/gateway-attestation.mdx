@@ -3,7 +3,9 @@ title: "Gateway Attestation"
 description: "Verify the NEAR AI Cloud gateway attestation for requests sent to cloud-api.near.ai."
 ---
 
-`gateway_attestation` is evidence for the NEAR AI Cloud gateway. It is not evidence for a model environment. Use [model attestations](/cloud/verification/cloud-api/model-attestations) when your policy also requires model evidence.
+`gateway_attestation` authenticates the Gateway environment and its signing identity. Verify it before sending inference so that a later response signature can be checked against an identity you already verified. Model environments have [separate evidence](/cloud/verification/cloud-api/model-attestations).
+
+For application integration, start with [Verify with the SDK](/cloud/verification/verify-with-sdk). The SDK performs Gateway verification during preflight and can reuse a verified session within its configured cache lifetime. The steps below explain the underlying manual checks.
 
 ## Request gateway evidence
 
@@ -52,3 +54,7 @@ The verified quote is the cryptographic source of truth. The HTTP fields are con
 The nonce establishes freshness only when the client generated and retained it, and the verified quote contains that nonce. If the report is unavailable, the quote fails, the nonce does not match, or the identity does not match, treat the gateway property as unverified.
 
 For a deployment-first response-signature flow, retain this verified report and require a later `gateway` signature to match its signer and algorithm. A report fetched after the completion cannot replace that preflight evidence, and a report from another signer is not a substitute.
+
+## Continue the flow
+
+Bind the verified Gateway identity to your [TLS connection](/cloud/verification/cloud-api/tls). If your application requires model evidence, also verify the [model attestations](/cloud/verification/cloud-api/model-attestations) before inference. Return to the [verification overview](/cloud/verification) for the complete request lifecycle.

@@ -7,16 +7,16 @@ description: "Call NEAR AI Cloud inference and verify responses in JavaScript, P
 Use the NEAR AI Inference SDK to call models, verify attestation evidence, and check response signatures. Choose your language to get started:
 
 <CardGroup cols={2}>
-  <Card title="JavaScript" icon="braces" href="/cloud/inference-sdk/javascript">
+  <Card title="JavaScript" icon="/images/icons/languages/javascript.svg" href="/cloud/inference-sdk/javascript">
     Requires Node.js 24.22.1 or later.
   </Card>
-  <Card title="Python" icon="code" href="/cloud/inference-sdk/python">
+  <Card title="Python" icon="/images/icons/languages/python.svg" href="/cloud/inference-sdk/python">
     Requires Python 3.12 or later.
   </Card>
-  <Card title="Rust" icon="code" href="/cloud/inference-sdk/rust">
+  <Card title="Rust" icon="/images/icons/languages/rust.svg" href="/cloud/inference-sdk/rust">
     Use Rust stable and Cargo.
   </Card>
-  <Card title="Go" icon="code" href="/cloud/inference-sdk/go">
+  <Card title="Go" icon="/images/icons/languages/go.svg" href="/cloud/inference-sdk/go">
     Requires Go 1.26.10 or later.
   </Card>
 </CardGroup>
@@ -57,6 +57,8 @@ Choose the API listed on your model's page in the [model catalog](/cloud/models)
 End-to-end encryption (E2EE) encrypts supported Chat fields to a verified model key. It is disabled by default and requires a supported NEAR TEE model. Enable it in your language's client options; leave it disabled for Responses, Messages, and System One.
 
 ## Verification
+
+Follow [Verify with the SDK](/cloud/verification/verify-with-sdk) for a complete request-to-verification walkthrough and an explanation of its results.
 
 The SDK verifies Gateway attestation before sending a request and model attestation where supported. After receiving the answer, call `verifyResponse()` or your language's equivalent before using the output. For streaming, consume the entire stream first.
 

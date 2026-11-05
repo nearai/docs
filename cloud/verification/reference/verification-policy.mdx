@@ -3,7 +3,25 @@ title: "Verification Policy"
 description: "Define required evidence, acceptable measurements, provenance requirements, and handling for unavailable verification results."
 ---
 
-Attestation verifies particular cryptographic statements. Your application must decide which statements it requires and what software, hardware, and source provenance it accepts.
+Attestation verifies particular cryptographic statements. Your application must decide which statements it requires and what software, hardware, and source provenance it accepts. A policy makes those acceptance conditions explicit before you send inference or use a response.
+
+Start with [Verify with the SDK](/cloud/verification/verify-with-sdk) for a complete request. Use this page when deciding which additional evidence and deployment restrictions your application needs.
+
+## SDK defaults and application choices
+
+| Check | Default behavior | Application choice |
+| --- | --- | --- |
+| Intel TDX quote and bindings | Verify quote authenticity, nonce and signer bindings, and deployment measurements; reject debug-enabled quotes | Choose accepted TCB statuses. The defaults accept `UpToDate`, `OutOfDate`, and `TDRelaunchAdvised` |
+| GPU evidence in a supported model report | Verify it when present | Require GPU evidence if its absence must reject the model |
+| Deployment measurements | Verify their binding to the quote | Compare them with your approved-deployment allowlist |
+| Image provenance | No image-build policy is enabled automatically | Configure the required repositories, workflows, and revisions using [provenance helpers](/cloud/verification/cloud-api/image-provenance) |
+| Gateway TLS binding | Enabled by default in the Node-specific, Python, Rust, and Go clients; unavailable through browser Fetch | Choose a runtime and transport that can observe the peer certificate when this property is required |
+| Attestation reuse | Reuse successful verification for 60 minutes | Set the cache lifetime to `0` to verify before every request; a cached result does not detect later deployment changes |
+| Response signatures | Inference retains the information needed for verification | Call `verifyResponse` or the language equivalent after receiving the full response, then require an acceptable signature kind |
+
+The JavaScript result `deploymentProvenance: "verified"` means a caller-supplied deployment callback accepted the measured deployment. Its strength depends on what that callback checks; it does not imply that all images or model weights were verified. Without a callback, the value is `not_checked`.
+
+Configure reusable deployment checks through the SDK's Gateway or model deployment verifier. A model `deploymentPolicy` callback can also apply rules using the requested model name. See the [SDK verification guide](https://github.com/nearai/inference-sdk/blob/main/js/docs/verification-guide.md) for JavaScript configuration and the [language guides](/cloud/inference-sdk) for the other SDKs.
 
 ## Define acceptance before verification
 
@@ -42,3 +60,7 @@ The same hostname can be served by more than one attested instance. A report is 
 ## What attestation does not establish by itself
 
 Attestation does not validate the quality of a model response, secure a compromised client device, or establish image provenance without a separate cryptographic provenance check. It also does not turn a reachable build record into a verified provenance statement.
+
+## Apply the policy
+
+Use the policy with the [SDK request flow](/cloud/verification/verify-with-sdk), and interpret missing or failed checks with [troubleshooting](/cloud/verification/troubleshooting). The [overview](/cloud/verification) maps each policy decision to the stage where it is enforced.

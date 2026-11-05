@@ -3,10 +3,10 @@ title: "Verification Center"
 description: "Check a model's hardware attestation and a reply's signature in your browser, without writing code."
 ---
 
-The Verification Center at [cloud.near.ai/verify](https://cloud.near.ai/verify) is a public web page that verifies NEAR AI Cloud attestation evidence for a model and, optionally, the signature on a single reply. It runs the same checks described in the other verification guides, so you can inspect the evidence without writing code or holding an API key.
+The Verification Center at [cloud.near.ai/verify](https://cloud.near.ai/verify) is a public web page that verifies NEAR AI Cloud attestation evidence for a model and, optionally, the signature on a single reply. It uses the inference SDK to check hardware evidence and signing identities, so you can inspect them without writing code or holding an API key.
 
 <Note>
-  The Verification Center is a convenience for inspection and spot checks. It does not replace the checks your application performs when it enforces its own [verification policy](/cloud/verification/reference/verification-policy).
+  The Verification Center is a convenience for inspection and spot checks. To verify a request and its response inside your application, follow [Verify with the SDK](/cloud/verification/verify-with-sdk) and enforce your own [verification policy](/cloud/verification/reference/verification-policy).
 </Note>
 
 ## Open the page
@@ -137,17 +137,4 @@ If the receipt is malformed, too large, or repeated, the page reports an invalid
 
 ## Next steps
 
-<CardGroup cols={2}>
-  <Card title="Gateway attestation" icon="shield-check" href="/cloud/verification/cloud-api/gateway-attestation">
-    Verify the gateway's evidence in your own client.
-  </Card>
-  <Card title="Model attestations" icon="cpu" href="/cloud/verification/cloud-api/model-attestations">
-    Verify every model candidate before a completion.
-  </Card>
-  <Card title="Response signatures" icon="signature" href="/cloud/verification/cloud-api/response-signatures">
-    Verify the signature on a completion.
-  </Card>
-  <Card title="Verification policy" icon="list-checks" href="/cloud/verification/reference/verification-policy">
-    Decide which evidence your application requires.
-  </Card>
-</CardGroup>
+Use [Verify with the SDK](/cloud/verification/verify-with-sdk) to verify the exact bytes of your application's request and response. For errors, see [troubleshooting](/cloud/verification/troubleshooting); for the relationship between environment evidence, deployment policy, and reply signatures, return to the [verification overview](/cloud/verification).
