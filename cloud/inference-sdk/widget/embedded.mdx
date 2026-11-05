@@ -1,32 +1,18 @@
 ---
 title: "Embedded"
 icon: "panel-right"
-description: "Embed the Verification Center with an HTML iframe and JavaScript."
+description: "Embed the Verification Center and supply your application's verification reports."
 ---
 
-Add the [Verification Center](/cloud/verification/verification-center) to any web application with an HTML `<iframe>`. Send SDK verification reports to it using `postMessage`; no UI framework is required.
+Add the [Verification Center](/cloud/verification/verification-center) with an HTML `<iframe>` and plain JavaScript. Your application supplies verification reports; the viewer displays them through `postMessage`.
 
 <Note>
-  Your application runs verification. The embedded viewer validates and displays the reports you send; it does not independently verify their evidence. Keep API keys in your application, outside the iframe URL and reports.
+  This page covers iframe communication. Your application runs verification and prepares reports in the [format below](#report-type). The viewer validates their structure without independently verifying their evidence.
 </Note>
-
-## Before you begin
-
-This example extends an existing browser SDK inference flow. For client setup and creating completions, see the [JavaScript SDK guide](/cloud/inference-sdk/javascript).
-
-- Serve your page over HTTPS, or HTTP on `localhost` / `127.0.0.1` for development.
-- Use the same SDK client that created the completion, and finish consuming any response stream before verifying it.
-- Use the browser SDK entry point, `@nearai/inference-sdk`, rather than `@nearai/inference-sdk/node`.
-
-The example uses SDK **0.2.0**:
-
-```bash
-npm install @nearai/inference-sdk@0.2.0
-```
 
 ## 1. Add the iframe
 
-Leave `src` unset until the message listener is registered.
+Serve your application over HTTPS, or HTTP on `localhost` / `127.0.0.1` for development. Leave `src` unset until the message listener is registered.
 
 ```html
 <iframe
@@ -40,90 +26,10 @@ Leave `src` unset until the message listener is registered.
 
 ## 2. Connect the viewer
 
-Save the complete example below as `verification.js`. It verifies a response, selects the fields the viewer needs, and handles ready and refresh messages. Import it through your application's bundler to resolve the npm SDK import.
-
-<Accordion title="Complete verification.js — copy into your application">
+Save this as `verification.js`. The connection code uses browser APIs and has no SDK or framework dependency.
 
 ```js verification.js
-import { getSdkError, isVerificationError } from '@nearai/inference-sdk';
-
-const signingIdentity = ({ signingAlgo, signingAddress }) => ({
-  signingAlgo, signingAddress,
-});
-
-async function getReports(client, completionId) {
-  try {
-    const result = await client.verifyResponse(completionId);
-    const { signatureKind, signature, attestation } = result;
-    if (!['provider_tee', 'gateway'].includes(signatureKind))
-      throw new TypeError('Unsupported signature kind.');
-    return [{
-      schemaVersion: 1,
-      kind: 'reply',
-      completionId,
-      scope: signatureKind === 'provider_tee' ? 'model' : 'gateway',
-      status: signatureKind === 'provider_tee' ? 'verified' : 'partial',
-      signature: {
-        kind: signature.kind,
-        signer: signingIdentity(signature.signer),
-        signedText: signature.signedText,
-        signature: signature.signature,
-      },
-      attestation: {
-        signer: signingIdentity(attestation.signer),
-        tcbStatus: attestation.tcbStatus,
-        advisoryIds: [...attestation.advisoryIds],
-        deploymentProvenance: attestation.deploymentProvenance,
-        deployment: {
-          runtimeMeasurements: {
-            osImageHash: attestation.deployment.runtimeMeasurements.osImageHash,
-            composeHash: attestation.deployment.runtimeMeasurements.composeHash,
-          },
-        },
-        ...('gpuEvidence' in attestation
-          ? { gpuEvidence: attestation.gpuEvidence } : {}),
-        ...('signingPublicKey' in attestation
-          ? { signingPublicKey: attestation.signingPublicKey } : {}),
-        ...('tlsBinding' in attestation ? {
-          tlsBinding: attestation.tlsBinding.kind === 'attested'
-            ? { kind: 'attested', spkiFingerprint: attestation.tlsBinding.spkiFingerprint }
-            : { kind: 'none' },
-        } : {}),
-      },
-    }];
-  } catch (error) {
-    const sdkError = getSdkError(error);
-    const failure = sdkError?.failure;
-    const unavailable = [
-      'input.invalid', 'ohttp.attestation_required', 'quote.collateral_unavailable',
-      'policy.gpu_evidence_required', 'policy.model_attestation_required',
-      'binding.spki_fingerprint_required', 'gpu.nras_request_failed',
-      'gpu.jwks_request_failed', 'provenance.image_request_failed',
-      'e2ee.model_public_key_required',
-    ].includes(failure?.code);
-    const failed = (isVerificationError(sdkError) && !sdkError.retryable && !unavailable)
-      || failure?.code === 'api.nonce_mismatch';
-    const httpStatus = failure?.code === 'api.http_status'
-      ? failure.details.status : undefined;
-    return [{
-      schemaVersion: 1,
-      kind: 'reply',
-      completionId,
-      scope: 'unknown',
-      status: failed ? 'failed' : 'unverifiable',
-      error: {
-        code: failure?.code,
-        message: httpStatus === 401 || httpStatus === 403
-          ? `API access was denied (HTTP ${httpStatus}). Check credentials.`
-          : failed
-            ? 'The SDK rejected the signature or verification evidence.'
-            : 'Verification could not complete. Check API access and retry.',
-      },
-    }];
-  }
-}
-
-export function showVerification(client, completionId) {
+export function showVerification(getReports) {
   const iframe = document.getElementById('verification');
   const viewer = new URL('https://cloud.near.ai/verify?canRequestReports=true');
   let requestId = '';
@@ -142,7 +48,13 @@ export function showVerification(client, completionId) {
     ].includes(type)) return;
 
     requestId = id;
-    const reports = await getReports(client, completionId);
+    let reports;
+    try {
+      reports = await getReports();
+    } catch {
+      console.error('The application could not prepare verification reports.');
+      return;
+    }
     if (requestId !== id) return;
     iframe.contentWindow?.postMessage(
       {
@@ -166,33 +78,87 @@ export function showVerification(client, completionId) {
 }
 ```
 
-</Accordion>
+## 3. Supply your reports
 
-## 3. Open a completed response
+Supply a callback with this interface. It returns reports for the selected response, including unsuccessful verification results:
 
-Once the iframe exists and the response is complete, call the function with the browser SDK client that made the request and the response ID:
+```ts
+// VerificationReport is defined below.
+type GetReports = () => Promise<VerificationReport[]>;
+```
+
+After the iframe exists, pass your callback from your application module or a `<script type="module">`:
 
 ```js
 import { showVerification } from './verification.js';
 
-const disconnect = showVerification(client, completion.id);
+// reports is your application's prepared VerificationReport[].
+const disconnect = showVerification(async () => reports);
 ```
 
-The viewer requests a report when it is ready, then displays the response signature and hardware summary. **Verify again** checks the same completion without generating another response; the SDK may reuse cached evidence.
+This example reuses your application's prepared reports. The connection calls the callback when the viewer is ready and whenever the user selects **Verify again**. To provide fresh results, run verification or retrieve updated reports from your application's verification service inside the callback.
 
-Keep the returned `disconnect` function. Call `disconnect()` before removing the iframe or opening a different response, then call `showVerification()` with the new completion ID. This removes the previous listener and prevents its pending results from being sent.
+Call `disconnect()` before removing the iframe or opening a different response, then reconnect with the callback for the new target. Pending results from the previous connection are ignored.
 
-The example shares the response signature and its associated hardware summary, without chat content or raw evidence. A model-signed report uses `status: "verified"`. A Gateway report uses `status: "partial"` and appears as **Gateway verified** in the viewer: it does not attest model execution. Send the normalized `reports` array, rather than the raw SDK result.
+## Report type
+
+The following type describes response reports (`kind: "reply"`). These declarations document the data format; the JavaScript connection does not import them.
+
+<Accordion title="VerificationReport and attestation summary types">
+
+```ts
+import type {
+  CompletionSignature, GatewayTlsBinding, RuntimeMeasurements, SigningIdentity,
+} from '@nearai/inference-sdk';
+
+type VerificationReport = {
+  schemaVersion: 1;
+  kind: 'reply';
+  completionId: string;
+  model?: string;
+  scope: 'model' | 'gateway' | 'unknown';
+  status: 'verified' | 'partial' | 'failed' | 'unverifiable';
+  signature?: CompletionSignature;
+  attestation?: AttestationSummary;
+  error?: { code?: string; message: string };
+};
+
+type AttestationSummary = {
+  signer: SigningIdentity;
+  tcbStatus:
+    | 'UpToDate' | 'SWHardeningNeeded' | 'ConfigurationNeeded'
+    | 'ConfigurationAndSWHardeningNeeded' | 'OutOfDate'
+    | 'OutOfDateConfigurationNeeded' | 'Revoked' | 'Unknown';
+  advisoryIds: string[];
+  deploymentProvenance: 'verified' | 'not_checked';
+  deployment: { runtimeMeasurements: RuntimeMeasurements };
+  gpuEvidence?: 'verified' | 'not_provided';
+  signingPublicKey?: string;
+  tlsBinding?: GatewayTlsBinding;
+};
+```
+
+</Accordion>
+
+- Successful response reports require both `signature` and `attestation`, with matching signing identities and no `error`. Model scope requires a `provider_tee` signature and `gpuEvidence`; Gateway scope requires a `gateway` signature, `tlsBinding`, and `status: "partial"`. Only model scope can use `status: "verified"`.
+- Use `failed` when verification rejects a signature or evidence, and `unverifiable` when it cannot complete. Include a safe `error.message`; use `scope: "unknown"` if verification could not establish the scope.
+- The viewer derives a model-signed response's model from its signed payload; any supplied `model` must match. Gateway reports do not attest model execution and appear as **Gateway verified** in the viewer.
+
+Return a nonempty array for one completion and at most one model, with at most 1,000 reports and 1 MiB of projected UTF-8 JSON.
+
+Select report fields explicitly before sending them. A type annotation or `as VerificationReport` does not remove runtime fields. Keep API keys, chat content, raw SDK results, raw exceptions, and deployment configuration out of reports.
+
+For SDK verification, see the [JavaScript SDK guide](/cloud/inference-sdk/javascript). Its `verifyResponse()` result must be converted to this format by your application; it is not itself a `VerificationReport`. Use the original SDK client that made the request, after any response stream is fully consumed.
 
 ## Customize the viewer
 
-Add these optional parameters to the viewer URL:
+Add these optional parameters to the viewer URL in `verification.js`:
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
 | `darkMode` | `false` | Use a dark viewer. |
 | `showHeader` | `true` | Set to `false` to hide the page header. |
-| `canRequestReports` | `false` | Enable **Verify again**, as in the example. |
+| `canRequestReports` | `false` | Enable **Verify again**, which calls `getReports` again. |
 
 For example: `https://cloud.near.ai/verify?darkMode=true&showHeader=false&canRequestReports=true`.
 
@@ -201,9 +167,9 @@ For example: `https://cloud.near.ai/verify?darkMode=true&showHeader=false&canReq
 | Symptom | What to check |
 | --- | --- |
 | Blank viewer | Use HTTPS or a supported local origin. Allow `https://cloud.near.ai` in CSP `frame-src`. If sandboxed, include `allow-scripts allow-same-origin`. |
-| Completion not found | Reuse the original SDK client and finish consuming the response stream. |
-| SDK HTTP `401` or `403` | Check your application's credentials and SDK `baseUrl` (`https://cloud-api.near.ai/v1`). |
-| Invalid report | Use the complete example above and echo the latest viewer request ID. Keep its origin and source checks. |
+| No report received | Ensure `getReports()` resolves with a nonempty report array. Check the browser console for callback errors. |
+| Invalid report | Check the versions, required fields, report limits, and matching signer identities. Keep the origin, source, and request-ID checks in the example. |
+| SDK cannot find the completion | Reuse the original SDK client and finish consuming the response stream before preparing reports. |
 
 ## Reference
 
