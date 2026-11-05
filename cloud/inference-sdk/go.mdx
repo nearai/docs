@@ -128,7 +128,7 @@ ai := openai.NewClient(
 
 Use `client` from the completion example and the same API key. Both `ai.Chat.Completions.New` and `NewStreaming` use the verified transport. Configure credentials on the inference client so evidence and signature requests are authenticated too. Only Chat Completions are supported; the Responses API is not supported.
 
-For streaming, consume the stream to completion, check `stream.Err()`, close it, and call `client.VerifyResponse(ctx, completionID)` using an ID from the stream. Output displayed before verification succeeds is not yet signature-verified. Close abandoned streams to cancel requests; incomplete or failed streams do not produce verifiable receipt records. The [runnable OpenAI example](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/gateway/openai/main.go) and its [shared implementation](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/internal/demo/demo.go) cover JSON and streaming calls.
+For streaming, consume the stream to completion, check `stream.Err()`, close it, and call `client.VerifyResponse(ctx, completionID)` using an ID from the stream. Output displayed before verification succeeds is not yet signature-verified. Close abandoned streams to cancel requests; incomplete or failed streams do not produce verifiable receipt records. The [runnable OpenAI example](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/gateway/chat-completions-with-openai-sdk/main.go) and its [shared implementation](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/internal/demo/demo.go) cover JSON and streaming calls.
 
 ## OHTTP
 

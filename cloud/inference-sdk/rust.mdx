@@ -77,7 +77,7 @@ Optionally call `client.verify(model).await?` before the first Chat request. It 
 
 Use `chat_request()` with `"stream": true`, then `send(reqwest::Request)` to obtain an `InferenceResponse`. Consume its `body` through HTTP EOF, including bytes after SSE `[DONE]`, before calling `verify_response()` with the completion ID from an SSE data event. Dropping a partial stream leaves no verifiable receipt. Output displayed before verification succeeds is not yet signature-verified.
 
-Rust exposes its own reqwest transport API rather than an OpenAI SDK adapter. Body chunks are SSE bytes and need not correspond to complete events or UTF-8 strings. The [streaming guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md#streaming) and [Gateway client example](https://github.com/nearai/inference-sdk/blob/main/examples/example-rs/src/gateway/client.rs) show how to consume responses and verify receipts. Only Chat Completions are supported; the Responses API is not supported.
+Rust exposes its own reqwest transport API rather than an OpenAI SDK adapter. Body chunks are SSE bytes and need not correspond to complete events or UTF-8 strings. The [streaming guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md#streaming) and [Gateway client example](https://github.com/nearai/inference-sdk/blob/main/examples/example-rs/src/gateway/chat_completions.rs) show how to consume responses and verify receipts. Only Chat Completions are supported; the Responses API is not supported.
 
 ## OHTTP
 
