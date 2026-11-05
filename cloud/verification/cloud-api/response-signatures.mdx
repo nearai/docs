@@ -3,7 +3,11 @@ title: "Response Signatures"
 description: "Verify available response signatures from the NEAR AI Cloud gateway against exact bytes and matching preflight evidence."
 ---
 
-Response signatures returned through the NEAR AI Cloud gateway can be produced by either a model-serving TEE or the gateway itself. Before sending a completion, verify the gateway and, when your policy requires model evidence, every returned NEAR model-attestation candidate. When present, `signature_kind` determines which verified preflight result must match the signer.
+Response verification checks that the exact request and response bytes match a signature from an identity verified before inference. Run it after receiving the complete response, including all events for a stream, and before accepting the output under your application's policy.
+
+Start with [Verify with the SDK](/cloud/verification/verify-with-sdk) to let the client retain the bytes and call `verifyResponse` or your language's equivalent. The manual procedure below explains the same byte and signer checks.
+
+Signatures can come from a model-serving TEE or the Gateway itself. Before sending a completion, verify the Gateway and, when your policy requires model evidence, every returned NEAR model-attestation candidate. The returned `signature_kind` determines which retained verified identity must match the signer.
 
 <Note>
   A response without an available signature is not a successfully verified response. If response verification is required by your policy, treat it as unverified after a short, bounded retry interval.
@@ -72,3 +76,7 @@ Do not use a report obtained after the completion as a substitute for preflight 
 <Note>
   Preflight Gateway and model evidence plus one response signature do not yet form a complete model-to-Gateway-to-final-response chain. A `gateway` signature proves that the verified Gateway signed the final client-visible bytes, not that the verified model produced an upstream response. A `provider_tee` signature does not bind its model-signed bytes to the preflight Gateway or TLS evidence.
 </Note>
+
+## Use the result
+
+Accept the output only when the verified signer type and evidence satisfy your [verification policy](/cloud/verification/reference/verification-policy). For missing receipts or a signer mismatch, use [troubleshooting](/cloud/verification/troubleshooting). Return to the [overview](/cloud/verification) to review the full lifecycle.

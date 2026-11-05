@@ -3,7 +3,9 @@ title: "NEAR Model Attestations"
 description: "Verify the NEAR model-attestation report returned through the NEAR AI Cloud gateway."
 ---
 
-Use this page when a request to `cloud-api.near.ai` needs evidence for a NEAR-operated model environment in addition to the gateway. Request that report explicitly with `provider=near`.
+Model attestation authenticates a NEAR-operated model environment and its signing identity, separately from the Gateway. Perform this check before inference when your application requires model evidence, then retain the verified identity for [response verification](/cloud/verification/cloud-api/response-signatures).
+
+The [SDK tutorial](/cloud/verification/verify-with-sdk) shows the application flow. The manual steps below request NEAR evidence explicitly with `provider=near`; support for other provider formats is separate.
 
 ## Request model evidence
 
@@ -74,3 +76,7 @@ For a NEAR AI Cloud gateway response with `signature_kind: "provider_tee"`, veri
 ## Other provider documentation
 
 Chutes documents its own evidence format in [TEE Evidence Verification](https://github.com/chutesai/chutes-api/blob/main/docs/tee-verification.md).
+
+## Continue the flow
+
+Apply any required [image-provenance policy](/cloud/verification/cloud-api/image-provenance) before sending inference. After receiving the complete response, verify its [response signature](/cloud/verification/cloud-api/response-signatures). The [overview](/cloud/verification) shows how these checks fit together.

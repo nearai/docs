@@ -3,7 +3,9 @@ title: "TLS Connection Binding"
 description: "Bind a live NEAR AI Cloud gateway TLS connection to the gateway attestation."
 ---
 
-Use this flow to establish that the HTTPS connection to `cloud-api.near.ai` terminates at the endpoint bound to `gateway_attestation`.
+TLS binding checks that the HTTPS peer you are connected to matches the identity authenticated by [Gateway attestation](/cloud/verification/cloud-api/gateway-attestation). It connects the environment evidence to the connection carrying your request.
+
+Use the [SDK tutorial](/cloud/verification/verify-with-sdk) for application integration. The Node-specific, Python, Rust, and Go clients enable Gateway TLS binding by default; browsers cannot observe the peer certificate. The manual flow below requires both the actual connection's certificate and a verified Gateway report.
 
 <Warning>
   The peer certificate and attestation report must be obtained on the **same TLS connection**. Two independent connections can reach different instances or observe different certificates, so they cannot establish this connection-specific conclusion.
@@ -42,3 +44,7 @@ This result applies to the connection used for the evidence request. When it mus
 | Certificate and report came from different connections | Treat the result as inconclusive. |
 
 Do not use a cached fingerprint as evidence for a new connection. Fetch new evidence after a certificate, signer, measurement, or accepted-attestation-age change.
+
+## Continue the flow
+
+After preflight, send inference through the verified connection and check the [response signature](/cloud/verification/cloud-api/response-signatures) against the retained evidence. Return to the [overview](/cloud/verification) for the full flow or [troubleshooting](/cloud/verification/troubleshooting) if connection binding is unavailable.
