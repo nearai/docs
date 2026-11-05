@@ -117,6 +117,9 @@ The API will return a JSON response containing the model's completion:
   "usage": {
     "prompt_tokens": 11,
     "completion_tokens": 70,
+    "completion_tokens_details": {
+      "reasoning_tokens": 21
+    },
     "reasoning_tokens": 21,
     "total_tokens": 81
   }
@@ -124,7 +127,7 @@ The API will return a JSON response containing the model's completion:
 ```
 
 <Note>
-  `zai-org/GLM-5.1-FP8` is a reasoning model, so the response includes a `reasoning_content` field and `reasoning_tokens` in `usage`. See [Reasoning Models](/cloud/reasoning-models) to control this behavior.
+  `zai-org/GLM-5.1-FP8` is a reasoning model, so the response includes a `reasoning_content` field and the reasoning token count in `usage.completion_tokens_details.reasoning_tokens` (the top-level `reasoning_tokens` is a deprecated alias). See [Reasoning Models](/cloud/reasoning-models) to control this behavior.
 </Note>
 All inference is performed within Trusted Execution Environments (TEEs), ensuring your data remains private and verifiable.
 

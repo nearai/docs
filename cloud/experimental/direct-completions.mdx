@@ -11,7 +11,7 @@ tag: "Experimental"
   Current verification limitations:
 
   - **An attestation report covers one instance.** Several instances can serve the same direct hostname, and separate connections can reach different ones. `GET /v1/attestation/report` returns the report of the instance that answered, and `all_attestations` contains only that report. You can't verify every serving instance before a completion, so a TLS key pinned from one report fails when a later connection reaches another instance, even a legitimate one. Tracked in [cloud-api#1087](https://github.com/nearai/cloud-api/issues/1087).
-  - **Signature lookups can return `404`.** Each instance keeps response signatures in its own memory. `GET /v1/signature/{chat_id}` can reach a different instance than the one that served the completion, and clients can't choose the instance.
+  - **Signature lookups can return `404`.** Each instance keeps response signatures in its own memory. `GET /v1/signature/{chat_id}` can reach a different instance than the one that served the completion, and there is no stable way to choose the instance.
 </Warning>
 
 A direct completions endpoint sends your request straight to one model's TEE at its own hostname, without the Gateway in between. It accepts the same API key as the Gateway. Use it only when you maintain an existing direct integration.

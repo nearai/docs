@@ -1,0 +1,153 @@
+---
+title: "Verification Center"
+description: "Check a model's hardware attestation and a reply's signature in your browser, without writing code."
+---
+
+The Verification Center at [cloud.near.ai/verify](https://cloud.near.ai/verify) is a public web page that verifies NEAR AI Cloud attestation evidence for a model and, optionally, the signature on a single reply. It runs the same checks described in the other verification guides, so you can inspect the evidence without writing code or holding an API key.
+
+<Note>
+  The Verification Center is a convenience for inspection and spot checks. It does not replace the checks your application performs when it enforces its own [verification policy](/cloud/verification/reference/verification-policy).
+</Note>
+
+## Open the page
+
+Add the model ID to the `model` query parameter:
+
+```text
+https://cloud.near.ai/verify?model=z-ai%2Fglm-5.3-flash
+```
+
+URL-encode the model ID, so `z-ai/glm-5.3-flash` becomes `z-ai%2Fglm-5.3-flash`. Without a `model` parameter, and without a reply receipt that names a model, the page asks you to open it from an app that uses NEAR AI or to add the parameter.
+
+The page starts verifying as soon as it loads. Select **Verify again** to fetch new evidence and repeat every check.
+
+## How verification works
+
+Verification runs in your browser with the NEAR AI inference SDK. Each visit fetches hardware evidence fresh rather than reusing a cached result, and the page shows details as trusted only after your browser has verified them.
+
+The page verifies two things:
+
+| Evidence | What it covers |
+| --- | --- |
+| **Gateway** | The NEAR AI Cloud gateway that receives requests. See [Gateway attestation](/cloud/verification/cloud-api/gateway-attestation). |
+| **Model** | The Trusted Execution Environment (TEE) that runs the model, including its GPUs. See [Model attestations](/cloud/verification/cloud-api/model-attestations). |
+
+Model evidence is checked only for models whose attestation format the SDK supports. For other models the page verifies the Gateway and tells you that model verification is not yet supported.
+
+## Read the overall result
+
+The heading at the top of the page summarizes everything the page checked.
+
+| Heading | Meaning |
+| --- | --- |
+| **Model verified** | Model and Gateway evidence both verified. When you opened the page with a reply receipt, the heading reads **Reply verified** and the receipt checks passed too. |
+| **Gateway verified** | The Gateway verified, but the model's execution environment could not be verified. This is expected for models that do not yet support model attestation. With a receipt, the heading reads **Reply partially verified**. |
+| **Unable to verify** | Evidence could not be retrieved or matched, for example because of an outage, rate limiting, or a signing key that current evidence does not confirm. No conclusion is established. |
+| **Verification failed** | Evidence or a signature failed a check, or the link is invalid. Do not trust the result. |
+
+An evidence outage shows as **Unable to verify** and not as a failure, but a failed signature or model-binding check always takes priority over an outage.
+
+<Warning>
+  Verified hardware evidence and signing keys do not establish that a deployment is an approved deployment of the named model. The Verification Center checks deployment measurements for consistency but does not compare them against a trusted allowlist. If you need that guarantee, apply your own [measurement and provenance policy](/cloud/verification/reference/verification-policy).
+</Warning>
+
+## Hardware verification
+
+The **Hardware verification** section has two tabs, **Model Verification** and **Gateway Verification**. Both show the same layout. The page opens on the model tab when model evidence verified and on the Gateway tab otherwise.
+
+### Summary
+
+| Field | Description |
+| --- | --- |
+| **Status** | `Verified` when the evidence passed verification. |
+| **TCB status** | The Intel trusted computing base status reported for the platform, for example `UpToDate`. |
+| **Signing algorithm** | The algorithm of the key that signs replies from this component, `ED25519` or `ECDSA`. |
+| **Deployment policy** | `Measurements verified` when the page verified the measurements but did not check them against a trusted allowlist. `Verified` when deployment provenance was also verified. |
+
+### Signing identity
+
+**Signing address** and **Signing public key** identify the key that this component uses to sign replies. These values are bound to the hardware quote, so a verified quote ties the key to the attested environment. Use them to match the signer of a [response signature](/cloud/verification/cloud-api/response-signatures).
+
+### Evidence sections
+
+Expand a section to see the raw evidence behind the verdict. Every value has a **Copy** button, so you can verify it with another tool.
+
+<AccordionGroup>
+  <Accordion title="TDX Attestation (Intel)">
+    The Intel TDX quote and the values it commits to: request nonce, report data, event log, OS image hash, compose hash, app compose, and any Intel security advisories. Links open Intel's TDX documentation and the [Intel TDX Explorer](https://proof.t16z.com/), where you can check the quote independently. See [Quote, nonce, and signer bindings](/cloud/verification/reference/quote-nonce-signer) for how these values are checked.
+  </Accordion>
+  <Accordion title="GPU Attestation (NVIDIA)">
+    Shown on the Model tab. NVIDIA's Remote Attestation Service verified the GPU evidence, and your browser checked the signed result against NVIDIA's public keys. The section lists the nonce, GPU architecture, evidence list, and raw payload, with links to NVIDIA's attestation documentation and API.
+  </Accordion>
+</AccordionGroup>
+
+## Verify a reply
+
+An application that uses NEAR AI can link to the Verification Center with a **reply receipt**, so that you can check one specific response in addition to the hardware evidence. The receipt travels in the URL fragment:
+
+```text
+https://cloud.near.ai/verify?model=<MODEL_ID>#receipt=<BASE64URL_JSON>
+```
+
+The fragment is base64url-encoded JSON with these fields:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `completionId` | Yes | The completion the signature belongs to. |
+| `model` | Yes | The model ID. Used when the `model` query parameter is absent. |
+| `signatureKind` | Yes | `provider_tee` for a model signature, or `gateway` for a Gateway signature. |
+| `signingAlgo` | Yes | `ecdsa` or `ed25519`. |
+| `signingAddress` | Yes | The signer's address (ECDSA) or public key (Ed25519). |
+| `signedText` | Yes | The exact text that was signed. |
+| `signature` | Yes | The signature over `signedText`. |
+| `verifiedAt` | No | When the linking application verified the receipt. |
+
+When a receipt is present, a **Reply signature** section appears above the hardware evidence. It runs three checks:
+
+1. **Signature**: your browser checks the signature over `signedText`. ECDSA signatures must be 65 bytes and recover the stated address. Ed25519 signatures are checked against the stated 32-byte public key.
+2. **Model binding**: the signed text must name the same model as the receipt and the verified deployment. A Gateway receipt whose signed text does not include a model can be only partially verified.
+3. **Signer**: the signing key must match a signer in the freshly verified evidence. A `provider_tee` signature must come from one of the verified model replicas, and a `gateway` signature must come from the verified Gateway. A Gateway signature on its own does not prove that the model ran in a TEE.
+
+The section also lists the completion ID, signing address, request and response hashes (SHA-256), signed message, and signature, each with a **Copy** button.
+
+<Note>
+  The page checks the signature over the hashes in the receipt. It does not receive the chat content and cannot recompute those hashes, so only the application that sent the request can confirm the hashes match the original request and response. The `verifiedAt` timestamp is reported by the linking application and is not independently verified.
+
+  If the signer cannot be matched, the replica that signed the reply may have restarted or rotated its key since. That does not by itself mean the signature is invalid. For a completion you want to verify in full, follow the [response signature](/cloud/verification/cloud-api/response-signatures) guide.
+</Note>
+
+If the receipt is malformed, too large, or repeated, the page reports an invalid receipt and the result is **Verification failed**. Ask the application for a new verification link.
+
+## Privacy
+
+- The receipt is read from the URL fragment (`#`), which browsers do not send in page requests.
+- The page does not send the receipt to analytics.
+- Verification requests do not include chat content.
+
+## Troubleshooting
+
+| Message | What to do |
+| --- | --- |
+| *Model or attestation evidence was not found (HTTP 404)* | Check the model ID in the link, including URL encoding. |
+| *The verification request was rejected (HTTP 400)* | Check the model ID and the link. |
+| *The verification service is rate limited (HTTP 429)* | Wait and select **Verify again**. |
+| *Hardware evidence is unavailable* | Evidence could not be retrieved. Try again later. |
+| *This model does not expose an attestation format supported by this SDK* | Only the Gateway can be verified for this model. |
+| *Hardware evidence failed verification* | The evidence did not pass a check. Treat the model property as unverified. |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Gateway attestation" icon="shield-check" href="/cloud/verification/cloud-api/gateway-attestation">
+    Verify the gateway's evidence in your own client.
+  </Card>
+  <Card title="Model attestations" icon="cpu" href="/cloud/verification/cloud-api/model-attestations">
+    Verify every model candidate before a completion.
+  </Card>
+  <Card title="Response signatures" icon="signature" href="/cloud/verification/cloud-api/response-signatures">
+    Verify the signature on a completion.
+  </Card>
+  <Card title="Verification policy" icon="list-checks" href="/cloud/verification/reference/verification-policy">
+    Decide which evidence your application requires.
+  </Card>
+</CardGroup>

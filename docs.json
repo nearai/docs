@@ -67,17 +67,12 @@
                 "icon": "file-check",
                 "root": "cloud/verification/index",
                 "pages": [
-                  {
-                    "group": "NEAR AI Cloud Gateway",
-                    "root": "cloud/verification/cloud-api/index",
-                    "pages": [
-                      "cloud/verification/cloud-api/gateway-attestation",
-                      "cloud/verification/cloud-api/model-attestations",
-                      "cloud/verification/cloud-api/tls",
-                      "cloud/verification/cloud-api/response-signatures",
-                      "cloud/verification/cloud-api/image-provenance"
-                    ]
-                  },
+                  "cloud/verification/verification-center",
+                  "cloud/verification/cloud-api/gateway-attestation",
+                  "cloud/verification/cloud-api/model-attestations",
+                  "cloud/verification/cloud-api/tls",
+                  "cloud/verification/cloud-api/response-signatures",
+                  "cloud/verification/cloud-api/image-provenance",
                   {
                     "group": "Reference",
                     "pages": [
@@ -86,6 +81,17 @@
                       "cloud/verification/reference/verification-policy"
                     ]
                   }
+                ]
+              },
+              {
+                "group": "SDK",
+                "icon": "braces",
+                "root": "cloud/inference-sdk/index",
+                "pages": [
+                  "cloud/inference-sdk/javascript",
+                  "cloud/inference-sdk/python",
+                  "cloud/inference-sdk/rust",
+                  "cloud/inference-sdk/go"
                 ]
               }
             ]
@@ -134,7 +140,13 @@
           {
             "group": "Experimental",
             "pages": [
-              "cloud/experimental/direct-completions"
+              {
+                "group": "Direct Completions",
+                "root": "cloud/experimental/direct-completions",
+                "pages": [
+                  "cloud/inference-sdk/direct"
+                ]
+              }
             ]
           }
         ]
@@ -207,6 +219,7 @@
             "group": "Attestation",
             "pages": [
               "GET /v1/attestation/ita-token",
+              "GET /v1/attestation/pins",
               "GET /v1/attestation/report",
               "GET /v1/signature/{chat_id}"
             ]
@@ -214,12 +227,15 @@
           {
             "group": "Users",
             "pages": [
+              "POST /v1/users/contact-email/verify",
               "GET /v1/users/me",
-              "PATCH /v1/users/me",
               "POST /v1/users/me/access-tokens",
+              "POST /v1/users/me/contact-email",
+              "DELETE /v1/users/me/contact-email",
               "GET /v1/users/me/invitations",
               "POST /v1/users/me/invitations/{invitation_id}/accept",
               "POST /v1/users/me/invitations/{invitation_id}/decline",
+              "PUT /v1/users/me/profile",
               "GET /v1/users/me/refresh-tokens",
               "DELETE /v1/users/me/refresh-tokens/{refresh_token_id}",
               "GET /v1/users/me/status",
@@ -233,7 +249,9 @@
               "POST /v1/organizations",
               "GET /v1/organizations/{org_id}",
               "PUT /v1/organizations/{org_id}",
-              "DELETE /v1/organizations/{org_id}"
+              "DELETE /v1/organizations/{org_id}",
+              "GET /v1/organizations/{org_id}/settings",
+              "PATCH /v1/organizations/{org_id}/settings"
             ]
           },
           {
@@ -274,6 +292,7 @@
           {
             "group": "Usage",
             "pages": [
+              "GET /v1/organizations/{org_id}/service-usage/history",
               "GET /v1/organizations/{org_id}/usage/balance",
               "GET /v1/organizations/{org_id}/usage/by-model",
               "GET /v1/organizations/{org_id}/usage/history",
@@ -302,6 +321,7 @@
             "group": "Staking Farm",
             "pages": [
               "GET /v1/organizations/{org_id}/staking/farm",
+              "POST /v1/organizations/{org_id}/staking/farm/bind",
               "POST /v1/organizations/{org_id}/staking/farm/sync",
               "GET /v1/staking/farm/config"
             ]
@@ -343,6 +363,7 @@
               "DELETE /v1/admin/aml/allowlist/{account_id}",
               "GET /v1/admin/aml/reports",
               "PATCH /v1/admin/aml/reports/{report_id}/status",
+              "GET /v1/admin/api-keys",
               "GET /v1/admin/invitation-email-deliveries",
               "POST /v1/admin/invitation-email-deliveries/{invitation_id}/resend",
               "GET /v1/admin/models",
@@ -353,12 +374,17 @@
               "POST /v1/admin/models/pricing-changes/preview",
               "DELETE /v1/admin/models/pricing-changes/{id}",
               "DELETE /v1/admin/models/{model_name}",
+              "GET /v1/admin/models/{model_name}/access",
+              "PUT /v1/admin/models/{model_name}/access/{org_id}",
+              "DELETE /v1/admin/models/{model_name}/access/{org_id}",
               "POST /v1/admin/models/{model_name}/deprecation/confirm",
               "POST /v1/admin/models/{model_name}/deprecation/preview",
               "GET /v1/admin/models/{model_name}/history",
+              "GET /v1/admin/organizations",
               "GET /v1/admin/organizations/{org_id}",
               "GET /v1/admin/organizations/{org_id}/concurrent-limit",
               "PATCH /v1/admin/organizations/{org_id}/concurrent-limit",
+              "POST /v1/admin/organizations/{org_id}/credit/reconciliations",
               "GET /v1/admin/organizations/{org_id}/fallback",
               "PATCH /v1/admin/organizations/{org_id}/fallback",
               "PATCH /v1/admin/organizations/{org_id}/limits",
@@ -367,20 +393,61 @@
               "PUT /v1/admin/organizations/{org_id}/members/{user_id}",
               "GET /v1/admin/organizations/{org_id}/metrics",
               "GET /v1/admin/organizations/{org_id}/metrics/timeseries",
+              "GET /v1/admin/organizations/{org_id}/model-access",
               "GET /v1/admin/organizations/{org_id}/priority",
               "PATCH /v1/admin/organizations/{org_id}/priority",
               "GET /v1/admin/organizations/{org_id}/staking/farm",
               "POST /v1/admin/organizations/{org_id}/staking/farm/sync",
+              "GET /v1/admin/organizations/{org_id}/usage-discount",
+              "PUT /v1/admin/organizations/{org_id}/usage-discount",
               "GET /v1/admin/organizations/{org_id}/usage/balance",
               "GET /v1/admin/platform/billing-summary",
               "GET /v1/admin/platform/infra-summary",
               "GET /v1/admin/platform/metrics",
               "GET /v1/admin/platform/metrics/timeseries",
+              "GET /v1/admin/platform/model-consumption-timeseries",
               "GET /v1/admin/platform/model-revenue",
               "GET /v1/admin/platform/org-revenue",
+              "GET /v1/admin/platform/performance-timeseries",
+              "GET /v1/admin/platform/revenue-density",
               "POST /v1/admin/services",
               "PATCH /v1/admin/services/{id}",
-              "GET /v1/admin/users"
+              "GET /v1/admin/settings",
+              "GET /v1/admin/settings/{key}",
+              "PATCH /v1/admin/settings/{key}",
+              "POST /v1/admin/usage-hourly/recompute",
+              "POST /v1/admin/user-erasures/lookup",
+              "GET /v1/admin/users",
+              "POST /v1/admin/users/{user_id}/erasure",
+              "POST /v1/admin/users/{user_id}/erasure/preview"
+            ]
+          },
+          {
+            "group": "Credits",
+            "pages": [
+              "GET /v1/admin/organizations/{org_id}/credit/transfer/reconciliation",
+              "GET /v1/admin/organizations/{org_id}/policy",
+              "PUT /v1/admin/organizations/{org_id}/policy",
+              "POST /v1/organizations/{org_id}/credentials",
+              "DELETE /v1/organizations/{org_id}/credentials/{id}",
+              "POST /v1/organizations/{org_id}/credit/transfer",
+              "GET /v1/organizations/{org_id}/credit/transfer/capacity",
+              "GET /v1/organizations/{org_id}/credit/transfers",
+              "GET /v1/organizations/{org_id}/credit/transfers/{id}"
+            ]
+          },
+          {
+            "group": "Decisions",
+            "pages": [
+              "POST /v1/systemone"
+            ]
+          },
+          {
+            "group": "Organization credentials",
+            "pages": [
+              "GET /v1/organizations/{org_id}/credentials",
+              "PUT /v1/organizations/{org_id}/credentials/{id}",
+              "POST /v1/organizations/{org_id}/credentials/{id}/rotate"
             ]
           }
         ]

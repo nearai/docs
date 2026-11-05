@@ -1,0 +1,227 @@
+---
+title: "Python"
+icon: "code"
+description: "Use the asynchronous Python SDK for verified Chat Completions, Responses, Messages, and System One decisions."
+---
+
+## Install
+
+The SDK is available on [PyPI](https://pypi.org/project/nearai-inference-sdk/). The package requires Python 3.12 or later.
+
+```bash
+pip install nearai-inference-sdk
+export NEARAI_API_KEY="your-api-key"
+```
+
+## Examples
+
+Choose the tab matching your model's API. Save the example as `example.py` and run it with `python example.py`.
+
+<Tabs>
+<Tab title="Chat Completions" id="chat-completions">
+
+Call a supported NEAR TEE model with E2EE enabled, then verify the completion.
+
+```python
+import asyncio
+import os
+
+from nearai_inference_sdk import InferenceClient
+
+
+async def main():
+    async with InferenceClient(
+        os.environ["NEARAI_API_KEY"],
+        e2ee=True,
+    ) as client:
+        completion = await client.chat.completions.create(
+            model="z-ai/glm-5.3-flash",
+            messages=[{"role": "user", "content": "Reply with the word ok."}],
+        )
+        # Verify the exact request and response bytes before using the answer.
+        verified = await client.verify_response(completion.id)
+        print(f"Verified {verified.signature_kind} response.")
+        print(completion.choices[0].message.content or "")
+
+
+asyncio.run(main())
+```
+
+</Tab>
+<Tab title="Responses" id="responses">
+
+Use a Responses model with `store: false` and E2EE disabled. See [Stateless Responses](/cloud/guides/stateless-responses) for conversation history and tool calls.
+
+```python
+import asyncio
+import os
+
+from nearai_inference_sdk import InferenceClient
+
+
+async def main():
+    api_key = os.environ["NEARAI_API_KEY"]
+
+    async with InferenceClient(
+        api_key,
+        base_url="https://cloud-api.near.ai/v1",
+        e2ee=False,
+    ) as client:
+        response = await client.responses.create(
+            model="openai/gpt-6-astra",
+            input="Hello!",
+            store=False,
+        )
+
+        # Verify before displaying the answer.
+        verified = await client.verify_response(response.id)
+        print(response.output_text)
+        print("Verified signer:", verified.signature_kind)
+
+
+asyncio.run(main())
+```
+
+</Tab>
+<Tab title="Messages" id="messages">
+
+Call an Anthropic model through the Messages API with E2EE disabled.
+
+```python
+import asyncio
+import os
+
+from nearai_inference_sdk import InferenceClient
+
+
+async def main():
+    api_key = os.environ["NEARAI_API_KEY"]
+    async with InferenceClient(
+        api_key,
+        base_url="https://cloud-api.near.ai/v1",
+        e2ee=False,
+    ) as client:
+        response = await client.messages.create(
+            model="anthropic/claude-opus-4-6",
+            max_tokens=128,
+            messages=[{"role": "user", "content": "Hello!"}],
+        )
+
+        # Verify before displaying the answer.
+        verified = await client.verify_response(response.id)
+        print("".join(block.text for block in response.content if block.type == "text"))
+        print("Verified signer:", verified.signature_kind)
+
+
+asyncio.run(main())
+```
+
+</Tab>
+<Tab title="System One" id="system-one">
+
+Ask Jev a structured question with E2EE and OHTTP disabled.
+
+```python
+import asyncio
+import os
+
+from nearai_inference_sdk import InferenceClient
+
+
+async def main():
+    api_key = os.environ["NEARAI_API_KEY"]
+    async with InferenceClient(
+        api_key,
+        base_url="https://cloud-api.near.ai/v1",
+        e2ee=False,
+        ohttp=False,
+    ) as client:
+        result = await client.systemone.create({
+            "model": "typesafe/jev-1.13",
+            "state": {"message": "I was charged twice. Please help."},
+            "questions": {
+                "billing": {"type": "noul", "instructions": "Is this about billing?"},
+            },
+        })
+        # decision_id is captured from X-Generation-Id.
+        verified = await client.verify_response(result.decision_id)
+        print(result.data["answers"])
+        print("Verified signer:", verified.signature_kind)
+
+
+asyncio.run(main())
+```
+
+</Tab>
+</Tabs>
+
+## E2EE
+
+End-to-end encryption is disabled by default. `e2ee=True` encrypts supported Chat fields to a verified model key and decrypts the response automatically.
+
+E2EE requires a NEAR vLLM model with attestation enabled. Other providers use Gateway-only verification; set `e2ee=False` for those models.
+
+## Verification
+
+Before sending Chat, the client verifies the Gateway and, for supported NEAR TEE models, every returned model report. Gateway TLS identity verification is enabled by default and subsequent requests are pinned to that identity. Failed required checks stop the request.
+
+Response-signature verification is explicit: call `await client.verify_response(completion.id)` after receiving the completion. It verifies the exact request and response bytes retained by the client against the relevant verified evidence.
+
+See [Verification](/cloud/inference-sdk#verification) for receipt IDs and signature kinds.
+
+Response records expire 60 minutes after the full response is read, by default. Verify each response before its record expires or the client closes.
+
+To check a deployment without sending a prompt, call `await client.verify(model)`. For custom policies and cache settings, see the [Python verification guide](https://github.com/nearai/inference-sdk/blob/main/py/docs/verification-guide.md).
+
+### Streaming
+
+Consume the entire stream before calling `verify_response()`. This example buffers the text until verification succeeds; use it inside the client context above:
+
+```python
+stream = await client.chat.completions.create(
+    model="z-ai/glm-5.3-flash",
+    messages=[{"role": "user", "content": "Hello!"}],
+    stream=True,
+)
+completion_id = None
+parts = []
+async for chunk in stream:
+    if chunk.id:
+        completion_id = chunk.id
+    if chunk.choices:
+        parts.append(chunk.choices[0].delta.content or "")
+
+if completion_id is None:
+    raise RuntimeError("Stream returned no completion ID")
+await client.verify_response(completion_id)
+print("".join(parts))
+```
+
+## OHTTP
+
+Set `ohttp=True` when constructing the client to encapsulate the Chat HTTP exchange to the attested Gateway:
+
+```python
+async with InferenceClient(api_key, e2ee=True, ohttp=True) as client:
+    completion = await client.chat.completions.create(
+        model="z-ai/glm-5.3-flash",
+        messages=[{"role": "user", "content": "Hello!"}],
+    )
+    await client.verify_response(completion.id)
+    print(completion.choices[0].message.content or "")
+```
+
+OHTTP requires the default Ed25519 algorithm and cannot be used with `signing_algo="ecdsa"`. E2EE is configured independently. Missing or invalid Gateway OHTTP evidence blocks the Chat request.
+
+<Note>
+  OHTTP supports Chat Completions, Responses, and Messages through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
+</Note>
+
+## Examples and reference
+
+- [Python verification guide](https://github.com/nearai/inference-sdk/blob/main/py/docs/verification-guide.md): policies, encryption, streaming, and errors.
+- [Python API reference](https://github.com/nearai/inference-sdk/blob/main/py/docs/api-reference.md): client options, verification functions, and result fields.
+- [Runnable Python examples](https://github.com/nearai/inference-sdk/tree/main/examples/example-py).
+- OpenAI SDK integration: [Chat Completions](https://github.com/nearai/inference-sdk/blob/main/examples/example-py/gateway/chat_completions_with_openai_sdk.py) and [Responses](https://github.com/nearai/inference-sdk/blob/main/examples/example-py/gateway/responses_with_openai_sdk.py).
+- [Anthropic SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-py/gateway/messages_with_anthropic_sdk.py).
+- [TypeSafe SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-py/gateway/systemone_with_typesafe_sdk.py).

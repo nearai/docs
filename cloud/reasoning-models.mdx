@@ -14,7 +14,7 @@ Reasoning models can process information in two stages:
 1. **Thinking stage**: Internal reasoning process, returned in the `reasoning_content` field of the response message
 2. **Response stage**: The final answer, returned in the `content` field
 
-For most TEE-hosted models you can control whether the model uses reasoning by configuring the `chat_template_kwargs` parameter in your API requests. Reasoning output is billed as completion tokens and reported separately as `reasoning_tokens` in the `usage` object.
+For most TEE-hosted models you can control whether the model uses reasoning by configuring the `chat_template_kwargs` parameter in your API requests. Reasoning output is billed as completion tokens. The number of tokens spent thinking is reported in `usage.completion_tokens_details.reasoning_tokens`, the same location OpenAI uses, and is a subset of `completion_tokens`. The top-level `usage.reasoning_tokens` field is kept as a deprecated alias.
 
 <Tip>
   **Which models support reasoning?**
@@ -23,6 +23,46 @@ For most TEE-hosted models you can control whether the model uses reasoning by c
 
   Known gap: `Qwen/Qwen3.5-122B-A10B` ([cloud-api#703](https://github.com/nearai/cloud-api/issues/703)), `moonshotai/kimi-k2.5`, and `moonshotai/kimi-k2.6` currently reason by default even though their metadata does not yet list the `"reasoning"` flag.
 </Tip>
+---
+
+## GLM-5.3 Flash
+
+GLM-5.3 Flash (`z-ai/glm-5.3-flash`) reasons by default. The reasoning is returned in `reasoning_content`.
+
+### Cap the reasoning with `thinking_token_budget`
+
+`thinking_token_budget` sets the maximum number of reasoning tokens. When you omit it, the budget is 8192 tokens. Send `null` to remove the cap. This is the most precise control for this model:
+
+```bash
+curl https://cloud-api.near.ai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "model": "z-ai/glm-5.3-flash",
+    "messages": [
+      {"role": "user", "content": "How many prime numbers are there between 1 and 200?"}
+    ],
+    "thinking_token_budget": 512
+  }'
+```
+
+### `reasoning_effort` is close to on/off
+
+GLM-5.3 Flash accepts `reasoning_effort`, but the levels are not a gradual dial:
+
+| `reasoning_effort` | Reasoning |
+|--------------------|-----------|
+| omitted, `"medium"` or `"max"` | Full reasoning (up to the budget) |
+| `"low"` or `"high"` | Minimal reasoning, usually under 20 tokens |
+
+To shorten the reasoning without removing it, use `thinking_token_budget` instead.
+
+<Warning>
+  **`enable_thinking: false` does not make GLM-5.3 Flash faster**
+
+  With `"chat_template_kwargs": {"enable_thinking": false}`, the response has no `reasoning_content` and `reasoning_tokens` is 0, but the model writes its reasoning into `content` instead. Responses are not shorter or faster. Use a small `thinking_token_budget` or `"reasoning_effort": "low"` for minimal reasoning.
+</Warning>
+
 ---
 
 ## GLM-5.1
@@ -135,7 +175,7 @@ curl https://cloud-api.near.ai/v1/chat/completions \
   }'
 ```
 
-With `"thinking": false` the response contains no reasoning trace and `usage.reasoning_tokens` drops to 0.
+With `"thinking": false` the response contains no reasoning trace and `usage.completion_tokens_details.reasoning_tokens` drops to 0.
 
 <Warning>
   **`reasoning_effort` is not supported on Kimi**
@@ -150,6 +190,7 @@ Different models use different parameter names for controlling reasoning:
 
 | Model | Model ID | Parameter | Default |
 |-------|----------|-----------|---------|
+| GLM-5.3 Flash | `z-ai/glm-5.3-flash` | `thinking_token_budget` (integer or `null`); `reasoning_effort` (`low`/`high` = minimal) | on, budget 8192 |
 | GLM-5.1 | `zai-org/GLM-5.1-FP8` | `chat_template_kwargs.enable_thinking` | `true` |
 | Qwen3.5-122B | `Qwen/Qwen3.5-122B-A10B` | `chat_template_kwargs.enable_thinking` | `true` |
 | Qwen3.6-35B | `Qwen/Qwen3.6-35B-A3B-FP8` | `chat_template_kwargs.enable_thinking` | `true` |
@@ -180,6 +221,9 @@ When reasoning is active, responses contain the reasoning trace alongside the an
   "usage": {
     "prompt_tokens": 13,
     "completion_tokens": 81,
+    "completion_tokens_details": {
+      "reasoning_tokens": 73
+    },
     "reasoning_tokens": 73,
     "total_tokens": 94
   }
@@ -187,7 +231,7 @@ When reasoning is active, responses contain the reasoning trace alongside the an
 ```
 
 - `reasoning_content` — the model's internal thinking (streamed as `delta.reasoning_content` chunks when `stream: true`)
-- `usage.reasoning_tokens` — how many completion tokens were spent thinking
+- `usage.completion_tokens_details.reasoning_tokens` — how many of the completion tokens were spent thinking. It is present in non-streaming responses and in the final usage chunk of a stream when you set `stream_options: {"include_usage": true}`. The top-level `usage.reasoning_tokens` carries the same number and is deprecated.
 
 ---
 

@@ -38,8 +38,11 @@ stateless_request = spec.get("components", {}).get("schemas", {}).get(
 )
 if stateless_request:
     store = stateless_request["properties"]["store"]
-    store["type"] = "boolean"
-    store["const"] = False
+    store["type"] = ["boolean", "null"]
+    store["enum"] = [False, None]
+    store["description"] = (
+        "Must be `false` or `null` when supplied; omitted or `null` is normalized to `false`."
+    )
 spec["servers"] = [{"url": "https://cloud-api.near.ai", "description": "NEAR AI Cloud"}]
 
 for path, path_item in list(spec["paths"].items()):
