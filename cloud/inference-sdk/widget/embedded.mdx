@@ -142,7 +142,7 @@ type AttestationSummary = {
 
 - Successful response reports require both `signature` and `attestation`, with matching signing identities and no `error`. Model scope requires a `provider_tee` signature and `gpuEvidence`; Gateway scope requires a `gateway` signature, `tlsBinding`, and `status: "partial"`. Only model scope can use `status: "verified"`.
 - Use `failed` when verification rejects a signature or evidence, and `unverifiable` when it cannot complete. Include a safe `error.message`; use `scope: "unknown"` if verification could not establish the scope.
-- The viewer derives a model-signed response's model from its signed payload; any supplied `model` must match. Gateway reports do not attest model execution and appear as **Gateway verified** in the viewer.
+- The viewer derives a model-signed response's model from its signed payload; any supplied `model` must match. Successful Gateway-only results appear as **Gateway verified** in the viewer; they do not attest model execution.
 
 Return a nonempty array for one completion and at most one model, with at most 1,000 reports and 1 MiB of projected UTF-8 JSON.
 
