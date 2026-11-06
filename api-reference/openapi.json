@@ -3239,7 +3239,7 @@
           "Attestation"
         ],
         "summary": "Get attestation report",
-        "description": "Get hardware attestation report for TEE verification. Requires an API key\n(nearai/infra#193); report retrieval is non-billable — no usage or billing\nrecords are created.",
+        "description": "Get hardware attestation report for TEE verification. The API key is\noptional, so a client can verify the gateway before it sends any\ncredential. Without a key, listed models only; with one, also the unlisted\nmodels the key's organization may use. A key that is sent must be valid.\nReport retrieval is non-billable — no usage or billing records are created.",
         "operationId": "get_attestation_report",
         "parameters": [
           {
@@ -3333,7 +3333,17 @@
             }
           },
           "401": {
-            "description": "Missing or invalid API key",
+            "description": "An API key was sent and is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many anonymous requests in progress; retry after `Retry-After` seconds or send an API key",
             "content": {
               "application/json": {
                 "schema": {
@@ -3354,6 +3364,7 @@
           }
         },
         "security": [
+          {},
           {
             "api_key": []
           }
