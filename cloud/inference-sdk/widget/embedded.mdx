@@ -7,12 +7,12 @@ description: "Embed the Verification Center and supply your application's verifi
 Add the [Verification Center](/cloud/verification/verification-center) with an HTML `<iframe>` and plain JavaScript. Your application supplies verification reports; the viewer displays them through `postMessage`.
 
 <Note>
-  This page covers iframe communication. Your application runs verification and prepares reports in the [format below](#report-type). The viewer validates their structure without independently verifying their evidence.
+  This page covers iframe communication. Your application runs verification and prepares reports in the [format below](#report-types). The viewer validates their structure without independently verifying their evidence.
 </Note>
 
 ## 1. Add the iframe
 
-Serve your application over HTTPS, or HTTP on `localhost` / `127.0.0.1` for development. Leave `src` unset until the message listener is registered.
+Serve your application over HTTPS. Leave `src` unset until the message listener is registered.
 
 ```html
 <iframe
@@ -80,10 +80,9 @@ export function showVerification(getReports) {
 
 ## 3. Supply your reports
 
-Supply a callback with this interface. It returns reports for the selected response, including unsuccessful verification results:
+Supply a callback that returns [`VerificationReport`](#report-types) objects for your model, Gateway, or response, including unsuccessful verification results:
 
 ```ts
-// VerificationReport is defined below.
 type GetReports = () => Promise<VerificationReport[]>;
 ```
 
@@ -98,20 +97,23 @@ const disconnect = showVerification(async () => reports);
 
 This example reuses your application's prepared reports. The connection calls the callback when the viewer is ready and whenever the user selects **Verify again**. To provide fresh results, run verification or retrieve updated reports from your application's verification service inside the callback.
 
-Call `disconnect()` before removing the iframe or opening a different response, then reconnect with the callback for the new target. Pending results from the previous connection are ignored.
+Call `disconnect()` before removing the iframe or changing the verification target, then reconnect with the callback for the new target. Pending results from the previous connection are ignored.
 
-## Report type
+### Report types
 
-The following type describes response reports (`kind: "reply"`). These declarations document the data format; the JavaScript connection does not import them.
-
-<Accordion title="VerificationReport and attestation summary types">
+Choose the report type for what your application verifies. Both use the shared types below. These declarations describe the payload; the JavaScript connection does not import them.
 
 ```ts
-import type {
-  CompletionSignature, GatewayTlsBinding, RuntimeMeasurements, SigningIdentity,
-} from '@nearai/inference-sdk';
+type VerificationReport = ResponseReport | AttestationReport;
+```
 
-type VerificationReport = {
+<Tabs>
+<Tab title="Response" id="response-report">
+
+Use this type for a specific response. Its protocol value is `kind: 'reply'`.
+
+```ts
+type ResponseReport = {
   schemaVersion: 1;
   kind: 'reply';
   completionId: string;
@@ -122,6 +124,38 @@ type VerificationReport = {
   attestation?: AttestationSummary;
   error?: { code?: string; message: string };
 };
+```
+
+Successful response reports require both `signature` and `attestation`, with matching signing identities. Model scope requires a `provider_tee` signature; Gateway scope requires a `gateway` signature.
+
+The viewer derives a model-signed response's model from its signed payload; any supplied `model` must match. Successful Gateway-only results appear as **Gateway verified** in the viewer; they do not attest model execution.
+
+</Tab>
+<Tab title="Model / Gateway" id="attestation-report">
+
+Use this type for deployment attestation. Both model and Gateway reports use `kind: 'model'`; `scope` distinguishes them. The `model` field identifies the target model and is required for this report type, including Gateway-only reports.
+
+```ts
+type AttestationReport = {
+  schemaVersion: 1;
+  kind: 'model';
+  model: string;
+  scope: 'model' | 'gateway' | 'unknown';
+  status: 'verified' | 'partial' | 'failed' | 'unverifiable';
+  attestation?: AttestationSummary;
+  error?: { code?: string; message: string };
+};
+```
+
+</Tab>
+</Tabs>
+
+<Accordion title="Shared signature and attestation types">
+
+```ts
+import type {
+  CompletionSignature, GatewayTlsBinding, RuntimeMeasurements, SigningIdentity,
+} from '@nearai/inference-sdk';
 
 type AttestationSummary = {
   signer: SigningIdentity;
@@ -140,15 +174,14 @@ type AttestationSummary = {
 
 </Accordion>
 
-- Successful response reports require both `signature` and `attestation`, with matching signing identities and no `error`. Model scope requires a `provider_tee` signature and `gpuEvidence`; Gateway scope requires a `gateway` signature, `tlsBinding`, and `status: "partial"`. Only model scope can use `status: "verified"`.
+- Successful reports require `attestation`, a known `scope`, and no `error`. Model scope requires `gpuEvidence`; Gateway scope requires `tlsBinding` and `status: "partial"`. Only model scope can use `status: "verified"`.
 - Use `failed` when verification rejects a signature or evidence, and `unverifiable` when it cannot complete. Include a safe `error.message`; use `scope: "unknown"` if verification could not establish the scope.
-- The viewer derives a model-signed response's model from its signed payload; any supplied `model` must match. Successful Gateway-only results appear as **Gateway verified** in the viewer; they do not attest model execution.
 
-Return a nonempty array for one completion and at most one model, with at most 1,000 reports and 1 MiB of projected UTF-8 JSON.
+Return a nonempty array with at most 1,000 reports and 1 MiB of projected UTF-8 JSON. All reports must refer to the same model, and all response reports to the same completion.
 
 Select report fields explicitly before sending them. A type annotation or `as VerificationReport` does not remove runtime fields. Keep API keys, chat content, raw SDK results, raw exceptions, and deployment configuration out of reports.
 
-For SDK verification, see the [JavaScript SDK guide](/cloud/inference-sdk/javascript). Its `verifyResponse()` result must be converted to this format by your application; it is not itself a `VerificationReport`. Use the original SDK client that made the request, after any response stream is fully consumed.
+For SDK verification, see the [JavaScript SDK guide](/cloud/inference-sdk/javascript). Convert SDK verification results to this format in your application. For response reports, call `verifyResponse()` on the original SDK client that made the request, after any response stream is fully consumed.
 
 ## Customize the viewer
 
@@ -166,7 +199,7 @@ For example: `https://cloud.near.ai/verify?darkMode=true&showHeader=false&canReq
 
 | Symptom | What to check |
 | --- | --- |
-| Blank viewer | Use HTTPS or a supported local origin. Allow `https://cloud.near.ai` in CSP `frame-src`. If sandboxed, include `allow-scripts allow-same-origin`. |
+| Blank viewer | Use HTTPS. Allow `https://cloud.near.ai` in CSP `frame-src`. If sandboxed, include `allow-scripts allow-same-origin`. |
 | No report received | Ensure `getReports()` resolves with a nonempty report array. Check the browser console for callback errors. |
 | Invalid report | Check the versions, required fields, report limits, and matching signer identities. Keep the origin, source, and request-ID checks in the example. |
 | SDK cannot find the completion | Reuse the original SDK client and finish consuming the response stream before preparing reports. |
