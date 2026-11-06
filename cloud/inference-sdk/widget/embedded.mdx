@@ -127,12 +127,12 @@ type AttestationReport = {
 </Tab>
 <Tab title="Response" id="response-report">
 
-Use this type for a specific response. Its protocol value is `kind: 'reply'`.
+Use this type for a specific response. Its protocol value is `kind: 'response'`.
 
 ```ts
 type ResponseReport = {
   schemaVersion: 1;
-  kind: 'reply';
+  kind: 'response';
   completionId: string;
   model?: string;
   scope: 'model' | 'gateway' | 'unknown';
