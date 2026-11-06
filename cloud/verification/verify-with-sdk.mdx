@@ -21,12 +21,8 @@ export NEARAI_API_KEY="your-api-key"
 
 ## Send a request and verify the reply
 
-Choose your language. These examples use HTTPS with the SDK's default verification settings. Field-level E2EE and OHTTP remain disabled; you can add [encryption](/cloud/inference-sdk#e2ee) after completing this flow.
-
 <Tabs>
 <Tab title="JavaScript" icon="/images/icons/languages/javascript.svg">
-
-Save as `verify.mjs` and run `node verify.mjs`. Use the Node entry point so the SDK can bind Gateway attestation to the TLS peer.
 
 ```javascript
 import { InferenceClient } from '@nearai/inference-sdk/node';
@@ -51,8 +47,6 @@ console.log(completion.choices[0]?.message.content);
 
 </Tab>
 <Tab title="Python" icon="/images/icons/languages/python.svg">
-
-Save as `verify.py` and run `python verify.py`.
 
 ```python
 import asyncio
@@ -81,15 +75,6 @@ asyncio.run(main())
 
 </Tab>
 <Tab title="Rust" icon="/images/icons/languages/rust.png">
-
-In your Rust project, add the example's supporting dependencies:
-
-```bash
-cargo add tokio --features macros,rt-multi-thread
-cargo add serde_json
-```
-
-Save as `src/main.rs` and run `cargo run`.
 
 ```rust
 use nearai_inference_sdk::{
@@ -122,8 +107,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 </Tab>
 <Tab title="Go" icon="/images/icons/languages/go.svg">
-
-Save as `main.go` in the Go module where you installed the SDK, then run `go run .`.
 
 ```go
 package main
