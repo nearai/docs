@@ -187,7 +187,7 @@ func run() error {
 </Tab>
 </Tabs>
 
-The success message appears only after the SDK verified the receipt and the example checked its signer category. An exception or returned error stops the example before it prints the answer. See [troubleshooting](/cloud/verification/troubleshooting) if evidence or a receipt is unavailable.
+See [troubleshooting](/cloud/verification/troubleshooting) if evidence or a receipt is unavailable.
 
 ## What just happened
 
@@ -198,24 +198,20 @@ The success message appears only after the SDK verified the receipt and the exam
 | After the complete response | Your application calls the SDK | `verifyResponse` or its language equivalent fetches the receipt, verifies its signature and byte hashes, and matches the signer against the request's verified evidence. |
 | Before using the answer | Your application | Checks whether the successful result meets its requirements. This example requires a model-signed receipt. |
 
-Keep the same client alive until response verification finishes. Its default response-cache lifetime is 60 minutes. Creating another client with the response ID does not restore the original bytes and verification context.
+Keep the same client alive until response verification finishes. Its default response-cache lifetime is 60 minutes.
 
 ## Understand the result
 
 | Signature kind | What the successful verification establishes |
 | --- | --- |
 | `provider_tee` | The request and response bytes match a receipt signed by a model-serving TEE identity matched to the request's verified model evidence. |
-| `gateway` | The request and response bytes match a receipt signed by the verified Gateway identity. It does not establish model TEE execution. |
+| `gateway` | The request and response bytes match a receipt signed by the verified Gateway identity. |
 
-The example rejects `gateway` because its goal is a model-signed response. A Gateway-signed receipt is useful when that is the guarantee your application requires, including for APIs or providers without model-level receipts. See [response signatures](/cloud/verification/cloud-api/response-signatures) for the formats and matching rules.
-
-<Note>
-  These default checks authenticate evidence and signed bytes. They do not select an approved software release or verify model weights. Add a [verification policy](/cloud/verification/reference/verification-policy) when your application requires particular measurements, image sources, or deployment constraints. A matching model signer also does not uniquely identify a serving instance.
-</Note>
+This example requires a model-signed receipt (`provider_tee`). Applications that accept Gateway-signed receipts can use `gateway` results. See [response signatures](/cloud/verification/cloud-api/response-signatures) for the formats and matching rules.
 
 ## Adapt the flow
 
-- **Streaming:** consume the entire stream before calling response verification. Output displayed before that call succeeds has not yet passed receipt verification.
+- **Streaming:** consume the entire stream before calling response verification.
 - **Other APIs:** use the response ID appropriate to the API. The [SDK overview](/cloud/inference-sdk#verification) lists the IDs for Chat Completions, Responses, Messages, and System One.
-- **Browser applications:** use the browser SDK entry point and follow its runtime guidance. Browsers cannot expose the TLS peer certificate for the same Gateway TLS check as Node. The [Verification Center](/cloud/verification/verification-center) is a separate evidence-inspection tool.
+- **Browser applications:** use the browser SDK entry point. See [TLS connection binding](/cloud/verification/cloud-api/tls) for runtime support, or inspect evidence with the [Verification Center](/cloud/verification/verification-center).
 - **Software acceptance rules:** follow [verification policy](/cloud/verification/reference/verification-policy) and [image provenance](/cloud/verification/cloud-api/image-provenance).

@@ -7,18 +7,16 @@ Start with the stage that stopped: obtaining evidence, checking the deployment o
 
 ## Read the outcome
 
-These are categories for interpreting a result, not a shared set of SDK enum values. The [Verification Center](/cloud/verification/verification-center#read-the-overall-result) has its own display labels.
+Use the categories below to choose a next step. For the [Verification Center](/cloud/verification/verification-center#read-the-overall-result), refer to its display labels.
 
 | Outcome | Meaning | What to do |
 | --- | --- | --- |
 | A check succeeded | The evidence passed that check. | Confirm the checked property and signer category meet your application's requirements. |
-| A check was not configured | For example, no image-provenance or approved-deployment policy was supplied. | Configure the required policy; success in another check does not supply it. |
-| Model verification is unsupported | The SDK cannot verify that model's evidence format or the route exposes Gateway evidence only. | Use a supported model when model evidence is required. Gateway verification covers a different property. |
+| A check was not configured | For example, no image-provenance or approved-deployment policy was supplied. | Configure the required policy. |
+| Model verification is unsupported | The SDK cannot verify that model's evidence format or the route exposes Gateway evidence only. | Use a supported model when model evidence is required. |
 | Evidence is unavailable | A report, verification service, or receipt could not be obtained. | Retry a transient retrieval failure within a bounded interval. Keep the required property unverified until evidence is obtained and checked. |
 | A check failed | A signature, nonce, identity, measurement, or byte comparison did not pass. | Stop using the result under that policy and inspect the failed check. |
 | A policy rejected the deployment | The evidence does not satisfy your chosen acceptance rules. | Compare the authenticated measurements or build identity with the approved policy. |
-
-An unavailable report or missing provenance record does not by itself establish a security incident. Equally, a reachable endpoint or successful inference request does not establish verification success.
 
 ## Before the request: evidence and connection
 
@@ -27,21 +25,21 @@ An unavailable report or missing provenance record does not by itself establish 
 | Model or report not found | Canonical model ID, endpoint, and model availability. | Check the [model catalog](/cloud/models). Manual NEAR model-report requests use `provider=near`; see [model attestations](/cloud/verification/cloud-api/model-attestations). |
 | Evidence retrieval times out or is rate limited | Whether the failure is a temporary network or service error. | Retry retrieval with backoff and a limit. Keep attestation checks enabled. |
 | Quote or nonce verification fails | The exact failed check and whether a manual flow reused or altered its challenge. | Fetch fresh evidence with a new client-generated nonce. If verification still fails, stop and investigate; see [quote bindings](/cloud/verification/reference/quote-nonce-signer). |
-| Gateway TLS binding fails | Whether the endpoint or a TLS-terminating proxy changed the peer certificate. | Follow [TLS connection binding](/cloud/verification/cloud-api/tls). A fresh quote for another connection is not a substitute for the required peer match. |
+| Gateway TLS binding fails | Whether the endpoint or a TLS-terminating proxy changed the peer certificate. | Obtain the report and peer certificate on the same connection; see [TLS connection binding](/cloud/verification/cloud-api/tls). |
 | Browser cannot perform the server-side TLS check | Browser runtimes do not expose the TLS peer certificate. | Use the supported browser flow and understand its scope, or perform the required connection check in a supported server-side runtime. |
-| Image provenance is missing or rejected | The required image digest, build identity, and configured policy. | Follow [image provenance](/cloud/verification/cloud-api/image-provenance); a tag or HTTP `200` is not a verified build statement. |
+| Image provenance is missing or rejected | The required image digest, build identity, and configured policy. | Verify the build statement and digest using the [image-provenance flow](/cloud/verification/cloud-api/image-provenance). |
 
 ## After the request: response receipts
 
 | Symptom | Check | Next step |
 | --- | --- | --- |
 | Receipt is temporarily unavailable | Whether the request completed and the receipt lookup reports a transient/unavailable result. | Retry verification with the **same client and response ID** within a bounded interval. Do not resend inference to retry its receipt. |
-| Response is not in the client's cache | Client instance, correct receipt ID, cache lifetime, and whether the client was closed or its cache cleared. | Verify before the record expires or the client closes. Another client cannot recover the original context from an ID alone. |
-| Streaming receipt cannot be verified | Whether the complete stream was consumed successfully. | Finish consuming the stream before verification. A partial response is not the complete byte sequence covered by the receipt. |
-| Receipt verifies as `gateway` | The receipt's signer category and the API/provider being used. | Accept only if Gateway-signed bytes satisfy your requirements. This result does not become model-level proof by requesting a separate model report. |
+| Response is not in the client's cache | Client instance, correct receipt ID, cache lifetime, and whether the client was closed or its cache cleared. | Verify with the original client before the record expires or the client closes. |
+| Streaming receipt cannot be verified | Whether the complete stream was consumed successfully. | Finish consuming the stream before verification. |
+| Receipt verifies as `gateway` | The receipt's signer category and the API/provider being used. | Accept it when Gateway-signed bytes satisfy your requirements. Require `provider_tee` when your application needs a model-signed response. |
 | Signer, signature, or byte hashes do not match | The receipt, preflight evidence, and exact bytes belonging to this request. | Treat the response as unverified. For manual implementations, follow [response signatures](/cloud/verification/cloud-api/response-signatures); do not reserialize JSON or rebuild streams before hashing. |
 
-The SDK keeps request-specific verification context. An unrelated report fetched after a response cannot replace the evidence required for that request. For browser inspection, the Verification Center can also lose the ability to match an older signer after key rotation; see its [reply verification scope](/cloud/verification/verification-center#verify-a-reply).
+The SDK retains verification context for each request. The Verification Center matches receipts against freshly fetched evidence, so older signers may become unavailable after key rotation; see [reply verification](/cloud/verification/verification-center#verify-a-reply).
 
 ## Collect useful diagnostics
 
