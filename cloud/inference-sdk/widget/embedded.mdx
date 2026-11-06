@@ -108,6 +108,23 @@ type VerificationReport = ResponseReport | AttestationReport;
 ```
 
 <Tabs>
+<Tab title="Model / Gateway" id="attestation-report">
+
+Use this type for deployment attestation. Both model and Gateway reports use `kind: 'model'`; `scope` distinguishes them. The `model` field identifies the target model and is required for this report type, including Gateway-only reports.
+
+```ts
+type AttestationReport = {
+  schemaVersion: 1;
+  kind: 'model';
+  model: string;
+  scope: 'model' | 'gateway' | 'unknown';
+  status: 'verified' | 'partial' | 'failed' | 'unverifiable';
+  attestation?: AttestationSummary;
+  error?: { code?: string; message: string };
+};
+```
+
+</Tab>
 <Tab title="Response" id="response-report">
 
 Use this type for a specific response. Its protocol value is `kind: 'reply'`.
@@ -129,23 +146,6 @@ type ResponseReport = {
 Successful response reports require both `signature` and `attestation`, with matching signing identities. Model scope requires a `provider_tee` signature; Gateway scope requires a `gateway` signature.
 
 The viewer derives a model-signed response's model from its signed payload; any supplied `model` must match. Successful Gateway-only results appear as **Gateway verified** in the viewer; they do not attest model execution.
-
-</Tab>
-<Tab title="Model / Gateway" id="attestation-report">
-
-Use this type for deployment attestation. Both model and Gateway reports use `kind: 'model'`; `scope` distinguishes them. The `model` field identifies the target model and is required for this report type, including Gateway-only reports.
-
-```ts
-type AttestationReport = {
-  schemaVersion: 1;
-  kind: 'model';
-  model: string;
-  scope: 'model' | 'gateway' | 'unknown';
-  status: 'verified' | 'partial' | 'failed' | 'unverifiable';
-  attestation?: AttestationSummary;
-  error?: { code?: string; message: string };
-};
-```
 
 </Tab>
 </Tabs>
