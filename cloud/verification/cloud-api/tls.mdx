@@ -5,21 +5,19 @@ description: "Bind a live NEAR AI Cloud gateway TLS connection to the gateway at
 
 TLS binding checks that the HTTPS peer you are connected to matches the identity authenticated by [Gateway attestation](/cloud/verification/cloud-api/gateway-attestation). It connects the environment evidence to the connection carrying your request.
 
-Use the [SDK tutorial](/cloud/verification/verify-with-sdk) for application integration. The Node-specific, Python, Rust, and Go clients enable Gateway TLS binding by default; browsers cannot observe the peer certificate. The manual flow below requires both the actual connection's certificate and a verified Gateway report.
+Use the [SDK tutorial](/cloud/verification/verify-with-sdk) for application integration. The Node-specific, Python, Rust, and Go clients enable Gateway TLS binding by default. The manual flow below requires both the actual connection's certificate and a verified Gateway report.
 
 <Warning>
-  The peer certificate and attestation report must be obtained on the **same TLS connection**. Two independent connections can reach different instances or observe different certificates, so they cannot establish this connection-specific conclusion.
+  Obtain the peer certificate and attestation report on the **same TLS connection**. Repeat the check whenever the client reconnects.
 </Warning>
 
 <Note>
-  Browser Fetch APIs do not expose the peer certificate or its SPKI. A browser client can verify a gateway quote without TLS binding, but cannot establish this TLS connection-binding property.
+  Use a server-side SDK for Gateway TLS binding. Browser Fetch APIs do not expose the peer certificate or its SPKI.
 </Note>
 
 ## What this checks
 
 When you request `include_tls_fingerprint=true`, `gateway_attestation.tls_cert_fingerprint` is the SHA-256 hash of the gateway certificate's SubjectPublicKeyInfo (SPKI). The verified quote binds that fingerprint, the gateway signing identity, and the nonce.
-
-This is a gateway check. It does not bind the client connection to an upstream model endpoint.
 
 ## Verification flow
 
@@ -30,7 +28,7 @@ This is a gateway check. It does not bind the client connection to an upstream m
 5. Verify `gateway_attestation.intel_quote`, then check the nonce, gateway signer, and TLS-fingerprint binding in the verified quote.
 6. Compare the calculated peer SPKI hash with `gateway_attestation.tls_cert_fingerprint`.
 
-The optional `tls_certificate` response field is not a substitute for the peer certificate observed on the connection. A command-line report request alone also cannot establish the same-connection property.
+Calculate the peer SPKI hash from the certificate observed on the live connection, rather than the optional `tls_certificate` response field.
 
 This result applies to the connection used for the evidence request. When it must also cover an inference request, send that request over the same open TLS connection. If the client reconnects, repeat the flow.
 
@@ -43,7 +41,7 @@ This result applies to the connection used for the evidence request. When it mus
 | Quote, nonce, or signer binding fails | Reject the report and fetch fresh evidence. |
 | Certificate and report came from different connections | Treat the result as inconclusive. |
 
-Do not use a cached fingerprint as evidence for a new connection. Fetch new evidence after a certificate, signer, measurement, or accepted-attestation-age change.
+Fetch new evidence for a new connection or after a certificate, signer, measurement, or accepted-attestation-age change.
 
 ## Continue the flow
 

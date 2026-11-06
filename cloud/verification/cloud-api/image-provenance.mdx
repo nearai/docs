@@ -5,18 +5,18 @@ description: "Apply an image-provenance policy to configurations measured in NEA
 
 Image provenance checks whether a container image was built by a source repository and build process your application accepts. Run it after authenticating deployment measurements and before accepting the deployment for inference.
 
-The [SDK tutorial](/cloud/verification/verify-with-sdk) covers the basic request and response flow. Provenance is an additional, explicitly configured [deployment policy](/cloud/verification/reference/verification-policy); successful hardware attestation alone does not run these checks.
+The [SDK tutorial](/cloud/verification/verify-with-sdk) covers the basic request and response flow. Enable provenance checks through an explicit [deployment policy](/cloud/verification/reference/verification-policy).
 
 ## Choose the evidence source
 
-Gateway and model reports contain a measured `app_compose`, but that configuration does not always list the containers serving the model.
+Choose the evidence that records the images in your deployment:
 
 | Deployment structure | Evidence to use | JavaScript SDK helper |
 | --- | --- | --- |
 | Images are declared in the measured configuration | The raw `appCompose` authenticated by quote verification | `verifyDeploymentImageProvenance` |
 | A launcher uses Compose Manager to deploy model services later | Authenticated Compose Manager actions and the referenced deployment file | `verifyComposeManagerDeploymentImageProvenance` |
 
-Choose independently whether your application requires provenance for the Gateway, each supported model report, or both. A Gateway image policy does not cover model-serving images.
+Configure separate image policies for the Gateway and each supported model deployment your application requires.
 
 ## Use the SDK
 
@@ -27,7 +27,7 @@ Register the helper in a deployment callback so that the SDK verifies the quote 
 
 The names above are JavaScript options. The [image-provenance examples](https://github.com/nearai/inference-sdk/tree/main/examples#image-provenance) provide complete projects for each SDK language, and the [JavaScript verification guide](https://github.com/nearai/inference-sdk/blob/main/js/docs/verification-guide.md#optional-image-build-provenance) explains the callback configuration.
 
-`imagePolicies` maps required container repositories to accepted GitHub repositories and build workflows. Add a reviewed source revision or ref when your application requires it. Each configured image must have an immutable digest; images outside the policy are not automatically verified.
+`imagePolicies` maps required container repositories to accepted GitHub repositories and build workflows. Each configured image must have an immutable digest. Add a reviewed source revision or ref when your application requires it.
 
 For example, a policy for `nearaidev/vllm-proxy-rs` covers the inference proxy image. To require provenance for a vLLM or SGLang engine image, configure a separate policy for that image and its trusted build source.
 
@@ -52,25 +52,17 @@ The Compose Manager provenance helper:
 3. Checks the configured image policies within the services named by that action, or the whole compose file when the service list is absent or empty.
 4. Separately verifies the manager startup image against `composeManagerImagePolicy`.
 
-The default compose repository is `nearai/cvm-compose-files`. Selection is based on the deployment action and optional file path, not the requested model name. Check that the selected action covers the services your policy requires; the latest action can concern a different service.
+The default compose repository is `nearai/cvm-compose-files`. The helper selects by deployment action and optional file path. Check that the selected action covers the services your policy requires.
 
 ## What a passing policy establishes
 
-A passing provenance check authenticates the selected image builds and their recorded configuration. It does not establish that a deployment action succeeded, that those containers are currently running, or that a particular request ran on them. Model weights loaded by an engine also require their own integrity and execution binding; checking the proxy or engine image does not verify those weights.
-
-<Warning>
-  A tag, search result, or HTTP `200` only locates a possible record. It does not cryptographically verify the provenance statement, its signer, or its subject digest.
-</Warning>
+A passing provenance check authenticates the selected image builds and their recorded configuration. Model weights loaded separately by an engine require their own integrity and execution-binding checks.
 
 ## Missing evidence
 
-An unavailable provenance record, including an HTTP `404`, means the reported digest could not be verified under that policy. It does not by itself identify a security incident.
+If a required provenance record is unavailable, including an HTTP `404`, keep that image unverified under your policy.
 
 Fetch a fresh report after a deployment change. If the current evidence still lacks provenance required by your policy, treat that image as unverified.
-
-<Note>
-  When requesting help, share only non-sensitive verification metadata: the endpoint, UTC time, requested model, signing address, `info.instance_id` when present, image name, and full digest. Never include API keys, prompts, or response content.
-</Note>
 
 ## Continue the flow
 

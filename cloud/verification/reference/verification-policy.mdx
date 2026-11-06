@@ -3,7 +3,7 @@ title: "Verification Policy"
 description: "Define required evidence, acceptable measurements, provenance requirements, and handling for unavailable verification results."
 ---
 
-Attestation verifies particular cryptographic statements. Your application must decide which statements it requires and what software, hardware, and source provenance it accepts. A policy makes those acceptance conditions explicit before you send inference or use a response.
+A verification policy defines the evidence, software releases, hardware, and build sources your application accepts. Apply it before sending inference or using a response.
 
 Start with [Verify with the SDK](/cloud/verification/verify-with-sdk) for a complete request. Use this page when deciding which additional evidence and deployment restrictions your application needs.
 
@@ -16,10 +16,10 @@ Start with [Verify with the SDK](/cloud/verification/verify-with-sdk) for a comp
 | Deployment measurements | Verify their binding to the quote | Compare them with your approved-deployment allowlist |
 | Image provenance | No image-build policy is enabled automatically | Configure the required repositories, workflows, and revisions using [provenance helpers](/cloud/verification/cloud-api/image-provenance) |
 | Gateway TLS binding | Enabled by default in the Node-specific, Python, Rust, and Go clients; unavailable through browser Fetch | Choose a runtime and transport that can observe the peer certificate when this property is required |
-| Attestation reuse | Reuse successful verification for 60 minutes | Set the cache lifetime to `0` to verify before every request; a cached result does not detect later deployment changes |
+| Attestation reuse | Reuse successful verification for 60 minutes | Set the cache lifetime to `0` to verify before every request |
 | Response signatures | Inference retains the information needed for verification | Call `verifyResponse` or the language equivalent after receiving the full response, then require an acceptable signature kind |
 
-The JavaScript result `deploymentProvenance: "verified"` means a caller-supplied deployment callback accepted the measured deployment. Its strength depends on what that callback checks; it does not imply that all images or model weights were verified. Without a callback, the value is `not_checked`.
+The JavaScript result `deploymentProvenance: "verified"` means a caller-supplied deployment callback accepted the measured deployment. The callback defines which images and deployment properties it checks. Without a callback, the value is `not_checked`.
 
 Configure reusable deployment checks through the SDK's Gateway or model deployment verifier. A model `deploymentPolicy` callback can also apply rules using the requested model name. See the [SDK verification guide](https://github.com/nearai/inference-sdk/blob/main/js/docs/verification-guide.md) for JavaScript configuration and the [language guides](/cloud/inference-sdk) for the other SDKs.
 
@@ -38,7 +38,7 @@ At minimum, specify:
 
 ## Treat required checks as fail-closed
 
-When a required check is missing, unavailable, malformed, mismatched, or fails verification, the result is unverified. Do not replace it with a report for a different signer, certificate, request, or model instance.
+Accept a result when every required check passes against the evidence for that request. Use the following handling for missing or failed checks:
 
 | Condition | Recommended result |
 | --- | --- |
@@ -51,15 +51,11 @@ When a required check is missing, unavailable, malformed, mismatched, or fails v
 
 ## Load balancing and rotations
 
-The same hostname can be served by more than one attested instance. A report is not evidence for a later request merely because it came from the same hostname.
+The same hostname can be served by more than one attested instance. Match evidence to the connection and response you are verifying:
 
 - For TLS, obtain the peer certificate and report on the same connection.
-- For a `provider_tee` response signature, verify and retain every returned model-attestation candidate before the completion. Accept the signature only when its signer identity and algorithm match exactly one verified candidate. A report fetched after the completion cannot replace that preflight check.
+- For a `provider_tee` response signature, verify and retain every returned model-attestation candidate before the completion. Accept the signature when its signer identity and algorithm match exactly one verified candidate.
 - Refresh preflight evidence before a later request after a signer, certificate, configuration, deployment, or policy-age change.
-
-## What attestation does not establish by itself
-
-Attestation does not validate the quality of a model response, secure a compromised client device, or establish image provenance without a separate cryptographic provenance check. It also does not turn a reachable build record into a verified provenance statement.
 
 ## Apply the policy
 
