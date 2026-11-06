@@ -7,16 +7,16 @@ description: "Call NEAR AI Cloud inference and verify responses in JavaScript, P
 Use the NEAR AI Inference SDK to call models, verify attestation evidence, and check response signatures. Choose your language to get started:
 
 <CardGroup cols={2}>
-  <Card title="JavaScript" icon="braces" href="/cloud/inference-sdk/javascript">
+  <Card title="JavaScript" icon="/images/icons/languages/javascript.svg" href="/cloud/inference-sdk/javascript">
     Requires Node.js 24.22.1 or later.
   </Card>
-  <Card title="Python" icon="code" href="/cloud/inference-sdk/python">
+  <Card title="Python" icon="/images/icons/languages/python.svg" href="/cloud/inference-sdk/python">
     Requires Python 3.12 or later.
   </Card>
-  <Card title="Rust" icon="code" href="/cloud/inference-sdk/rust">
+  <Card title="Rust" icon="/images/icons/languages/rust.png" href="/cloud/inference-sdk/rust">
     Use Rust stable and Cargo.
   </Card>
-  <Card title="Go" icon="code" href="/cloud/inference-sdk/go">
+  <Card title="Go" icon="/images/icons/languages/go.svg" href="/cloud/inference-sdk/go">
     Requires Go 1.26.10 or later.
   </Card>
 </CardGroup>
@@ -58,6 +58,8 @@ End-to-end encryption (E2EE) encrypts supported Chat fields to a verified model 
 
 ## Verification
 
+Follow [Verify with the SDK](/cloud/verification/verify-with-sdk) for a complete request-to-verification walkthrough and an explanation of its results.
+
 The SDK verifies Gateway attestation before sending a request and model attestation where supported. After receiving the answer, call `verifyResponse()` or your language's equivalent before using the output. For streaming, consume the entire stream first.
 
 | API | ID to verify |
@@ -72,7 +74,7 @@ System One's receipt ID is separate from the upstream request ID. If a receipt i
 Check the returned signature kind:
 
 - `provider_tee`: the verified model signer signed the request and response bytes.
-- `gateway`: the verified Gateway signed those bytes. This does not verify model TEE execution.
+- `gateway`: the verified Gateway signed those bytes.
 
 Responses and Messages use Gateway signatures. See [Verification](/cloud/verification) for custom policies and evidence requirements.
 

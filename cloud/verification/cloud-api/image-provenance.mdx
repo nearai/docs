@@ -3,34 +3,67 @@ title: "Image Provenance"
 description: "Apply an image-provenance policy to configurations measured in NEAR AI Cloud gateway and model attestations."
 ---
 
-Image provenance is separate from hardware attestation. A verified quote can bind a configuration measurement to a runtime. Provenance determines whether the image digests in that configuration were built by a source and build process your policy accepts.
+Image provenance checks whether a container image was built by a source repository and build process your application accepts. Run it after authenticating deployment measurements and before accepting the deployment for inference.
 
-For model-level provenance through the gateway, this flow applies to every NEAR model report returned by a request with `provider=near`.
+The [SDK tutorial](/cloud/verification/verify-with-sdk) covers the basic request and response flow. Enable provenance checks through an explicit [deployment policy](/cloud/verification/reference/verification-policy).
 
-For a NEAR AI Cloud gateway flow, decide separately whether your policy requires provenance for:
+## Choose the evidence source
 
-- the configuration measured by `gateway_attestation`
-- each NEAR model report in `model_attestations[]`, requested with `provider=near`
-- both
+Choose the evidence that records the images in your deployment:
 
-## Verification flow
+| Deployment structure | Evidence to use | JavaScript SDK helper |
+| --- | --- | --- |
+| Images are declared in the measured configuration | The raw `appCompose` authenticated by quote verification | `verifyDeploymentImageProvenance` |
+| A launcher uses Compose Manager to deploy model services later | Authenticated Compose Manager actions and the referenced deployment file | `verifyComposeManagerDeploymentImageProvenance` |
 
-1. Verify the relevant Intel TDX quote first. For `model_attestations[]`, verify each candidate report separately before treating it as eligible evidence.
-2. For each eligible NEAR model report, use the raw `info.tcb_info.app_compose` string. Calculate its SHA-256 hash without parsing or reserializing it, and compare it with the configuration measurement in that report's verified quote.
-3. Extract every immutable image digest (`@sha256:…`) from the matched configuration.
-4. Cryptographically verify provenance for each required digest and confirm that the statement's subject equals the image digest exactly.
-5. Apply your policy for repository, build identity, workflow, ref, and source revision.
+Configure separate image policies for the Gateway and each supported model deployment your application requires.
 
-<Warning>
-  A tag, search result, or HTTP `200` only locates a possible record. It does not cryptographically verify the provenance statement, its signer, or its subject digest.
-</Warning>
+## Use the SDK
+
+Register the helper in a deployment callback so that the SDK verifies the quote and configuration binding first:
+
+- For Gateway images, use `gatewayVerification.verifiers.deployment` with `verifyDeploymentImageProvenance`.
+- For model images managed by Compose Manager, use `modelVerification.verifiers.deployment` with `verifyComposeManagerDeploymentImageProvenance`. This requires authenticated Compose Manager evidence in every model report being checked.
+
+The names above are JavaScript options. The [image-provenance examples](https://github.com/nearai/inference-sdk/tree/main/examples#image-provenance) provide complete projects for each SDK language, and the [JavaScript verification guide](https://github.com/nearai/inference-sdk/blob/main/js/docs/verification-guide.md#optional-image-build-provenance) explains the callback configuration.
+
+`imagePolicies` maps required container repositories to accepted GitHub repositories and build workflows. Each configured image must have an immutable digest. Add a reviewed source revision or ref when your application requires it.
+
+For example, a policy for `nearaidev/vllm-proxy-rs` covers the inference proxy image. To require provenance for a vLLM or SGLang engine image, configure a separate policy for that image and its trusted build source.
+
+## Images in the measured configuration
+
+For a manual implementation:
+
+1. Verify the relevant Intel TDX quote. For `model_attestations[]`, verify each candidate separately before using its deployment evidence.
+2. Read the raw `info.tcb_info.app_compose` string from the report being checked. Hash it without parsing or reserializing it and match the configuration measurement in the verified quote.
+3. Extract the immutable image digests (`@sha256:…`) required by your policy from that matched configuration.
+4. Cryptographically verify provenance for each required digest. Require the statement's subject to equal that digest exactly.
+5. Check the repository, build identity, workflow, ref, and source revision against your policy.
+
+## Images deployed by Compose Manager
+
+The SDK authenticates supplied Compose Manager evidence as part of model attestation. That establishes the recorded actions; fetching deployment files and checking their image provenance is a separate, optional step.
+
+The Compose Manager provenance helper:
+
+1. Selects the latest authenticated `compose_up` action, optionally restricted to `composeFile`.
+2. Fetches that action's compose file at its recorded commit from `composeRepository` and verifies the file's SHA-256 hash.
+3. Checks the configured image policies within the services named by that action, or the whole compose file when the service list is absent or empty.
+4. Separately verifies the manager startup image against `composeManagerImagePolicy`.
+
+The default compose repository is `nearai/cvm-compose-files`. The helper selects by deployment action and optional file path. Check that the selected action covers the services your policy requires.
+
+## What a passing policy establishes
+
+A passing provenance check authenticates the selected image builds and their recorded configuration. Model weights loaded separately by an engine require their own integrity and execution-binding checks.
 
 ## Missing evidence
 
-An unavailable provenance record, including an HTTP `404`, means the reported digest could not be verified under that policy. It does not by itself identify a security incident.
+If a required provenance record is unavailable, including an HTTP `404`, keep that image unverified under your policy.
 
 Fetch a fresh report after a deployment change. If the current evidence still lacks provenance required by your policy, treat that image as unverified.
 
-<Note>
-  When requesting help, share only non-sensitive verification metadata: the endpoint, UTC time, requested model, signing address, `info.instance_id` when present, image name, and full digest. Never include API keys, prompts, or response content.
-</Note>
+## Continue the flow
+
+After your required deployment checks pass, send inference and verify the [response signature](/cloud/verification/cloud-api/response-signatures). See [troubleshooting](/cloud/verification/troubleshooting) for missing evidence, or return to the [verification overview](/cloud/verification).

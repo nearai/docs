@@ -3,11 +3,7 @@ title: "Experimental Model Attestation Report"
 description: "Inspect the root model report returned by a direct completions endpoint."
 ---
 
-<Warning>
-  This experimental report is evidence for the request that returned it. It does not establish deployment evidence for a separate inference request to the same hostname.
-</Warning>
-
-Use this page to inspect the model environment reported by a direct `https://<MODEL_SLUG>.completions.near.ai` endpoint.
+Use this experimental flow to inspect the model evidence returned by a direct request to `https://<MODEL_SLUG>.completions.near.ai`.
 
 ## Request a fresh report
 
@@ -39,7 +35,7 @@ The root response is the model report. Relevant fields include:
 | `nvidia_payload` | GPU evidence, when present. |
 | `info.tcb_info.app_compose` | Raw measured configuration string. Hash it and match it to the quote's MRCONFIGID. `tcb_info` can itself be JSON text. |
 | `tls_cert_fingerprint` | The direct endpoint TLS binding, when requested. |
-| `all_attestations[]` | Model-report entries in this direct response envelope. It is not a complete list of instances that can serve later requests. |
+| `all_attestations[]` | Model-report entries included in this direct response. |
 
 ## Verify the report
 
@@ -51,8 +47,8 @@ The root response is the model report. Relevant fields include:
 6. Apply your accepted measurement policy to the verified configuration.
 7. If source and build provenance are required, continue with [direct image provenance](/cloud/verification/direct/image-provenance).
 
-When a response signature is being verified, match both `signing_address` and `signing_algo`. A direct report for another signer is not a substitute, even when the hostname and model name are the same.
+When verifying a response signature, match both `signing_address` and `signing_algo` to the verified report.
 
 ## Load balancing and freshness
 
-The same direct model hostname can serve more than one instance. Do not assume two independent HTTP requests reached the same instance, or use a report as evidence for a separate completion sent later. Fetch fresh evidence when the signer, certificate, measured configuration, or accepted-attestation-age policy changes.
+A direct model hostname can route requests to multiple instances. Fetch fresh evidence when the signer, certificate, measured configuration, or accepted-attestation-age policy changes.
