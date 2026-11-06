@@ -40,6 +40,17 @@ This makes it easy to display "searching the web…" states and surface sources 
 <Note>
   Unlike client-side function calling, you never receive a `finish_reason: "tool_calls"` response that you have to answer — the search loop runs entirely server-side, on infrastructure operated by NEAR AI.
 </Note>
+
+### Number of results
+
+Set `count` on the tool to cap the sources each search returns. It is an integer from 0 to 20 and applies to every search in the request. With `0` no search runs, and the model answers without web results. Any other value returns a 400 error. Without `count`, searches return their default number of results.
+
+```json
+"tools": [{"type": "web_context_search", "count": 5}]
+```
+
+Web search on Chat Completions also works with [end-to-end encryption](/cloud/guides/e2ee-chat-completions): the search queries and the results in `delta.nearai_tool_result` are encrypted with the rest of the stream.
+
 ## See Also
 
 - [Stateless Responses](/cloud/guides/stateless-responses) — client-managed functions and unsupported built-in tools
