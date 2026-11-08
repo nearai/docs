@@ -32,7 +32,7 @@ curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
 
 The response includes gateway evidence and NEAR model-report candidates in `model_attestations[]`. The field is omitted when no candidate is available. If your policy requires NEAR model evidence, reject a missing or empty `model_attestations[]`. Before sending a completion, verify every candidate and retain the verified results.
 
-For a later `provider_tee` response signature, select exactly one retained verified report whose `signing_address` and `signing_algo` match the signature. If no report or more than one report matches, the response is unverified.
+For Chat Completions, the SDK selects a verified model public key and sends it in `X-Model-Pub-Key`. Keep the signing identity from that report with the request. A later `provider_tee` receipt must match that identity.
 
 `provider=near` selects the source of reports for this attestation request. The later completion follows its own provider routing.
 
@@ -62,15 +62,13 @@ Perform these checks on every returned candidate before sending a completion:
 5. When GPU evidence is present, follow [GPU evidence verification](/cloud/verification/reference/quote-nonce-signer#verify-gpu-evidence-when-present).
 6. Apply your own allowlist and provenance policy to the verified measurements.
 
-After receiving a `provider_tee` response signature, select the one retained report whose signer identity and algorithm match the signature. If the match is absent or ambiguous, reject the response as unverified.
-
 ## Relationship to NEAR AI Cloud gateway TLS
 
 The browser or client connection is to `cloud-api.near.ai`. Verify its TLS endpoint binding against `gateway_attestation`. See [NEAR AI Cloud gateway TLS connection binding](/cloud/verification/cloud-api/tls).
 
 ## Verify a signed response
 
-For a NEAR AI Cloud gateway response with `signature_kind: "provider_tee"`, verify the signature over the endpoint-defined payload and match its signer to exactly one previously verified model report. For a `gateway` signature, match the signer to the previously verified `gateway_attestation` instead. See [NEAR AI Cloud gateway response signatures](/cloud/verification/cloud-api/response-signatures).
+For a `provider_tee` receipt, the SDK verifies the signature and exact bytes against the signer selected for the request. The result includes every previously verified model report with that signing address and algorithm. A `gateway` receipt uses the previously verified Gateway signing key. See [response signatures](/cloud/verification/cloud-api/response-signatures).
 
 ## Other provider documentation
 

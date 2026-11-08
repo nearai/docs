@@ -82,7 +82,7 @@ printf '%s' "$GPU_PAYLOAD" | curl --fail-with-body -sS -X POST \
 
 The request is sent only when the payload nonce matches. The payload goes on standard input because an eight-GPU payload is close to the shell's argument-size limit.
 
-NRAS returns a JSON array whose first entry is `["JWT", "<token>"]`. Decode that JWT's payload and require `x-nvidia-overall-att-result` to be boolean `true`. Reject missing or malformed GPU evidence, a nonce mismatch, or any other verdict. This minimal flow relies on the TLS-authenticated NRAS verdict; apply local JWT/EAT validation separately if your policy requires it. Define in advance whether missing GPU evidence is acceptable for your workload policy.
+NRAS returns a JSON array whose first entry is `["JWT", "<token>"]`. The SDK verifies the JWT's ES384 signature against NVIDIA's published keys, checks its issuer and time claims, matches the signed `eat_nonce` to the challenge, and requires `x-nvidia-overall-att-result` to be boolean `true`. Apply those checks before accepting the token from the command above. If your policy requires a GPU, reject a report without GPU evidence.
 
 ## Check a report in code
 

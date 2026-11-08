@@ -23,7 +23,7 @@ Suppose your application asks a supported NEAR model to summarize a paragraph. U
 
 <Steps>
   <Step title="The SDK checks the services">
-    When your application makes an inference call, the SDK checks the Gateway and model service evidence before sending the paragraph. It also checks the Gateway connection and remembers the signing keys authenticated by the evidence.
+    Before sending the paragraph, the SDK verifies the Gateway, its HTTPS connection, and the model service. It records the Gateway’s signing key and selects a verified model key for this request.
 
     **The SDK handles this automatically.** It can reuse a previously verified result within its configured cache lifetime.
   </Step>
@@ -34,7 +34,7 @@ Suppose your application asks a supported NEAR model to summarize a paragraph. U
     The SDK retains the request and response bytes so they can be checked later. For a streaming response, wait until the whole stream has been received.
   </Step>
   <Step title="Your application asks the SDK to verify the reply">
-    Call `verifyResponse(responseId)` or your language's equivalent on the same SDK client. The SDK fetches the signed response record, checks its signature against the keys it verified earlier, and compares it with the saved request and response bytes.
+    Call `verifyResponse(responseId)` or your language's equivalent on the same SDK client. The SDK compares the signed record with the saved request and reply bytes. It checks a model signature against the model key it selected, or a Gateway signature against the verified Gateway key.
 
     **Your application triggers this step.**
   </Step>

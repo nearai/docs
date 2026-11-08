@@ -21,7 +21,7 @@ Start with [Verify with the SDK](/cloud/verification/verify-with-sdk) for a comp
 
 The JavaScript result `deploymentProvenance: "verified"` means a caller-supplied deployment callback accepted the measured deployment. The callback defines which images and deployment properties it checks. Without a callback, the value is `not_checked`.
 
-Configure reusable deployment checks through the SDK's Gateway or model deployment verifier. A model `deploymentPolicy` callback can also apply rules using the requested model name. See the [SDK verification guide](https://github.com/nearai/inference-sdk/blob/main/js/docs/verification-guide.md) for JavaScript configuration and the [language guides](/cloud/inference-sdk) for the other SDKs.
+Configure reusable deployment checks through the SDK's Gateway or model deployment verifier. A model `deploymentPolicy` callback can also apply rules using the requested model name. With a model deployment policy or field-level E2EE enabled, the client requires model evidence before sending Chat. See the [JavaScript verification guide](https://github.com/nearai/inference-sdk/blob/v0.3.0/js/docs/verification-guide.md) and the other [language guides](/cloud/inference-sdk).
 
 ## Define acceptance before verification
 
@@ -53,8 +53,8 @@ Accept a result when every required check passes against the evidence for that r
 
 The same hostname can be served by more than one attested instance. Match evidence to the connection and response you are verifying:
 
-- For TLS, obtain the peer certificate and report on the same connection.
-- For a `provider_tee` response signature, verify and retain every returned model-attestation candidate before the completion. Accept the signature when its signer identity and algorithm match exactly one verified candidate.
+- For Gateway TLS, obtain the peer certificate and report on the same connection, then pin subsequent connections to that verified public key.
+- For a `provider_tee` receipt, verify each model report before inference and require the receipt to match the signer selected for routing. Retain all verified reports that share that signing address and algorithm.
 - Refresh preflight evidence before a later request after a signer, certificate, configuration, deployment, or policy-age change.
 
 ## Apply the policy

@@ -3,7 +3,7 @@ title: "Experimental TLS Connection Binding"
 description: "Bind one live direct-model TLS connection to a direct model attestation report."
 ---
 
-Use this experimental flow to bind one HTTPS connection to the direct model attestation report it returns.
+This manual check binds one HTTPS connection to the direct model report it returns. The SDK's experimental Direct clients use standard HTTPS and request reports with `include_tls_fingerprint=false`. Use the [Gateway SDK flow](/cloud/verification/cloud-api/tls) for automatic TLS binding.
 
 <Warning>
   Obtain the peer certificate and direct attestation report over the **same TLS connection**. For production verification workflows, use the [NEAR AI Cloud Gateway flow](/cloud/verification).

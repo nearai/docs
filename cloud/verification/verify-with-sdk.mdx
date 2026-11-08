@@ -197,7 +197,7 @@ The SDK checked the receipt against the exact request and response bytes. The si
 
 | Signature kind | Who signed the receipt |
 | --- | --- |
-| `provider_tee` | A model service whose signing key matched the model evidence verified for this request. The example requires this result. |
+| `provider_tee` | The model service signed with the key selected for this request. The example requires this result. |
 | `gateway` | The verified Gateway. Accept this result if your application allows Gateway-signed replies. |
 
 If the example stops because it requires a model-signed response, check that you selected a **Confidential TEE** Chat Completions model. For SDK errors, see [Troubleshooting](/cloud/verification/troubleshooting#after-the-request-response-receipts).

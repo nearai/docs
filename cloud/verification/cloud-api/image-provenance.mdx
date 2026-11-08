@@ -25,7 +25,7 @@ Register the helper in a deployment callback so that the SDK verifies the quote 
 - For Gateway images, use `gatewayVerification.verifiers.deployment` with `verifyDeploymentImageProvenance`.
 - For model images managed by Compose Manager, use `modelVerification.verifiers.deployment` with `verifyComposeManagerDeploymentImageProvenance`. This requires authenticated Compose Manager evidence in every model report being checked.
 
-The names above are JavaScript options. The [image-provenance examples](https://github.com/nearai/inference-sdk/tree/main/examples#image-provenance) provide complete projects for each SDK language, and the [JavaScript verification guide](https://github.com/nearai/inference-sdk/blob/main/js/docs/verification-guide.md#optional-image-build-provenance) explains the callback configuration.
+For the callback and image policy in your language, see the [JavaScript](https://github.com/nearai/inference-sdk/blob/v0.3.0/js/docs/verification-guide.md#optional-image-build-provenance), [Python](https://github.com/nearai/inference-sdk/blob/v0.3.0/py/docs/verification-guide.md#optional-image-build-provenance), [Rust](https://github.com/nearai/inference-sdk/blob/v0.3.0/rs/docs/verification-guide.md#model-images-deployed-by-compose-manager), or [Go](https://github.com/nearai/inference-sdk/blob/v0.3.0/go/docs/verification-guide.md#images-deployed-by-compose-manager) verification guide.
 
 `imagePolicies` maps required container repositories to accepted GitHub repositories and build workflows. Each configured image must have an immutable digest. Add a reviewed source revision or ref when your application requires it.
 
