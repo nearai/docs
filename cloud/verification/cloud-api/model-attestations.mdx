@@ -3,7 +3,13 @@ title: "NEAR Model Attestations"
 description: "Verify the NEAR model-attestation report returned through the NEAR AI Cloud gateway."
 ---
 
-Model attestation authenticates a NEAR-operated model environment and its signing identity, separately from the Gateway. Perform this check before inference when your application requires model evidence, then retain the verified identity for [response verification](/cloud/verification/cloud-api/response-signatures).
+Before sending a prompt, the SDK checks the NEAR model service's hardware evidence. The evidence you need for each check depends on what you want to verify.
+
+| What you want to verify | Evidence to use |
+| --- | --- |
+| **Model service** | Hardware attestation authenticates the NEAR service's deployment measurements and signing key. Use that key to verify a [signed reply](/cloud/verification/cloud-api/response-signatures). |
+| **Proxy or inference engine image** | An optional [image provenance policy](/cloud/verification/cloud-api/image-provenance) checks each image you select. For example, `nearaidev/vllm-proxy-rs` selects the proxy. Add the engine image to check its build too. |
+| **Model weights** | Weights loaded separately by the engine require evidence of their digest and a link between those weights and the running service. |
 
 The [SDK tutorial](/cloud/verification/verify-with-sdk) shows the application flow. The manual steps below request NEAR evidence explicitly with `provider=near`; support for other provider formats is separate.
 
@@ -15,7 +21,7 @@ Request the canonical model ID with `x-no-aliasing: true` to require an exact mo
 NONCE="$(openssl rand -hex 32)"
 
 curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
-  --data-urlencode 'model=<MODEL_ID>' \
+  --data-urlencode 'model=z-ai/glm-5.3-flash' \
   --data-urlencode 'provider=near' \
   --data-urlencode 'include_tls_fingerprint=false' \
   --data-urlencode 'signing_algo=ecdsa' \

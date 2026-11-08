@@ -33,8 +33,8 @@ Use the categories below to choose a next step. For the [Verification Center](/c
 
 | Symptom | Check | Next step |
 | --- | --- | --- |
-| Receipt is temporarily unavailable | Whether the request completed and the receipt lookup reports a transient/unavailable result. | Retry verification with the **same client and response ID** within a bounded interval. Do not resend inference to retry its receipt. |
-| Response is not in the client's cache | Client instance, correct receipt ID, cache lifetime, and whether the client was closed or its cache cleared. | Verify with the original client before the record expires or the client closes. |
+| `api.completion_signature_unavailable` | The service returned an error instead of a receipt. Check the provider's error code and message. | If the receipt is pending, retry verification with the same client and response ID after a short delay. Limit retries to the time your application can wait. |
+| `api.completion_not_found` | The client has no cached record for this ID. | Use the client that sent the request and the ID from its response. For a stream, finish reading it first. If the record expired or was cleared, this client can no longer verify that reply. |
 | Streaming receipt cannot be verified | Whether the complete stream was consumed successfully. | Finish consuming the stream before verification. |
 | Receipt verifies as `gateway` | The receipt's signer category and the API/provider being used. | Accept it when Gateway-signed bytes satisfy your requirements. Require `provider_tee` when your application needs a model-signed response. |
 | Signer, signature, or byte hashes do not match | The receipt, preflight evidence, and exact bytes belonging to this request. | Treat the response as unverified. For manual implementations, follow [response signatures](/cloud/verification/cloud-api/response-signatures); do not reserialize JSON or rebuild streams before hashing. |
