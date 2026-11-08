@@ -167,7 +167,6 @@ async def check_near_report(report, nonce_hex, accepted_tcb_statuses, peer_spki_
 
 ```python
 import asyncio
-import os
 import secrets
 
 import requests
@@ -186,7 +185,6 @@ async def main():
             "nonce": nonce,
         },
         headers={
-            "Authorization": f"Bearer {os.environ['NEAR_AI_CLOUD_API_KEY']}",
             "x-no-aliasing": "true",
         },
         timeout=60,
@@ -298,7 +296,6 @@ const response = await fetch(
     }),
   {
     headers: {
-      Authorization: `Bearer ${process.env.NEAR_AI_CLOUD_API_KEY}`,
       'x-no-aliasing': 'true',
     },
   },

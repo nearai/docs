@@ -9,7 +9,7 @@ The [SDK tutorial](/cloud/verification/verify-with-sdk) shows the application fl
 
 ## Request model evidence
 
-Request the canonical model ID with `x-no-aliasing: true` to require an exact model match.
+Request the canonical model ID with `x-no-aliasing: true` to require an exact model match. Reports for publicly listed models are available without an API key. For an unlisted model enabled for your organization, include `Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>`.
 
 ```bash
 NONCE="$(openssl rand -hex 32)"
@@ -21,8 +21,7 @@ curl --fail-with-body -G 'https://cloud-api.near.ai/v1/attestation/report' \
   --data-urlencode 'signing_algo=ecdsa' \
   --data-urlencode "nonce=${NONCE}" \
   -H 'Accept: application/json' \
-  -H 'x-no-aliasing: true' \
-  -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
+  -H 'x-no-aliasing: true'
 ```
 
 The response includes gateway evidence and NEAR model-report candidates in `model_attestations[]`. The field is omitted when no candidate is available. If your policy requires NEAR model evidence, reject a missing or empty `model_attestations[]`. Before sending a completion, verify every candidate and retain the verified results.
