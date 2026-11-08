@@ -47,7 +47,7 @@ The root response is the model report. Relevant fields include:
 6. Apply your accepted measurement policy to the verified configuration.
 7. If source and build provenance are required, continue with [direct image provenance](/cloud/verification/direct/image-provenance).
 
-When verifying a response signature, match both `signing_address` and `signing_algo` to the verified report.
+The Direct SDK client verifies the returned attestation set before sending Chat and selects an attested model public key for routing. A model receipt must match that selected signer's `signing_address` and `signing_algo`.
 
 ## Load balancing and freshness
 

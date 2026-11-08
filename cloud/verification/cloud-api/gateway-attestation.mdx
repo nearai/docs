@@ -9,7 +9,7 @@ For application integration, start with [Verify with the SDK](/cloud/verificatio
 
 ## Request gateway evidence
 
-Generate the nonce in your client. It must be 32 random bytes encoded as 64 hexadecimal characters. No API key is needed, so you can verify the gateway before you send your key. Requests without a key share a small concurrency limit: on `429`, retry after the `Retry-After` delay or send your key.
+Generate the nonce in your client. It must be 32 random bytes encoded as 64 hexadecimal characters. Fetch the Gateway report without credentials. If the endpoint returns `429`, wait for the `Retry-After` delay before trying again.
 
 ```bash
 NONCE="$(openssl rand -hex 32)"

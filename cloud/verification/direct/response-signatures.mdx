@@ -38,15 +38,13 @@ For `ecdsa`, recover the Ethereum EIP-191 signer from `text` and `signature`, th
 Then require that `text` is exactly:
 
 ```text
-<MODEL_NAME>:<request_hash>:<response_hash>
+<MODEL_ID>:<request_hash>:<response_hash>
 ```
 
-Require a non-empty `model_name` in the verified direct model attestation and use that exact value in the signed text.
-
-Use the [manual response-signature helpers](/cloud/verification/reference/response-signature-verification) with the exact request and response bytes, this `model_name`, and the signer from the verified direct model attestation.
+Take `<MODEL_ID>` from the `model` field in the original Chat request. Use the [manual response-signature helpers](/cloud/verification/reference/response-signature-verification) with that ID, the exact request and response bytes, and the verified model signer selected for routing.
 
 ## Match the model signer
 
-Request or select a direct model attestation whose `signing_address` and `signing_algo` exactly match the signature. Verify its quote, client-generated nonce, signer binding, and required workload policy as described in [direct model attestation](/cloud/verification/direct/model-attestation).
+Before sending Chat, verify the returned [direct model attestations](/cloud/verification/direct/model-attestation) and retain the signer of the model key selected for the request. The SDK treats a direct receipt as `provider_tee`, checks it against that signer's address and algorithm, and returns all previously verified reports sharing that signer.
 
 `ecdsa` identities are Ethereum-style signing addresses. `ed25519` identities are Ed25519 public-key bytes encoded as hexadecimal. Always compare the identity together with `signing_algo`.

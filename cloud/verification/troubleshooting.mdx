@@ -25,7 +25,7 @@ Use the categories below to choose a next step. For the [Verification Center](/c
 | Model or report not found | Canonical model ID, endpoint, and model availability. | Check the [model catalog](/cloud/models). Manual NEAR model-report requests use `provider=near`; see [model attestations](/cloud/verification/cloud-api/model-attestations). |
 | Evidence retrieval times out or is rate limited | Whether the failure is a temporary network or service error. | Retry retrieval with backoff and a limit. Keep attestation checks enabled. |
 | Quote or nonce verification fails | The exact failed check and whether a manual flow reused or altered its challenge. | Fetch fresh evidence with a new client-generated nonce. If verification still fails, stop and investigate; see [quote bindings](/cloud/verification/reference/quote-nonce-signer). |
-| Gateway TLS binding fails | Whether the endpoint or a TLS-terminating proxy changed the peer certificate. | Obtain the report and peer certificate on the same connection; see [TLS connection binding](/cloud/verification/cloud-api/tls). |
+| Gateway TLS pin mismatch | The connection presented a different public key from the verified Gateway. | Stop the request. Check the endpoint and any TLS-terminating proxy, then [verify the Gateway key again](/cloud/verification/cloud-api/tls). |
 | Browser cannot perform the server-side TLS check | Browser runtimes do not expose the TLS peer certificate. | Use the supported browser flow and understand its scope, or perform the required connection check in a supported server-side runtime. |
 | Image provenance is missing or rejected | The required image digest, build identity, and configured policy. | Verify the build statement and digest using the [image-provenance flow](/cloud/verification/cloud-api/image-provenance). |
 
@@ -35,7 +35,7 @@ Use the categories below to choose a next step. For the [Verification Center](/c
 | --- | --- | --- |
 | `api.completion_signature_unavailable` | The service returned an error instead of a receipt. Check the provider's error code and message. | If the receipt is pending, retry verification with the same client and response ID after a short delay. Limit retries to the time your application can wait. |
 | `api.completion_not_found` | The client has no cached record for this ID. | Use the client that sent the request and the ID from its response. For a stream, finish reading it first. If the record expired or was cleared, this client can no longer verify that reply. |
-| Streaming receipt cannot be verified | Whether the complete stream was consumed successfully. | Finish consuming the stream before verification. |
+| Streaming receipt cannot be verified | Whether the stream returned a response ID and completed without error. | Consume the full stream on the original client. For Chat and Responses, normal end-of-stream or `[DONE]` can complete it. A Messages stream must reach `message_stop`. |
 | Receipt verifies as `gateway` | The receipt's signer category and the API/provider being used. | Accept it when Gateway-signed bytes satisfy your requirements. Require `provider_tee` when your application needs a model-signed response. |
 | Signer, signature, or byte hashes do not match | The receipt, preflight evidence, and exact bytes belonging to this request. | Treat the response as unverified. For manual implementations, follow [response signatures](/cloud/verification/cloud-api/response-signatures); do not reserialize JSON or rebuild streams before hashing. |
 

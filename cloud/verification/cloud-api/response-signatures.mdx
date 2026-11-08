@@ -13,7 +13,7 @@ Signatures can come from a model-serving TEE or the Gateway itself. Before sendi
 
 Build the request body once and retain the exact bytes sent by the client. Retain the raw response bytes before parsing JSON or Server-Sent Events.
 
-To verify a `provider_tee` signature, send the original completion with the canonical model ID and `x-no-aliasing: true`. Use that same model ID when constructing the expected signed text.
+For a model-signed Chat completion, send the canonical model ID with `x-no-aliasing: true` and route the request with `X-Model-Pub-Key` set to the verified model public key you selected. Keep the signing identity from that report with the original request.
 
 ```text
 request_hash  = SHA-256(exact request-body bytes)
@@ -43,18 +43,18 @@ Then compare `text` with the expected payload:
 
 | `signature_kind` | Expected `text` | Required preflight match |
 | --- | --- | --- |
-| `provider_tee` | `<MODEL_ID>:<request_hash>:<response_hash>` | Exactly one verified NEAR model report with the same `signing_address` and `signing_algo`. |
+| `provider_tee` | `<MODEL_ID>:<request_hash>:<response_hash>` | The signing address and algorithm of the verified model key selected for this request. |
 | `gateway` | `<request_hash>:<response_hash>` | A verified `gateway_attestation` with the same `signing_address` and `signing_algo`. |
 
 Choose the signer type your application requires: `provider_tee` authenticates a model-side signature, while `gateway` authenticates the Gateway's signature.
 
-The Gateway signs a response itself when it changes the bytes it relays: by default on streamed completions (it removes per-chunk usage data), when it resolves a model alias, and on the Responses API. A `gateway` signature covers the exact bytes received from the Gateway, including stream framing and terminal events.
+The Gateway can sign a Chat response when it changes the bytes it relays, for example when it removes per-chunk usage data from a stream or resolves a model alias. The SDK also expects a Gateway signature for the Responses and Messages APIs. A `gateway` signature covers the exact bytes received from the Gateway, including stream framing and terminal events.
 
 Use the endpoint's `signature_kind` contract to classify the signer. If the value is absent or unfamiliar, treat the classification as unavailable.
 
 For `provider_tee`, `<MODEL_ID>` is the canonical model identifier in the signed payload.
 
-Use the [manual response-signature helpers](/cloud/verification/reference/response-signature-verification) with the exact request and response bytes. For `provider_tee`, pass the canonical model ID from the original request to build the expected text and use the signer from the uniquely matching verified model report. For `gateway`, omit the model ID and use the verified Gateway report's signer.
+Use the [manual response-signature helpers](/cloud/verification/reference/response-signature-verification) with the exact request and response bytes. For `provider_tee`, pass the canonical model ID from the original request and the selected model signer. For `gateway`, omit the model ID and use the verified Gateway signer.
 
 ## Match preflight evidence
 
@@ -62,7 +62,7 @@ Before sending the completion, request and verify gateway evidence with a client
 
 After fetching the signature, use `signature_kind` to select the matching preflight result:
 
-- For `provider_tee`, require the signature signer and algorithm to match exactly one verified NEAR model report. If the match is absent or ambiguous, the response is unverified.
+- For `provider_tee`, require the signing address and algorithm to match the model signer selected before inference. Multiple verified reports can share that signer. The SDK returns all of them for the verified receipt.
 - For `gateway`, require them to match the verified gateway report.
 
 Require a match with evidence verified before the completion. If the signature's signer or algorithm differs, reject the response under this flow.

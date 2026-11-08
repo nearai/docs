@@ -5,10 +5,10 @@ description: "Bind a live NEAR AI Cloud gateway TLS connection to the gateway at
 
 TLS binding checks that the HTTPS peer you are connected to matches the identity authenticated by [Gateway attestation](/cloud/verification/cloud-api/gateway-attestation). It connects the environment evidence to the connection carrying your request.
 
-Use the [SDK tutorial](/cloud/verification/verify-with-sdk) for application integration. The Node-specific, Python, Rust, and Go clients enable Gateway TLS binding by default. The manual flow below requires both the actual connection's certificate and a verified Gateway report.
+The Python, Rust, and Go [Gateway inference clients](/cloud/verification/verify-with-sdk) enable TLS binding by default, as does the JavaScript client imported from `@nearai/inference-sdk/node`. They get the Gateway report before sending credentials, then pin model metadata, model reports, inference requests, and receipt lookups to the verified Gateway public key.
 
 <Warning>
-  Obtain the peer certificate and attestation report on the **same TLS connection**. Repeat the check whenever the client reconnects.
+  Obtain the peer certificate and Gateway report on the **same TLS connection**. On later connections, check the pin before sending credentials or request data.
 </Warning>
 
 <Note>
@@ -30,18 +30,18 @@ When you request `include_tls_fingerprint=true`, `gateway_attestation.tls_cert_f
 
 Calculate the peer SPKI hash from the certificate observed on the live connection, rather than the optional `tls_certificate` response field.
 
-This result applies to the connection used for the evidence request. When it must also cover an inference request, send that request over the same open TLS connection. If the client reconnects, repeat the flow.
+Reuse that connection, or configure your HTTPS transport to check the verified SPKI on each new connection. Use that transport for model metadata, model attestations, inference, and response signatures. A standalone evidence client also needs to use the pinned transport for its authenticated calls.
 
 ## Required handling
 
 | Result | Action when TLS endpoint binding is required |
 | --- | --- |
 | `gateway_attestation.tls_cert_fingerprint` is absent | Treat TLS binding as unavailable. Request a new report with `include_tls_fingerprint=true`. |
-| Peer SPKI hash differs | Reject the connection and repeat the flow with one TLS connection. |
+| Peer SPKI hash differs | Reject the connection. Fetch and verify a fresh Gateway report before accepting a new key. |
 | Quote, nonce, or signer binding fails | Reject the report and fetch fresh evidence. |
 | Certificate and report came from different connections | Treat the result as inconclusive. |
 
-Fetch new evidence for a new connection or after a certificate, signer, measurement, or accepted-attestation-age change.
+Fetch new evidence when the Gateway key changes or the evidence reaches your policy's maximum age.
 
 ## Continue the flow
 
