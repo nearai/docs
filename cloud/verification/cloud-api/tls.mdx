@@ -3,21 +3,21 @@ title: "TLS Connection Binding"
 description: "Bind a live NEAR AI Cloud gateway TLS connection to the gateway attestation."
 ---
 
-Use this flow to establish that the HTTPS connection to `cloud-api.near.ai` terminates at the endpoint bound to `gateway_attestation`.
+TLS binding checks that the HTTPS peer you are connected to matches the identity authenticated by [Gateway attestation](/cloud/verification/cloud-api/gateway-attestation). It connects the environment evidence to the connection carrying your request.
+
+The Python, Rust, and Go [Gateway inference clients](/cloud/verification/verify-with-sdk) enable TLS binding by default, as does the JavaScript client imported from `@nearai/inference-sdk/node`. They get the Gateway report before sending credentials, then pin model metadata, model reports, inference requests, and receipt lookups to the verified Gateway public key.
 
 <Warning>
-  The peer certificate and attestation report must be obtained on the **same TLS connection**. Two independent connections can reach different instances or observe different certificates, so they cannot establish this connection-specific conclusion.
+  Obtain the peer certificate and Gateway report on the **same TLS connection**. On later connections, check the pin before sending credentials or request data.
 </Warning>
 
 <Note>
-  Browser Fetch APIs do not expose the peer certificate or its SPKI. A browser client can verify a gateway quote without TLS binding, but cannot establish this TLS connection-binding property.
+  Use a server-side SDK for Gateway TLS binding. Browser Fetch APIs do not expose the peer certificate or its SPKI.
 </Note>
 
 ## What this checks
 
 When you request `include_tls_fingerprint=true`, `gateway_attestation.tls_cert_fingerprint` is the SHA-256 hash of the gateway certificate's SubjectPublicKeyInfo (SPKI). The verified quote binds that fingerprint, the gateway signing identity, and the nonce.
-
-This is a gateway check. It does not bind the client connection to an upstream model endpoint.
 
 ## Verification flow
 
@@ -28,17 +28,21 @@ This is a gateway check. It does not bind the client connection to an upstream m
 5. Verify `gateway_attestation.intel_quote`, then check the nonce, gateway signer, and TLS-fingerprint binding in the verified quote.
 6. Compare the calculated peer SPKI hash with `gateway_attestation.tls_cert_fingerprint`.
 
-The optional `tls_certificate` response field is not a substitute for the peer certificate observed on the connection. A command-line report request alone also cannot establish the same-connection property.
+Calculate the peer SPKI hash from the certificate observed on the live connection, rather than the optional `tls_certificate` response field.
 
-This result applies to the connection used for the evidence request. When it must also cover an inference request, send that request over the same open TLS connection. If the client reconnects, repeat the flow.
+Reuse that connection, or configure your HTTPS transport to check the verified SPKI on each new connection. Use that transport for model metadata, model attestations, inference, and response signatures. A standalone evidence client also needs to use the pinned transport for its authenticated calls.
 
 ## Required handling
 
 | Result | Action when TLS endpoint binding is required |
 | --- | --- |
 | `gateway_attestation.tls_cert_fingerprint` is absent | Treat TLS binding as unavailable. Request a new report with `include_tls_fingerprint=true`. |
-| Peer SPKI hash differs | Reject the connection and repeat the flow with one TLS connection. |
+| Peer SPKI hash differs | Reject the connection. Fetch and verify a fresh Gateway report before accepting a new key. |
 | Quote, nonce, or signer binding fails | Reject the report and fetch fresh evidence. |
 | Certificate and report came from different connections | Treat the result as inconclusive. |
 
-Do not use a cached fingerprint as evidence for a new connection. Fetch new evidence after a certificate, signer, measurement, or accepted-attestation-age change.
+Fetch new evidence when the Gateway key changes or the evidence reaches your policy's maximum age.
+
+## Continue the flow
+
+After preflight, send inference through the verified connection and check the [response signature](/cloud/verification/cloud-api/response-signatures) against the retained evidence. Return to the [overview](/cloud/verification) for the full flow or [troubleshooting](/cloud/verification/troubleshooting) if connection binding is unavailable.

@@ -3,11 +3,7 @@ title: "Experimental Image Provenance"
 description: "Apply an image-provenance policy to configuration measured by a direct model attestation."
 ---
 
-<Warning>
-  This experimental check applies to the direct report under inspection. It does not establish deployment evidence for a separate inference request to the same hostname.
-</Warning>
-
-Image provenance is separate from hardware attestation. A verified direct model quote can bind a configuration measurement to a runtime. Provenance determines whether the image digests in that configuration were built by a source and build process your policy accepts.
+This experimental flow checks the image builds named in a direct model report's measured configuration. Verify the quote and configuration measurement first, then verify that each required image digest was built by a source and build process your policy accepts.
 
 ## Verification flow
 
@@ -17,19 +13,13 @@ Image provenance is separate from hardware attestation. A verified direct model 
 4. Cryptographically verify provenance for each required digest and confirm that the statement's subject equals the image digest exactly.
 5. Apply your policy for repository, build identity, workflow, ref, and source revision.
 
-<Warning>
-  An image tag, search result, or HTTP `200` only locates a possible record. It does not cryptographically verify the provenance statement, its signer, or its subject digest.
-</Warning>
-
 ## Relationship to direct attestation
 
 The quote and configuration measurement establish that the configuration text you matched is bound to the verified model report. Provenance establishes that a specific digest satisfies your source and build policy. Use both checks when your application requires a source-to-runtime trust chain.
 
 ## Missing evidence
 
-An unavailable provenance record, including an HTTP `404`, means the reported digest could not be verified under that policy. It does not by itself identify a security incident.
-
-Fetch a fresh report after a deployment change. If the current evidence still lacks provenance required by your policy, treat that image as unverified.
+Treat an image as unverified when its required provenance record is unavailable, including an HTTP `404`. Fetch a fresh report after a deployment change and apply the same policy to its image digests.
 
 <Note>
   When requesting help, share only non-sensitive verification metadata: the endpoint, UTC time, model name, signing address, `info.instance_id` when present, image name, and full digest. Never include API keys, prompts, or response content.

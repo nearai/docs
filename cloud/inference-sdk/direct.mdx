@@ -5,10 +5,10 @@ description: "Experimental SDK notes for direct model endpoints."
 ---
 
 <Warning>
-  Direct model endpoints are experimental and are not recommended for new integrations or production verification workflows. Use the NEAR AI Cloud Gateway instead.
+  Direct model endpoints are experimental. For new integrations and production verification workflows, use the NEAR AI Cloud Gateway.
 </Warning>
 
-Independent requests to the same direct hostname can reach different serving instances. An attestation report does not establish deployment evidence for a later completion, and a later signature lookup can return `404`. Do not use direct response signatures as a production verification gate.
+Use the direct verification flow to inspect the evidence returned by a direct request. A later signature lookup can return `404`; treat that signature as unavailable.
 
 Direct clients default E2EE to disabled. Set `e2ee: true` to enable it, as shown below.
 
@@ -17,7 +17,7 @@ Direct clients default E2EE to disabled. Set `e2ee: true` to enable it, as shown
 The package requires Node.js 24.22.1 or later.
 
 ```bash
-npm install @nearai/inference-sdk
+npm install @nearai/inference-sdk@0.3.0
 ```
 
 ## Send and verify an E2EE Chat Completion
@@ -41,13 +41,12 @@ const completion = await client.chat.completions.create({
   messages: [{ role: 'user', content: 'Reply with the word ok.' }],
 });
 
-console.log(completion.choices[0]?.message.content);
-
 const receipt = await client.verifyResponse(completion.id);
 console.log(`Verified ${receipt.signatureKind} response.`);
+console.log(completion.choices[0]?.message.content);
 ```
 
-Before sending the completion, the SDK verifies each model-attestation report returned by that endpoint. It does not request Gateway evidence. It encrypts supported Chat fields to a key from the verified model evidence and decrypts the response automatically.
+Before sending the completion, the SDK verifies the reports from the direct endpoint and selects a model key. It encrypts supported Chat fields with E2EE v3 and decrypts the response automatically. Verification checks the receipt against the selected signer.
 
 <Note>
   `verifyResponse()` is explicit. For a streaming completion, consume the entire stream first, then call it with the completion ID so the SDK can verify the exact response bytes.
@@ -80,11 +79,11 @@ For a browser or an application proxy, import from `@nearai/inference-sdk`. Conf
 
 ## Examples
 
-See the [Inference SDK examples and setup instructions](https://github.com/nearai/inference-sdk/tree/main/examples#entry-points) for runnable direct-endpoint projects.
+See the [Inference SDK examples and setup instructions](https://github.com/nearai/inference-sdk/tree/v0.3.0/examples#entry-points) for runnable direct-endpoint projects.
 
-- [DirectInferenceClient](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/chat-completions.ts): streaming and non-streaming Chat with E2EE and response verification.
-- [OpenAI SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/chat-completions-with-openai-sdk.ts): use `DirectInferenceClient.fetch` with the OpenAI client.
-- [Manual verification](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/direct/chat-completions-bare.ts): verify model attestations and response signatures directly. This example sends plaintext Chat bodies over HTTPS without E2EE.
+- [DirectInferenceClient](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/direct/chat-completions.ts): streaming and non-streaming Chat with E2EE and response verification.
+- [OpenAI SDK integration](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/direct/chat-completions-with-openai-sdk.ts): use `DirectInferenceClient.fetch` with the OpenAI client.
+- [Manual verification](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/direct/chat-completions-bare.ts): verify model attestations and response signatures directly. This example sends plaintext Chat bodies over HTTPS without E2EE.
 
 ## Next steps
 

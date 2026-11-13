@@ -1,0 +1,211 @@
+---
+title: "Verify with the SDK"
+description: "Send a request, verify its response receipt, and understand which service signed the answer."
+---
+
+Send a Chat Completions request through the NEAR AI Cloud Gateway and print the answer after the SDK verifies that the model service signed it.
+
+## Before you start
+
+- Create an API key in the [Developer Dashboard](https://cloud.near.ai).
+- Install the SDK using the [JavaScript](/cloud/inference-sdk/javascript#install), [Python](/cloud/inference-sdk/python#install), [Rust](/cloud/inference-sdk/rust#install), or [Go](/cloud/inference-sdk/go#install) guide.
+- Use `z-ai/glm-5.3-flash` as shown, or choose another Chat Completions model marked **Confidential TEE** in the [model catalog](/cloud/models).
+
+Set your API key in the environment:
+
+```bash
+export NEARAI_API_KEY="your-api-key"
+```
+
+## Send a request and verify the reply
+
+<Tabs>
+<Tab title="JavaScript" icon="/images/icons/languages/javascript.svg">
+
+```javascript
+import { InferenceClient } from '@nearai/inference-sdk/node';
+
+const apiKey = process.env.NEARAI_API_KEY;
+if (!apiKey) throw new Error('NEARAI_API_KEY is required');
+
+const client = new InferenceClient({ apiKey });
+const completion = await client.chat.completions.create({
+  model: 'z-ai/glm-5.3-flash',
+  messages: [{ role: 'user', content: 'Reply with the word ok.' }],
+});
+
+const verified = await client.verifyResponse(completion.id);
+if (verified.signatureKind !== 'provider_tee') {
+  throw new Error('This example requires a model-signed response.');
+}
+
+console.log('Verified model-signed response.');
+console.log(completion.choices[0]?.message.content);
+```
+
+</Tab>
+<Tab title="Python" icon="/images/icons/languages/python.svg">
+
+```python
+import asyncio
+import os
+
+from nearai_inference_sdk import InferenceClient
+
+
+async def main():
+    async with InferenceClient(os.environ["NEARAI_API_KEY"]) as client:
+        completion = await client.chat.completions.create(
+            model="z-ai/glm-5.3-flash",
+            messages=[{"role": "user", "content": "Reply with the word ok."}],
+        )
+
+        verified = await client.verify_response(completion.id)
+        if verified.signature_kind != "provider_tee":
+            raise RuntimeError("This example requires a model-signed response.")
+
+        print("Verified model-signed response.")
+        print(completion.choices[0].message.content or "")
+
+
+asyncio.run(main())
+```
+
+</Tab>
+<Tab title="Rust" icon="/images/icons/languages/rust.png">
+
+```rust
+use nearai_inference_sdk::{
+    CompletionSignatureKind, InferenceClient, InferenceClientOptions,
+};
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = InferenceClient::with_options(InferenceClientOptions {
+        api_key: Some(std::env::var("NEARAI_API_KEY")?),
+        ..Default::default()
+    })?;
+    let completion = client.chat_completions(json!({
+        "model": "z-ai/glm-5.3-flash",
+        "messages": [{"role": "user", "content": "Reply with the word ok."}]
+    })).await?;
+
+    let id = completion["id"].as_str().ok_or("Completion has no ID")?;
+    let verified = client.verify_response(id).await?;
+    if verified.signature_kind() != CompletionSignatureKind::ProviderTee {
+        return Err("This example requires a model-signed response.".into());
+    }
+
+    println!("Verified model-signed response.");
+    println!("{}", completion["choices"][0]["message"]["content"]);
+    Ok(())
+}
+```
+
+</Tab>
+<Tab title="Go" icon="/images/icons/languages/go.svg">
+
+```go
+package main
+
+import (
+    "context"
+    "encoding/json"
+    "fmt"
+    "log"
+    "os"
+    "time"
+
+    nearai "github.com/nearai/inference-sdk/go"
+)
+
+func main() {
+    if err := run(); err != nil {
+        log.Fatal(err)
+    }
+}
+
+func run() error {
+    apiKey := os.Getenv("NEARAI_API_KEY")
+    if apiKey == "" {
+        return fmt.Errorf("set NEARAI_API_KEY")
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+    defer cancel()
+
+    client, err := nearai.NewInferenceClient(nearai.InferenceOptions{
+        ClientOptions: nearai.ClientOptions{APIKey: apiKey},
+    })
+    if err != nil {
+        return err
+    }
+    defer client.Close()
+
+    body, err := client.CreateChatCompletion(ctx, map[string]any{
+        "model": "z-ai/glm-5.3-flash",
+        "messages": []map[string]string{{
+            "role": "user", "content": "Reply with the word ok.",
+        }},
+    })
+    if err != nil {
+        return err
+    }
+    var completion struct {
+        ID string `json:"id"`
+        Choices []struct {
+            Message struct {
+                Content string `json:"content"`
+            } `json:"message"`
+        } `json:"choices"`
+    }
+    if err := json.Unmarshal(body, &completion); err != nil {
+        return err
+    }
+    if completion.ID == "" {
+        return fmt.Errorf("completion has no ID")
+    }
+
+    verified, err := client.VerifyResponse(ctx, completion.ID)
+    if err != nil {
+        return err
+    }
+    if verified.SignatureKind != "provider_tee" {
+        return fmt.Errorf("this example requires a model-signed response")
+    }
+
+    fmt.Println("Verified model-signed response.")
+    for _, choice := range completion.Choices {
+        fmt.Println(choice.Message.Content)
+    }
+    return nil
+}
+```
+
+</Tab>
+</Tabs>
+
+## Understand the result
+
+On success, the example prints this line followed by the model's answer.
+
+```text
+Verified model-signed response.
+```
+
+The SDK checked the receipt against the exact request and response bytes. The signature kind tells you who signed it.
+
+| Signature kind | Who signed the receipt |
+| --- | --- |
+| `provider_tee` | The model service signed with the key selected for this request. The example requires this result. |
+| `gateway` | The verified Gateway. Accept this result if your application allows Gateway-signed replies. |
+
+If the example stops because it requires a model-signed response, check that you selected a **Confidential TEE** Chat Completions model. For SDK errors, see [Troubleshooting](/cloud/verification/troubleshooting#after-the-request-response-receipts).
+
+## Adapt the flow
+
+- **Client lifetime:** verify the response with the client that sent the request, before its cached record expires (60 minutes by default).
+- **Streaming:** consume the entire stream before calling response verification.
+- **Other APIs:** use the response ID appropriate to the API. The [SDK overview](/cloud/inference-sdk#verification) lists the IDs for Chat Completions, Responses, Messages, and System One.
+- **Browser applications:** use the browser SDK entry point. See [TLS connection binding](/cloud/verification/cloud-api/tls) for runtime support, or inspect evidence with the [Verification Center](/cloud/verification/verification-center).
+- **Software acceptance rules:** follow [verification policy](/cloud/verification/reference/verification-policy) and [image provenance](/cloud/verification/cloud-api/image-provenance).

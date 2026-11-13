@@ -188,7 +188,9 @@ Return a nonempty array with at most 1,000 reports and 1 MiB of projected UTF-8 
 
 Select report fields explicitly before sending them. A type annotation or `as VerificationReport` does not remove runtime fields. Keep API keys, chat content, raw SDK results, raw exceptions, and deployment configuration out of reports.
 
-For SDK verification, see the [JavaScript SDK guide](/cloud/inference-sdk/javascript). Convert SDK verification results to this format in your application. For response reports, call `verifyResponse()` on the original SDK client that made the request, after any response stream is fully consumed.
+After consuming the response, call `verifyResponse(id)` on the [JavaScript client](/cloud/inference-sdk/javascript) that sent the request. Use `result.id` as the viewer's `completionId`. For a `provider_tee` receipt, SDK 0.3.0 returns every matching model report in `result.attestations`. Each deployment you want to display can have its own model report. For a `gateway` receipt, use `result.attestation` for the Gateway summary.
+
+The viewer accepts the `tcbStatus` values listed above. If the SDK reports a different value, such as `TDRelaunchAdvised`, display that result directly in your application.
 
 ## Customize the viewer
 

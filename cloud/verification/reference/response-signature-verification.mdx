@@ -3,7 +3,7 @@ title: "Response Signature Verification"
 description: "Verify a response signature over exact request and response bytes."
 ---
 
-Use these helpers after you have fetched a response signature and verified the applicable preflight attestation. They verify only the signed response: exact-byte hashes, the signature, and the signer match. They do not verify a quote or choose which preflight evidence applies.
+Use these helpers after you have fetched a response signature and verified the applicable preflight attestation. They check the exact-byte hashes, response signature, and signer match against that verified evidence.
 
 Pass the signature JSON, the exact request and response bytes, the expected signed text for the endpoint, and the signer from the already verified preflight report:
 

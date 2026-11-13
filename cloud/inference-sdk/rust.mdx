@@ -1,15 +1,15 @@
 ---
 title: "Rust"
-icon: "code"
+icon: "/images/icons/languages/rust.png"
 description: "Use the Rust SDK for verified Chat Completions, Responses, Messages, and System One decisions."
 ---
 
 ## Install
 
-The SDK is available on [crates.io](https://crates.io/crates/nearai-inference-sdk). Use Rust stable and Cargo. Add the SDK to your application:
+The SDK is available on [crates.io](https://crates.io/crates/nearai-inference-sdk/0.3.0). Use Rust stable and Cargo. Add the SDK to your application:
 
 ```bash
-cargo add nearai-inference-sdk
+cargo add nearai-inference-sdk@0.3.0
 ```
 
 Set your API key in your server environment:
@@ -20,7 +20,7 @@ export NEARAI_API_KEY="your-api-key"
 
 ## Examples
 
-Choose the tab matching your model's API. These examples assume a project with Tokio and serde_json; use them in `src/main.rs`.
+Use the example for your model's API in `src/main.rs`. The examples use `serde_json` and Tokio with the `macros` and `rt-multi-thread` features.
 
 <Tabs>
 <Tab title="Chat Completions" id="chat-completions">
@@ -155,27 +155,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## E2EE
 
-End-to-end encryption is disabled by default. Set `e2ee: true` to encrypt supported Chat fields to a verified model key and decrypt the response automatically.
+Set `e2ee: true` to encrypt supported Chat fields to a verified model key and decrypt the response automatically. E2EE is off by default. When enabled, the SDK uses [field encryption v3](/cloud/guides/e2ee-chat-completions) to bind the reply key to each encrypted request field.
 
 E2EE requires a NEAR vLLM model with attestation enabled. Other providers use Gateway-only verification; set `e2ee: false` for those models.
 
 ## Verification
 
-Before sending Chat, the client verifies the Gateway and every returned model report for supported models. Gateway TLS identity verification is enabled by default and subsequent requests are pinned to that identity. Normal HTTPS certificate validation remains enabled. Failed required checks stop the request.
+The client verifies the Gateway before sending credentials. By default, it pins metadata, model evidence, inference, and receipt requests to the verified Gateway TLS identity. For supported models, it verifies every returned model report before sending the prompt.
 
 Response-signature verification is explicit: call `client.verify_response(id).await?` after receiving the completion. The client retains the exact request and response bytes automatically, including encrypted wire bytes when E2EE is enabled.
 
-See [Verification](/cloud/inference-sdk#verification) for receipt IDs and signature kinds.
+For a model-signed receipt (`provider_tee`), `verified.attestations` contains every verified model report matching the signer. See [Verification](/cloud/inference-sdk#verification) for receipt IDs and signature kinds.
 
 Response records expire 60 minutes after the full response is read, by default. Verify each response before its record expires.
 
-To check a deployment without sending a prompt, call `client.verify(model).await?`. For custom policies and cache settings, see the [Rust verification guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md).
+To check a deployment without sending a prompt, call `client.verify(model).await?`. For custom policies and cache settings, see the [Rust verification guide](https://github.com/nearai/inference-sdk/blob/v0.3.0/rs/docs/verification-guide.md).
 
 ### Streaming and HTTP transport
 
-Use `chat_request()` with `"stream": true`, then `send(reqwest::Request)` to obtain an `InferenceResponse`. Consume its `body` through HTTP EOF, including bytes after SSE `[DONE]`, before calling `verify_response()` with the completion ID from an SSE data event. Dropping a partial stream leaves no verifiable receipt. Output displayed before verification succeeds is not yet signature-verified.
+Use `chat_request()` with `"stream": true`, then `send(reqwest::Request)` to obtain an `InferenceResponse`. Consume its `body` to HTTP EOF before calling `verify_response()` with the completion ID from an SSE data event. Chat and Responses streams can finish at normal EOF without `[DONE]` once the SDK has a valid response ID. Messages streams require `message_stop`.
 
-Rust exposes its own reqwest transport API rather than an OpenAI SDK adapter. Body chunks are SSE bytes and need not correspond to complete events or UTF-8 strings. The [streaming guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md#streaming) and [Gateway client example](https://github.com/nearai/inference-sdk/blob/main/examples/example-rs/src/gateway/chat_completions.rs) show how to consume responses and verify receipts. Use `create_response()` for Responses JSON, or `response_request()` with `send()` for Responses streaming.
+Rust exposes its own reqwest transport API rather than an OpenAI SDK adapter. Body chunks are SSE bytes and need not correspond to complete events or UTF-8 strings. The [streaming guide](https://github.com/nearai/inference-sdk/blob/v0.3.0/rs/docs/verification-guide.md#streaming) and [Gateway client example](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-rs/src/gateway/chat_completions.rs) show how to consume responses and verify receipts. Use `create_response()` for Responses JSON, or `response_request()` with `send()` for Responses streaming.
 
 ## OHTTP
 
@@ -198,8 +198,8 @@ Use these options in the completion example above. OHTTP requires the default Ed
 
 ## Examples and reference
 
-- [Rust verification guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md): policies, encryption, streaming, TLS binding, and errors.
-- [Rust API reference](https://github.com/nearai/inference-sdk/blob/main/rs/docs/api-reference.md): client options, verification functions, defaults, and result fields.
-- [Runnable Rust examples](https://github.com/nearai/inference-sdk/tree/main/examples/example-rs): Gateway and direct clients, standalone verification, and JSON/SSE.
+- [Rust verification guide](https://github.com/nearai/inference-sdk/blob/v0.3.0/rs/docs/verification-guide.md): policies, encryption, streaming, TLS binding, and errors.
+- [Rust API reference](https://github.com/nearai/inference-sdk/blob/v0.3.0/rs/docs/api-reference.md): client options, verification functions, defaults, and result fields.
+- [Runnable Rust examples](https://github.com/nearai/inference-sdk/tree/v0.3.0/examples/example-rs): Gateway and direct clients, standalone verification, and JSON/SSE.
 
 For experimental direct endpoints, see the [direct-client guide](/cloud/inference-sdk/direct).

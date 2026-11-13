@@ -1,15 +1,15 @@
 ---
 title: "Python"
-icon: "code"
+icon: "/images/icons/languages/python.svg"
 description: "Use the asynchronous Python SDK for verified Chat Completions, Responses, Messages, and System One decisions."
 ---
 
 ## Install
 
-The SDK is available on [PyPI](https://pypi.org/project/nearai-inference-sdk/). The package requires Python 3.12 or later.
+[SDK 0.3.0 on PyPI](https://pypi.org/project/nearai-inference-sdk/0.3.0/) requires Python 3.12 or later.
 
 ```bash
-pip install nearai-inference-sdk
+pip install nearai-inference-sdk==0.3.0
 export NEARAI_API_KEY="your-api-key"
 ```
 
@@ -157,13 +157,13 @@ asyncio.run(main())
 
 ## E2EE
 
-End-to-end encryption is disabled by default. `e2ee=True` encrypts supported Chat fields to a verified model key and decrypts the response automatically.
+End-to-end encryption is disabled by default. `e2ee=True` encrypts supported Chat fields to a verified model key and decrypts the response automatically. SDK 0.3.0 uses encryption protocol v3 with Ed25519 (default) or ECDSA.
 
 E2EE requires a NEAR vLLM model with attestation enabled. Other providers use Gateway-only verification; set `e2ee=False` for those models.
 
 ## Verification
 
-Before sending Chat, the client verifies the Gateway and, for supported NEAR TEE models, every returned model report. Gateway TLS identity verification is enabled by default and subsequent requests are pinned to that identity. Failed required checks stop the request.
+The client verifies the Gateway before sending your API key. It pins subsequent requests, including model evidence and signature lookups, to the verified Gateway TLS identity by default. For supported NEAR TEE models it also verifies every returned model report before sending Chat, even when E2EE is disabled.
 
 Response-signature verification is explicit: call `await client.verify_response(completion.id)` after receiving the completion. It verifies the exact request and response bytes retained by the client against the relevant verified evidence.
 
@@ -171,7 +171,7 @@ See [Verification](/cloud/inference-sdk#verification) for receipt IDs and signat
 
 Response records expire 60 minutes after the full response is read, by default. Verify each response before its record expires or the client closes.
 
-To check a deployment without sending a prompt, call `await client.verify(model)`. For custom policies and cache settings, see the [Python verification guide](https://github.com/nearai/inference-sdk/blob/main/py/docs/verification-guide.md).
+To check a deployment without sending a prompt, call `await client.verify(model)`. For custom policies and cache settings, see the [Python verification guide](https://github.com/nearai/inference-sdk/blob/v0.3.0/py/docs/verification-guide.md).
 
 ### Streaming
 
@@ -219,9 +219,9 @@ OHTTP requires the default Ed25519 algorithm and cannot be used with `signing_al
 
 ## Examples and reference
 
-- [Python verification guide](https://github.com/nearai/inference-sdk/blob/main/py/docs/verification-guide.md): policies, encryption, streaming, and errors.
-- [Python API reference](https://github.com/nearai/inference-sdk/blob/main/py/docs/api-reference.md): client options, verification functions, and result fields.
-- [Runnable Python examples](https://github.com/nearai/inference-sdk/tree/main/examples/example-py).
-- OpenAI SDK integration: [Chat Completions](https://github.com/nearai/inference-sdk/blob/main/examples/example-py/gateway/chat_completions_with_openai_sdk.py) and [Responses](https://github.com/nearai/inference-sdk/blob/main/examples/example-py/gateway/responses_with_openai_sdk.py).
-- [Anthropic SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-py/gateway/messages_with_anthropic_sdk.py).
-- [TypeSafe SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-py/gateway/systemone_with_typesafe_sdk.py).
+- [Python verification guide](https://github.com/nearai/inference-sdk/blob/v0.3.0/py/docs/verification-guide.md): policies, encryption, streaming, and errors.
+- [Python API reference](https://github.com/nearai/inference-sdk/blob/v0.3.0/py/docs/api-reference.md): client options, verification functions, and result fields.
+- [Runnable Python examples](https://github.com/nearai/inference-sdk/tree/v0.3.0/examples/example-py).
+- OpenAI SDK integration: [Chat Completions](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-py/gateway/chat_completions_with_openai_sdk.py) and [Responses](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-py/gateway/responses_with_openai_sdk.py).
+- [Anthropic SDK integration](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-py/gateway/messages_with_anthropic_sdk.py).
+- [TypeSafe SDK integration](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-py/gateway/systemone_with_typesafe_sdk.py).

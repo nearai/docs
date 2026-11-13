@@ -1,33 +1,72 @@
 ---
 title: "Verification"
-description: "Verify requests sent through the NEAR AI Cloud Gateway."
+description: "Learn why to verify an AI request, what the checks tell you, and how to verify a reply with the SDK."
 ---
 
-Use these guides to verify the evidence returned for requests sent through the NEAR AI Cloud Gateway.
+## Why verify a request?
 
-<Tip>
-  See an example implementation in the [NEAR AI Cloud Verification Example](https://github.com/near-examples/nearai-cloud-verification-example) repo. A more complete verifier is available in the [NEAR AI Cloud Verifier](https://github.com/nearai/nearai-cloud-verifier) repo.
-</Tip>
+Before sending private data to an AI service, you may want to check that it runs on protected hardware. After it answers, you may also want to check that the reply matches what a verified service signed. Verification lets your application perform these checks as part of a request.
 
-<Note>
-  Using a direct completions endpoint (`{slug}.completions.near.ai`)? Direct verification is experimental. See [Direct Completions](/cloud/experimental/direct-completions) for the current limitations.
-</Note>
+## What are you checking?
 
-## Verify in your browser
+There are three questions to answer:
 
-Use the [Verification Center](/cloud/verification/verification-center) at [cloud.near.ai/verify](https://cloud.near.ai/verify) to inspect a model's hardware attestation and a reply's signature without writing code.
+1. **Are the services running on protected hardware?** The SDK checks hardware-backed evidence about the Gateway and, for supported models, the model service.
+2. **Does your connection reach the service you checked?** In a supported server-side runtime, the SDK checks that the HTTPS connection reaches the Gateway identified by that evidence.
+3. **Does the reply match what a verified service signed?** The SDK checks a signed record against the exact request you sent and the reply you received, then identifies which service signed it.
 
-## Verification flow
+The **Gateway** receives your API request and forwards it. The **model service** runs inference and produces the answer. The SDK checks each service's evidence separately.
 
-Start with [Gateway attestation](/cloud/verification/cloud-api/gateway-attestation) to verify fresh deployment evidence before a completion. When your policy requires NEAR model evidence, verify every returned [model-attestation candidate](/cloud/verification/cloud-api/model-attestations). You can also verify the [TLS connection](/cloud/verification/cloud-api/tls) and [image provenance](/cloud/verification/cloud-api/image-provenance) as required by your policy; after a completion, verify its [response signature](/cloud/verification/cloud-api/response-signatures) when present.
+## Follow one request
 
-## Common verification concepts
+Suppose your application asks a supported NEAR model to summarize a paragraph. Using a server-side SDK, the complete flow is:
+
+<Steps>
+  <Step title="The SDK checks the services">
+    Before sending the paragraph, the SDK verifies the Gateway, its HTTPS connection, and the model service. It records the Gateway’s signing key and selects a verified model key for this request.
+
+    **The SDK handles this automatically.** It can reuse a previously verified result within its configured cache lifetime.
+  </Step>
+  <Step title="The SDK sends the prompt">
+    After the checks pass, the SDK sends the request to the Gateway. The Gateway forwards it to the model service, which generates a summary and returns it through the Gateway.
+  </Step>
+  <Step title="Your application receives the complete reply">
+    The SDK retains the request and response bytes so they can be checked later. For a streaming response, wait until the whole stream has been received.
+  </Step>
+  <Step title="Your application asks the SDK to verify the reply">
+    Call `verifyResponse(responseId)` or your language's equivalent on the same SDK client. The SDK compares the signed record with the saved request and reply bytes. It checks a model signature against the model key it selected, or a Gateway signature against the verified Gateway key.
+
+    **Your application triggers this step.**
+  </Step>
+  <Step title="Your application decides whether to use the answer">
+    The result tells you whether the model service or the Gateway signed the reply. Check whether that signer meets your application's requirements.
+
+    Once verification succeeds and the result meets your requirements, display or use the summary.
+  </Step>
+</Steps>
+
+## Try verification
 
 <CardGroup cols={2}>
-  <Card title="Quote, nonce, and signer bindings" icon="fingerprint" href="/cloud/verification/reference/quote-nonce-signer">
-    Learn how fresh attestation evidence is tied to your request and to a signing identity.
+  <Card title="Verify a reply with the SDK" icon="code" href="/cloud/verification/verify-with-sdk">
+    Follow this flow with a complete JavaScript, Python, Rust, or Go example.
   </Card>
-  <Card title="Verification policy" icon="list-checks" href="/cloud/verification/reference/verification-policy">
-    Decide which checks, measurements, and source-provenance requirements your application accepts.
+  <Card title="Verify GLM-5.3 Flash in your browser" icon="search-check" href="https://cloud.near.ai/verify?model=z-ai%2Fglm-5.3-flash">
+    Check the current Gateway and model evidence in the Verification Center. No API key is required.
   </Card>
 </CardGroup>
+
+If your application gave you a receipt link, see [how to check that reply in the Verification Center](/cloud/verification/verification-center#verify-a-reply). For help with missing evidence or failed checks, see [Troubleshooting](/cloud/verification/troubleshooting).
+
+## Terms and verification details
+
+The detailed guides use these names for the checks above:
+
+| Term | Meaning | Detailed guide |
+| --- | --- | --- |
+| Attestation | Hardware-signed evidence about how a service is deployed and which signing key belongs to it | [Gateway attestation](/cloud/verification/cloud-api/gateway-attestation) and [model attestation](/cloud/verification/cloud-api/model-attestations) |
+| TLS connection binding | Matching the actual HTTPS connection to the Gateway evidence | [TLS connection binding](/cloud/verification/cloud-api/tls) |
+| Response receipt | The signed record checked against your request and response; `provider_tee` means a model-side signer, and `gateway` means the Gateway signer | [Response signatures](/cloud/verification/cloud-api/response-signatures) |
+| Deployment policy and image provenance | Additional rules for accepting particular software releases and verifying their build sources | [Verification policy](/cloud/verification/reference/verification-policy) and [image provenance](/cloud/verification/cloud-api/image-provenance) |
+
+For browser support, see [TLS connection binding](/cloud/verification/cloud-api/tls). For experimental direct model endpoints, see [Direct Completions](/cloud/experimental/direct-completions). Learn about the hardware protections in [Private Inference](/cloud/private-inference).
