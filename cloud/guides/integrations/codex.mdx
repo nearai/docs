@@ -1,0 +1,158 @@
+---
+title: "Codex CLI"
+description: "Configure OpenAI's Codex CLI to use NEAR AI Cloud as a custom model provider."
+---
+
+
+[Codex CLI](https://github.com/openai/codex) is OpenAI's terminal coding agent. It talks to the OpenAI Responses API, and NEAR AI Cloud serves a [stateless Responses API](/cloud/guides/stateless-responses) at the same base URL as its other endpoints, so you can add NEAR AI Cloud to Codex as a custom model provider.
+
+Through NEAR AI Cloud, Codex can use open models such as `z-ai/glm-5.3-flash` and OpenAI models such as `openai/gpt-5.4`. See [Available Models](/cloud/models) for each model's privacy tier.
+
+If you normally sign in to Codex with a ChatGPT account, you can keep doing that. The setup below adds NEAR AI Cloud as a separate profile, so plain `codex` keeps using your ChatGPT sign-in and `codex --profile nearai` uses NEAR AI Cloud.
+
+## Prerequisites
+
+- Codex CLI installed (checked with `0.167.0`).
+- A NEAR AI Cloud account with credits.
+- A NEAR AI Cloud API key. In the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations), open **API Keys** and create a key.
+
+## 1. Store your API key
+
+Codex reads the key from an environment variable. Add this line to your shell profile (`~/.zshrc`, `~/.bashrc`, or similar) so every new terminal has it:
+
+```bash
+export NEARAI_API_KEY="YOUR_NEAR_AI_API_KEY"
+```
+
+Open a new terminal, or run `source ~/.zshrc`, before starting Codex.
+
+<Warning>
+Do not paste the key into a Codex config file or commit it to a repository. Keep it in the environment variable.
+</Warning>
+
+## 2. Add a NEAR AI Cloud profile
+
+Create `~/.codex/nearai.config.toml` with:
+
+```toml ~/.codex/nearai.config.toml
+model = "z-ai/glm-5.3-flash"
+model_provider = "nearai"
+
+[model_providers.nearai]
+name = "NEAR AI Cloud"
+base_url = "https://cloud-api.near.ai/v1"
+env_key = "NEARAI_API_KEY"
+wire_api = "responses"
+```
+
+| Key | Value |
+| --- | --- |
+| `base_url` | `https://cloud-api.near.ai/v1`. Codex appends `/responses` itself. |
+| `env_key` | The environment variable that holds your NEAR AI Cloud API key. |
+| `wire_api` | `responses`. Current Codex versions reject `chat`. |
+| `model` | A model ID exactly as `/v1/models` lists it. |
+
+Codex loads `~/.codex/config.toml` first and then applies `~/.codex/<name>.config.toml` when you pass `--profile <name>`.
+
+## 3. Start Codex
+
+```bash
+codex --profile nearai
+```
+
+The session header shows `provider: nearai` and the model you set. For a one-off command:
+
+```bash
+codex --profile nearai exec "Summarize what this repository does"
+```
+
+To try another model without editing the file, pass `-m`:
+
+```bash
+codex --profile nearai -m openai/gpt-5.4
+```
+
+### Use NEAR AI Cloud by default
+
+If you want plain `codex` to use NEAR AI Cloud, put the same lines in `~/.codex/config.toml` instead of the profile file. To go back to your ChatGPT sign-in, remove `model_provider` and `model` from that file.
+
+## Choose a model
+
+List the models your key can use:
+
+```bash
+curl -s https://cloud-api.near.ai/v1/models \
+  -H "Authorization: Bearer $NEARAI_API_KEY" | jq -r '.data[].id'
+```
+
+Codex needs tool calling, so pick a model whose `supported_features` in `/v1/models` include `tools`. See [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery) for more on reading model metadata.
+
+Codex ships metadata only for the models it currently knows. For other model IDs, such as `z-ai/glm-5.3-flash` or `openai/gpt-5.4`, it prints a `Model metadata ... not found` warning and uses default limits. To make Codex compact the conversation at the right point, add `model_context_window` near the top of the file, above the `[model_providers.nearai]` table, using `context_length` from `/v1/models`:
+
+```toml ~/.codex/nearai.config.toml
+model = "z-ai/glm-5.3-flash"
+model_provider = "nearai"
+model_context_window = 1048576
+
+[model_providers.nearai]
+name = "NEAR AI Cloud"
+base_url = "https://cloud-api.near.ai/v1"
+env_key = "NEARAI_API_KEY"
+wire_api = "responses"
+```
+
+## Web search
+
+Codex includes a web search tool in its requests by default. When the model uses it, NEAR AI Cloud runs the search, and [web search](/cloud/guides/web-search) is billed per request on top of tokens. To turn it off, add this near the top of the profile file:
+
+```toml ~/.codex/nearai.config.toml
+web_search = "disabled"
+```
+
+## Quick test
+
+If Codex fails, test the key and model directly against the Responses API first:
+
+```bash
+curl https://cloud-api.near.ai/v1/responses \
+  -H "Authorization: Bearer $NEARAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "z-ai/glm-5.3-flash",
+    "input": "Reply with only: near-ai-ok",
+    "store": false
+  }'
+```
+
+A successful response contains `near-ai-ok` in its `output`. If curl works and Codex does not, the problem is in the Codex configuration.
+
+## Troubleshooting
+
+| Symptom | Fix |
+| --- | --- |
+| `Missing environment variable: NEARAI_API_KEY` | The variable is not set in the terminal that started Codex. Export it, or open a new terminal after editing your shell profile. |
+| `` `wire_api = "chat"` is no longer supported `` | Set `wire_api = "responses"` in `[model_providers.nearai]`. |
+| Codex still shows `provider: openai` | You started `codex` without `--profile nearai`, or the profile file is not named `~/.codex/nearai.config.toml`. |
+| `--profile nearai` has no effect on an older Codex | Profile files like `nearai.config.toml` need Codex `0.134.0` or later. Update Codex, or put the settings in `~/.codex/config.toml`. |
+| Requests return `401` | The key is wrong, revoked, or not exported. Check it with the quick test above. |
+| Requests return `402` | Your organization is out of credits. Add credits in the dashboard. |
+| Model not found error | Copy the model ID exactly from `/v1/models`, including the part before the slash. |
+| `Model metadata ... not found` warning | Expected for model IDs Codex does not know. Set `model_context_window` as shown above. |
+| The model answers but never runs commands | The model does not support tool calling. Choose one with `tools` in `supported_features`. |
+| `Native stateless Responses supports valid client-managed function, custom, and namespace tools, plus top-level web_search` | For some OpenAI models, such as `openai/gpt-5.5`, Codex adds a tool-search tool that NEAR AI Cloud does not accept yet. Use `openai/gpt-5.4` or an open model. |
+
+## Related guides
+
+- [Claude Code](/cloud/guides/integrations/claude-code)
+- [Stateless Responses API](/cloud/guides/stateless-responses)
+- [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)
+- [Available Models](/cloud/models)
+- [OpenCode](/cloud/guides/integrations/opencode)
+
+## Sources Checked
+
+Sources checked on 2026-11-16, against Codex CLI `0.167.0`. A Codex session that writes a file and runs a shell command was run against NEAR AI Cloud with `z-ai/glm-5.3-flash` and `openai/gpt-5.4`.
+
+- [Codex advanced configuration](https://learn.chatgpt.com/docs/config-file/config-advanced): custom providers and `--profile` overlay files
+- [Codex configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference): `model_providers`, `wire_api`, `model_context_window`, `web_search`
+- NEAR AI Cloud `GET /v1/models` and the [Stateless Responses API](/cloud/guides/stateless-responses)
