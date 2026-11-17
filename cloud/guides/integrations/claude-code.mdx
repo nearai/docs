@@ -1,0 +1,135 @@
+---
+title: "Claude Code"
+description: "Configure Claude Code to use Claude models through NEAR AI Cloud."
+---
+
+
+[Claude Code](https://code.claude.com/docs) is Anthropic's coding agent for the terminal, IDEs, and desktop. It talks to the Anthropic Messages API, which NEAR AI Cloud serves at `https://cloud-api.near.ai/v1/messages` for its Anthropic models. Point Claude Code at NEAR AI Cloud and it runs on your NEAR AI Cloud API key and credits instead of an Anthropic account.
+
+<Note>
+The Messages endpoint serves Anthropic models only, such as `anthropic/claude-sonnet-5-5`. Claude models on NEAR AI Cloud are in the **Incognito** privacy tier; see [Available Models](/cloud/models). To use open models such as GLM or Qwen in a coding agent, use [Codex CLI](/cloud/guides/integrations/codex), [OpenCode](/cloud/guides/integrations/opencode), or another OpenAI-compatible tool.
+</Note>
+
+## Prerequisites
+
+- Claude Code installed (checked with `2.1.325`).
+- A NEAR AI Cloud account with credits. Usage is billed per token from your NEAR AI Cloud credits; a Claude subscription is not used.
+- A NEAR AI Cloud API key. In the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations), open **API Keys** and create a key.
+
+## Configure
+
+Claude Code needs two settings:
+
+| Variable | Value |
+| --- | --- |
+| `ANTHROPIC_BASE_URL` | `https://cloud-api.near.ai` |
+| `ANTHROPIC_AUTH_TOKEN` | Your NEAR AI Cloud API key |
+
+Use the base URL without `/v1`. Claude Code appends `/v1/messages` itself, so `https://cloud-api.near.ai/v1` would produce `/v1/v1/messages`.
+
+### Try it in one terminal
+
+```bash
+export ANTHROPIC_BASE_URL="https://cloud-api.near.ai"
+export ANTHROPIC_AUTH_TOKEN="YOUR_NEAR_AI_API_KEY"
+claude
+```
+
+These variables last until you close the terminal.
+
+### Make it permanent
+
+Add the same values to the `env` block of your user settings file, `~/.claude/settings.json`:
+
+```json ~/.claude/settings.json
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://cloud-api.near.ai",
+    "ANTHROPIC_AUTH_TOKEN": "YOUR_NEAR_AI_API_KEY"
+  }
+}
+```
+
+If the file already exists, add the `env` entries to it rather than replacing it.
+
+<Warning>
+Use your user settings file, not a project's `.claude/settings.json`. Project settings are often committed to source control, which would publish your key.
+</Warning>
+
+Run `/status` inside Claude Code to confirm. It shows the Anthropic base URL and that an auth token is in use.
+
+## If you already sign in with a Claude account
+
+You do not need to sign out. When `ANTHROPIC_AUTH_TOKEN` is set, Claude Code sends that key instead of your Claude login, and the login stays saved on your machine. Claude Code may show a startup warning that both are present; that is expected.
+
+To switch back to your Claude subscription, unset the two variables or remove them from `settings.json`, then restart Claude Code.
+
+<Note>
+Setting only `ANTHROPIC_BASE_URL` is not enough. Without `ANTHROPIC_AUTH_TOKEN`, Claude Code keeps using your Claude login, which NEAR AI Cloud rejects with `401`.
+</Note>
+
+`ANTHROPIC_API_KEY` also works with NEAR AI Cloud. In interactive mode, Claude Code asks once whether to use a key set that way. `ANTHROPIC_AUTH_TOKEN` avoids the prompt.
+
+## Choose a model
+
+Claude Code's default model IDs, such as `claude-opus-5-5`, work as they are. NEAR AI Cloud resolves a Claude model ID without a prefix to the matching `anthropic/` model.
+
+To pick a different model, use `/model` inside Claude Code, or set `ANTHROPIC_MODEL`:
+
+```bash
+export ANTHROPIC_MODEL="claude-sonnet-5-5"
+```
+
+List the Claude models available on NEAR AI Cloud:
+
+```bash
+curl -s https://cloud-api.near.ai/v1/models | jq -r '.data[].id | select(startswith("anthropic/"))'
+```
+
+## Quick test
+
+If Claude Code fails, test the key and model directly against the Messages endpoint first:
+
+```bash
+curl https://cloud-api.near.ai/v1/messages \
+  -H "Authorization: Bearer $ANTHROPIC_AUTH_TOKEN" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-sonnet-5-5",
+    "max_tokens": 64,
+    "messages": [
+      {"role": "user", "content": "Reply with only: near-ai-ok"}
+    ]
+  }'
+```
+
+A successful response confirms that your key works with this model. If Claude Code still fails, check its error against the troubleshooting table below.
+
+## Troubleshooting
+
+| Symptom | Fix |
+| --- | --- |
+| `401` while signed in to a Claude account | `ANTHROPIC_AUTH_TOKEN` is not set, so Claude Code is sending your Claude login. Set it to your NEAR AI Cloud key. |
+| `401` with `ANTHROPIC_API_KEY` set | You declined the key at the prompt. Turn on **Use custom API key** in `/config`, or use `ANTHROPIC_AUTH_TOKEN` instead. |
+| `404` on `/v1/v1/messages` | Remove `/v1` from `ANTHROPIC_BASE_URL`. |
+| `The native Messages endpoint accepts Anthropic-backed models only` | The selected model is not a Claude model. Pick one from the `anthropic/` list above. |
+| `402` | Your organization is out of credits. Add credits in the dashboard. |
+| `... is not supported by the native Anthropic endpoint yet` | The request used a feature NEAR AI Cloud does not offer, such as Anthropic-hosted server tools or one-hour prompt caching. Remove the setting that enables it. |
+| `anthropic-beta` or "Unexpected value(s)" errors | Set `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1` to stop Claude Code from sending pre-release beta features. |
+
+## Related guides
+
+- [Codex CLI](/cloud/guides/integrations/codex)
+- [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)
+- [Available Models](/cloud/models)
+- [OpenCode](/cloud/guides/integrations/opencode)
+
+## Sources Checked
+
+Sources checked on 2026-11-16, against Claude Code `2.1.325`. A Claude Code session that writes a file and runs a shell command was run against NEAR AI Cloud with the default model, and a short prompt with `ANTHROPIC_MODEL=claude-sonnet-5-5`.
+
+- [Connect Claude Code to an LLM gateway](https://code.claude.com/docs/en/llm-gateway-connect): `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN`, settings `env` block
+- [Authentication](https://code.claude.com/docs/en/iam): credential precedence, `/status`
+- [Environment variables](https://code.claude.com/docs/en/env-vars): `ANTHROPIC_MODEL`, `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS`
+- NEAR AI Cloud `GET /v1/models` and `POST /v1/messages`

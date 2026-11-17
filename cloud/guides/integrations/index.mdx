@@ -1,11 +1,11 @@
 ---
 title: "Integrations"
 sidebarTitle: "Overview"
-description: "Use NEAR AI Cloud with third-party software that supports OpenAI-compatible providers."
+description: "Use NEAR AI Cloud with third-party software that supports OpenAI-compatible or Anthropic-compatible providers."
 ---
 
 
-Use these guides to connect third-party software to NEAR AI Cloud through its OpenAI-compatible API.
+Use these guides to connect third-party software to NEAR AI Cloud through its OpenAI-compatible API, or through its Anthropic Messages API for Claude Code.
 
 Most clients need the same values:
 
@@ -15,12 +15,18 @@ Most clients need the same values:
 | API key | A NEAR AI Cloud API key |
 | Model ID | A model available from NEAR AI Cloud |
 
+Claude Code is the exception: it takes `https://cloud-api.near.ai` without `/v1`. See the [Claude Code guide](/cloud/guides/integrations/claude-code).
+
+If you have never used an API key before: create one under **API Keys** in the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations), then follow the guide for your tool. Each guide shows where the key goes.
+
 ## Software Covered
 
 Use the OpenAI client guide when you are configuring code directly. Use the integration guides when a tool has its own provider settings, model picker, or model refresh behavior.
 
 ### Coding agents and IDEs
 
+- [Codex CLI](/cloud/guides/integrations/codex)
+- [Claude Code](/cloud/guides/integrations/claude-code)
 - [OpenCode](/cloud/guides/integrations/opencode)
 - [Cursor](/cloud/guides/integrations/cursor)
 - [Continue](/cloud/guides/integrations/continue)
