@@ -103,7 +103,7 @@ wire_api = "responses"
 
 ## Web search
 
-Codex includes a web search tool in its requests by default. When the model uses it, NEAR AI Cloud runs the search, and [web search](/cloud/guides/web-search) is billed per request on top of tokens. To turn it off, add this near the top of the profile file:
+Codex includes a web search tool in its requests by default. For open models such as `z-ai/glm-5.3-flash`, NEAR AI Cloud runs the search and bills it [per request](/cloud/guides/web-search) on top of token usage. For `openai/` models, OpenAI runs the search. To turn off web search, add this near the top of the profile file:
 
 ```toml ~/.codex/nearai.config.toml
 web_search = "disabled"
@@ -124,7 +124,7 @@ curl https://cloud-api.near.ai/v1/responses \
   }'
 ```
 
-A successful response contains `near-ai-ok` in its `output`. If curl works and Codex does not, the problem is in the Codex configuration.
+A successful response contains `near-ai-ok` in its `output` and confirms that your key works with this model. If Codex still fails, check its error against the troubleshooting table below.
 
 ## Troubleshooting
 
