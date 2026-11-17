@@ -124,6 +124,8 @@
                   {
                     "group": "Coding Agents and IDEs",
                     "pages": [
+                      "cloud/guides/integrations/codex",
+                      "cloud/guides/integrations/claude-code",
                       "cloud/guides/integrations/opencode",
                       "cloud/guides/integrations/cursor",
                       "cloud/guides/integrations/continue",

@@ -117,7 +117,7 @@ Responses accepts custom tools with `type: "function"`. NEAR AI Cloud can ask fo
 The client-managed flow is:
 
 1. Send a stateless request with your function definitions.
-2. If the model requests a function, the response has `status: "incomplete"`, `incomplete_details.reason: "function_call_required"`, and a `function_call` output item.
+2. If the model requests a function, the response has `status: "completed"` and a `function_call` item in `output`. A streamed response ends with `response.completed`. Check `output` for `function_call` items rather than relying on `status`.
 3. Execute the function in your application.
 4. Send a new stateless request containing your message history, the returned `function_call` item, its matching `function_call_output`, and the same function definitions.
 
