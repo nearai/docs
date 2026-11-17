@@ -24,6 +24,7 @@ NEAR AI Docs is a dark, technical reference surface for builders working with pr
 
 - Keep the page dark in every color mode.
 - Use NEAR blue only for navigation, links, icons, focus, and copy/action controls.
+- Language logos retain their original brand colors.
 - Extend this table before introducing a new semantic color.
 
 ## 3. Typography

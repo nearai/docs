@@ -4,19 +4,19 @@ icon: "braces"
 description: "Call NEAR AI Cloud inference and verify responses in JavaScript, Python, Rust, and Go."
 ---
 
-Use the NEAR AI Inference SDK to call models, verify attestation evidence, and check response signatures. Choose your language to get started:
+Use the NEAR AI Inference SDK to call models, verify attestation evidence, and check response signatures. These guides cover [SDK 0.3.0](https://github.com/nearai/inference-sdk/releases/tag/v0.3.0).
 
 <CardGroup cols={2}>
-  <Card title="JavaScript" icon="braces" href="/cloud/inference-sdk/javascript">
+  <Card title="JavaScript" icon="/images/icons/languages/javascript.svg" href="/cloud/inference-sdk/javascript">
     Requires Node.js 24.22.1 or later.
   </Card>
-  <Card title="Python" icon="code" href="/cloud/inference-sdk/python">
+  <Card title="Python" icon="/images/icons/languages/python.svg" href="/cloud/inference-sdk/python">
     Requires Python 3.12 or later.
   </Card>
-  <Card title="Rust" icon="code" href="/cloud/inference-sdk/rust">
+  <Card title="Rust" icon="/images/icons/languages/rust.png" href="/cloud/inference-sdk/rust">
     Use Rust stable and Cargo.
   </Card>
-  <Card title="Go" icon="code" href="/cloud/inference-sdk/go">
+  <Card title="Go" icon="/images/icons/languages/go.svg" href="/cloud/inference-sdk/go">
     Requires Go 1.26.10 or later.
   </Card>
 </CardGroup>
@@ -29,19 +29,19 @@ Use the [Embedded](/cloud/inference-sdk/widget/embedded) guide to add the Verifi
 
 <CodeGroup>
 ```bash JavaScript
-npm install @nearai/inference-sdk
+npm install @nearai/inference-sdk@0.3.0
 ```
 
 ```bash Python
-pip install nearai-inference-sdk
+pip install nearai-inference-sdk==0.3.0
 ```
 
 ```bash Rust
-cargo add nearai-inference-sdk
+cargo add nearai-inference-sdk@0.3.0
 ```
 
 ```bash Go
-go get github.com/nearai/inference-sdk/go
+go get github.com/nearai/inference-sdk/go@v0.3.0
 ```
 </CodeGroup>
 
@@ -58,9 +58,11 @@ Choose the API listed on your model's page in the [model catalog](/cloud/models)
 
 ## E2EE
 
-End-to-end encryption (E2EE) encrypts supported Chat fields to a verified model key. It is disabled by default and requires a supported NEAR TEE model. Enable it in your language's client options; leave it disabled for Responses, Messages, and System One.
+End-to-end encryption (E2EE) is off by default. Enable it for Chat Completions with a supported NEAR TEE model. The SDK encrypts each supported field to a verified model key and binds it to a fresh reply key using the [v3 encryption protocol](/cloud/guides/e2ee-chat-completions#encryption-protocol).
 
 ## Verification
+
+Follow [Verify with the SDK](/cloud/verification/verify-with-sdk) for a complete request-to-verification walkthrough and an explanation of its results.
 
 The SDK verifies Gateway attestation before sending a request and model attestation where supported. After receiving the answer, call `verifyResponse()` or your language's equivalent before using the output. For streaming, consume the entire stream first.
 
@@ -71,12 +73,14 @@ The SDK verifies Gateway attestation before sending a request and model attestat
 | Messages | Message `id`; for streaming, `event.message.id` from `message_start` |
 | System One | `decisionId` in JavaScript, `decision_id` in Python/Rust, `DecisionID` in Go; captured from `X-Generation-Id` |
 
-System One's receipt ID is separate from the upstream request ID. If a receipt is temporarily unavailable, retry verification on the same client with the same ID; do not resend inference. Response records expire after 60 minutes by default; verify before expiry or closing the client.
+System One's receipt ID is separate from the upstream request ID. If a receipt is temporarily unavailable, retry verification on the same client with the same ID.
+
+After successful verification, the client releases its copies of the request and response bodies and caches the result. Response records expire 60 minutes after the response finishes by default. Verify before expiry or closing the client.
 
 Check the returned signature kind:
 
-- `provider_tee`: the verified model signer signed the request and response bytes.
-- `gateway`: the verified Gateway signed those bytes. This does not verify model TEE execution.
+- `provider_tee`: the signer selected before the request signed the request and response bytes. The result includes every verified model report that matches that signer.
+- `gateway`: the verified Gateway signed those bytes.
 
 Responses and Messages use Gateway signatures. See [Verification](/cloud/verification) for custom policies and evidence requirements.
 
@@ -86,5 +90,5 @@ OHTTP adds encryption between the client and the attested Gateway for Chat Compl
 
 ## Examples
 
-- [SDK examples](https://github.com/nearai/inference-sdk/tree/main/examples): complete projects for each language.
-- [Image provenance examples](https://github.com/nearai/inference-sdk/tree/main/examples#image-provenance): check image builds and Compose Manager deployment evidence against your policies.
+- [SDK examples](https://github.com/nearai/inference-sdk/tree/v0.3.0/examples): complete projects for each language.
+- [Image provenance](/cloud/verification/cloud-api/image-provenance): configure checks for selected image builds and Compose Manager deployments.

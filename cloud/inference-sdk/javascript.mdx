@@ -1,15 +1,15 @@
 ---
 title: "JavaScript"
-icon: "braces"
+icon: "/images/icons/languages/javascript.svg"
 description: "Use the JavaScript SDK for verified Chat Completions, Responses, Messages, and System One decisions."
 ---
 
 ## Install
 
-The SDK is available on [npm](https://www.npmjs.com/package/@nearai/inference-sdk). It requires Node.js 24.22.1 or later for Node usage.
+[SDK 0.3.0 on npm](https://www.npmjs.com/package/@nearai/inference-sdk/v/0.3.0) requires Node.js 24.22.1 or later for Node usage.
 
 ```bash
-npm install @nearai/inference-sdk
+npm install @nearai/inference-sdk@0.3.0
 ```
 
 Set your API key in the environment:
@@ -150,11 +150,11 @@ console.log("Verified signer:", verified.signatureKind);
 
 ## E2EE
 
-End-to-end encryption is disabled by default. Set `e2ee: true` to encrypt supported Chat fields to a verified model key and decrypt the response automatically. E2EE requires a supported NEAR TEE model; leave it disabled for other models and APIs.
+End-to-end encryption is disabled by default. Set `e2ee: true` to encrypt supported Chat fields to a verified NEAR model key and decrypt the response automatically. SDK 0.3.0 uses encryption protocol v3 with Ed25519 (default) or ECDSA. Leave E2EE disabled for other models and APIs.
 
 ## Verification
 
-`InferenceClient` verifies the Gateway and every returned NEAR model-attestation candidate before sending an E2EE Chat Completion. Call `verifyResponse()` after a completion to verify its response signature with the request and response bytes captured by the client.
+`InferenceClient` verifies the Gateway before sending your API key. For supported NEAR models it also verifies every returned model report, even when E2EE is disabled. Call `verifyResponse()` after a completion to check the signature against the exact request and response bytes captured by the client.
 
 ```js
 const receipt = await client.verifyResponse(completion.id);
@@ -167,19 +167,15 @@ console.log(`Verified ${receipt.signatureKind} response.`);
 
 ### Set a TCB policy
 
-By default, the SDK accepts the Intel TCB statuses `UpToDate` and `OutOfDate`. To require `UpToDate`, apply a policy to both the Gateway and model evidence:
+By default, the SDK accepts the Intel TCB statuses `UpToDate`, `OutOfDate`, and `TDRelaunchAdvised`. To require `UpToDate`, apply a policy to both the Gateway and model evidence:
 
 ```js
-const strict = {
-  policy: { acceptedTcbStatuses: ['UpToDate'] },
-};
-
 const client = new InferenceClient({
   baseUrl,
   apiKey,
   e2ee: true,
-  gatewayVerification: strict,
-  modelVerification: strict,
+  gatewayVerification: { policy: { acceptedTcbStatuses: ['UpToDate'] } },
+  modelVerification: { policy: { acceptedTcbStatuses: ['UpToDate'] } },
 });
 ```
 
@@ -187,7 +183,7 @@ const client = new InferenceClient({
 
 For Node, import from `@nearai/inference-sdk/node`. It verifies the Gateway TLS peer and binds later requests to the verified Gateway identity. For a browser or application proxy, import from `@nearai/inference-sdk`; browser Fetch cannot read the TLS peer certificate, so that entry point does not perform Gateway TLS binding.
 
-Response records expire after 60 minutes by default. Verify each response before its record expires or you dispose of the client.
+Response records expire 60 minutes after the full response is read by default. Verify with the same client before the record expires or you call `clearResponseCache()`.
 
 See the [SDK overview](/cloud/inference-sdk#verification) for receipt IDs and signature kinds, or [Verification](/cloud/verification) for custom policies.
 
@@ -212,10 +208,10 @@ The Chat and `verifyResponse()` calls stay the same. Before sending Chat, the SD
 
 ## Examples and reference
 
-See the [Inference SDK examples and setup instructions](https://github.com/nearai/inference-sdk/tree/main/examples) for runnable projects.
+See the [Inference SDK examples and setup instructions](https://github.com/nearai/inference-sdk/tree/v0.3.0/examples) for runnable projects.
 
-- [InferenceClient](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/chat-completions.ts): streaming and non-streaming Chat, response verification, and Gateway image provenance checks.
-- OpenAI SDK integration: [Chat Completions](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/chat-completions-with-openai-sdk.ts) and [Responses](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/responses-with-openai-sdk.ts).
-- [Anthropic SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/messages-with-anthropic-sdk.ts).
-- [TypeSafe SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/systemone-with-typesafe-sdk.ts).
-- [Manual verification and E2EE](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/chat-completions-bare.ts): work directly with attestation, encryption, and signature-verification helpers.
+- [InferenceClient](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/gateway/chat-completions.ts): send encrypted Chat requests and verify both streaming and non-streaming replies.
+- OpenAI SDK integration: [Chat Completions](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/gateway/chat-completions-with-openai-sdk.ts) and [Responses](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/gateway/responses-with-openai-sdk.ts).
+- [Anthropic SDK integration](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/gateway/messages-with-anthropic-sdk.ts).
+- [TypeSafe SDK integration](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/gateway/systemone-with-typesafe-sdk.ts).
+- [Manual verification and E2EE](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/gateway/chat-completions-bare.ts): work directly with attestation, encryption, and signature-verification helpers.

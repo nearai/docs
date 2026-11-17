@@ -4,10 +4,10 @@ description: "Experimental verification notes for direct completions endpoints."
 ---
 
 <Warning>
-  Direct model endpoint verification is experimental and is not recommended for new integrations or production verification workflows. Use the [NEAR AI Cloud Gateway](/cloud/verification/cloud-api) instead.
+  Direct model endpoint verification is experimental. For new integrations and production verification workflows, use the [NEAR AI Cloud Gateway verification flow](/cloud/verification).
 </Warning>
 
-Independent requests to the same direct hostname can reach different serving instances. An attestation report, including `all_attestations[]`, is evidence for the request that returned it; it does not establish deployment evidence for a later completion. A later response-signature request can return `404`, so do not use direct response signatures as a production verification gate.
+Use these checks to inspect the evidence returned by a direct request or bound to an open TLS connection. A direct response-signature lookup can return `404`; treat that signature as unavailable.
 
 ## Available experimental checks
 
@@ -33,4 +33,4 @@ Independent requests to the same direct hostname can reach different serving ins
 3. Verify the model's hardware attestation and apply your acceptance policy.
 4. Add TLS, response-signature, or image-provenance checks only for the direct request under inspection.
 
-Start with [Model attestation report](/cloud/verification/direct/model-attestation). Do not combine these experimental checks into a production deployment-verification conclusion for later independent requests.
+Start with [Model attestation report](/cloud/verification/direct/model-attestation).
