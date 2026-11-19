@@ -65,7 +65,7 @@ End-to-end encryption (E2EE) encrypts supported Chat fields to a verified model 
 The SDK verifies Gateway attestation before sending a request and model attestation where supported. After receiving the answer, call `verifyResponse()` or your language's equivalent before using the output. For streaming, consume the entire stream first.
 
 <Note>
-  **Gateway signature retrieval requires an API key.** The SDK sends the configured key using Bearer authentication. If you use a separate attestation client for manual verification, configure its API key explicitly. For workspace-scoped lookup, use a key from the completion's organization and workspace. See [signature API authentication and lookup behavior](/cloud/verification/cloud-api/response-signatures#fetch-and-verify-the-signature).
+  **Gateway signature retrieval requires a bearer credential.** Configure the SDK's API key option, or leave that option unset and supply an `Authorization` header through the client's header configuration. A configured API key takes precedence over the supplied header. If you use a separate attestation client for manual verification, configure its credentials explicitly. For workspace-scoped lookup, use a key from the completion's organization and workspace. See [signature API authentication and lookup behavior](/cloud/verification/cloud-api/response-signatures#fetch-and-verify-the-signature).
 </Note>
 
 | API | ID to verify |
