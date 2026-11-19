@@ -24,6 +24,12 @@ Do not parse and re-serialize JSON, normalize whitespace or line endings, omit s
 
 ## Fetch and verify the signature
 
+<Note>
+  **An API key is required for the Gateway signature API.** Include your NEAR AI Cloud API key in the `Authorization` header using Bearer authentication. Fetching an unauthenticated attestation report does not authorize a signature request.
+</Note>
+
+For workspace-scoped signature lookup, use a key from the same organization and workspace that created the completion. A different key in that workspace is sufficient. When using separate inference and attestation clients, configure the API key on both; the attestation client does not inherit the inference client's credentials. Direct model endpoints follow their own authentication policy.
+
 Set `<CHAT_ID>` to the `id` in the completion response whose exact bytes you retained. For the Responses API, use its returned `resp_…` ID.
 
 ```bash
@@ -33,7 +39,7 @@ curl --fail-with-body -G 'https://cloud-api.near.ai/v1/signature/<CHAT_ID>' \
   -H 'Authorization: Bearer <YOUR_NEAR_AI_CLOUD_API_KEY>'
 ```
 
-A successful (`2xx`) response containing `error_code` and `message` is an unavailable result, not a signature. A `404` means no matching signature was found; it can be retried for a short, bounded interval when the signature may still be recorded. Treat either result as unverified if a signature is required.
+A successful (`2xx`) response containing `error_code` and `message` is an unavailable result, not a signature. A `404` means no signature is available to the caller for that ID. For workspace-scoped lookup, this can also mean the caller is outside the owning workspace or the signature lacks ownership metadata; a `404` does not establish whether the signature exists. Retry only for a bounded number of attempts and a short deadline when a signature is reasonably expected to become available. Do not resend inference to recover a missing signature. Treat either result as unverified if a signature is required.
 
 Use the same explicit `signing_algo` for the attestation request and the signature request. Their defaults differ: `/v1/signature` defaults to `ecdsa`, while `/v1/attestation/report` defaults to `ed25519` for the gateway report and `ecdsa` for model reports.
 
