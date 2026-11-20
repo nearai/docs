@@ -3,6 +3,10 @@
   "theme": "mint",
   "name": "NEAR AI",
   "description": "Documentation for NEAR AI Cloud: private, verifiable AI inference in Trusted Execution Environments through an OpenAI-compatible API.",
+  "banner": {
+    "content": "Direct endpoint support ends December 6, 2026. [Move to the Gateway](/cloud/guides/direct-to-gateway).",
+    "dismissible": true
+  },
   "colors": {
     "primary": "#0B8FF6",
     "light": "#83D2FA",
@@ -142,19 +146,8 @@
               "cloud/guides/prompt-caching",
               "cloud/guides/web-search",
               "cloud/guides/specialized-endpoints",
-              "cloud/guides/e2ee-chat-completions"
-            ]
-          },
-          {
-            "group": "Experimental",
-            "pages": [
-              {
-                "group": "Direct Completions",
-                "root": "cloud/experimental/direct-completions",
-                "pages": [
-                  "cloud/inference-sdk/direct"
-                ]
-              }
+              "cloud/guides/e2ee-chat-completions",
+              "cloud/guides/direct-to-gateway"
             ]
           }
         ]
@@ -547,6 +540,34 @@
     }
   },
   "redirects": [
+    {
+      "source": "/cloud/experimental/direct-completions",
+      "destination": "/cloud/guides/direct-to-gateway"
+    },
+    {
+      "source": "/cloud/inference-sdk/direct",
+      "destination": "/cloud/guides/direct-to-gateway"
+    },
+    {
+      "source": "/cloud/verification/direct",
+      "destination": "/cloud/guides/direct-to-gateway"
+    },
+    {
+      "source": "/cloud/verification/direct/model-attestation",
+      "destination": "/cloud/guides/direct-to-gateway"
+    },
+    {
+      "source": "/cloud/verification/direct/tls",
+      "destination": "/cloud/guides/direct-to-gateway"
+    },
+    {
+      "source": "/cloud/verification/direct/response-signatures",
+      "destination": "/cloud/guides/direct-to-gateway"
+    },
+    {
+      "source": "/cloud/verification/direct/image-provenance",
+      "destination": "/cloud/guides/direct-to-gateway"
+    },
     {
       "source": "/cloud/introduction",
       "destination": "/"

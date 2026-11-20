@@ -60,9 +60,8 @@ Use the gateway base URL by default:
 https://cloud-api.near.ai/v1
 ```
 
-Use the Gateway in new integration guides. Do not add direct-completions
-configuration or links; direct endpoints are experimental and are not
-recommended for new integrations.
+Use the Gateway in integration guides. Do not add configuration or examples for
+deprecated Direct endpoints.
 
 ### Model ID
 
