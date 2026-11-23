@@ -86,7 +86,7 @@ NRAS returns a JSON array whose first entry is `["JWT", "<token>"]`. Decode that
 
 ## Check a report in code
 
-These helpers run the quote, debug-mode, nonce, signer, configuration, and RTMR3 checks described above on one NEAR report. They use [`dcap-qvl`](https://github.com/Phala-Network/dcap-qvl) to verify the quote and read report data and measurements from the verified quote. Run them on `gateway_attestation`, on every `model_attestations[]` candidate, or on a direct model report. Pass `peer_spki_sha256` only when you observed the peer certificate on the same TLS connection that returned the report. GPU evidence is checked separately, as described above.
+These helpers run the quote, debug-mode, nonce, signer, configuration, and RTMR3 checks described above on one NEAR report. They use [`dcap-qvl`](https://github.com/Phala-Network/dcap-qvl) to verify the quote and read report data and measurements from the verified quote. Run them on `gateway_attestation` or on every `model_attestations[]` candidate. Pass `peer_spki_sha256` only when you observed the peer certificate on the same TLS connection that returned the report. GPU evidence is checked separately, as described above.
 
 <Tabs>
 <Tab title="Python">
