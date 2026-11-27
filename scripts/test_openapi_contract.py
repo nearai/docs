@@ -38,6 +38,9 @@ class OpenAPIContractTests(unittest.TestCase):
 
     def test_offline_sync_repairs_contract_and_is_idempotent(self):
         aliases = ("/v1/audio/transcriptions", "/v1/rerank", "/v1/score", "/v1/systemone")
+        ita_token = "/v1/attestation/ita-token"
+        published_description = self.spec["paths"][ita_token]["get"]["description"]
+        self.spec["paths"][ita_token]["get"]["description"] = "Example source description"
         for path in aliases:
             self.spec["paths"][path]["post"]["security"] = [{"ApiKeyAuth": []}]
         self.spec["paths"]["/v1/users/contact-email/verify"]["post"].pop("security", None)
@@ -57,6 +60,7 @@ class OpenAPIContractTests(unittest.TestCase):
             result = self.run_sync(self.spec, root)
             self.assertEqual(result.returncode, 0, result.stderr)
             generated = json.loads((root / "api-reference/openapi.json").read_text())
+            self.assertEqual(generated["paths"][ita_token]["get"]["description"], published_description)
             for path in aliases:
                 self.assertEqual(generated["paths"][path]["post"]["security"], [{"api_key": []}])
             self.assertEqual(generated["paths"]["/v1/users/contact-email/verify"]["post"]["security"], [])

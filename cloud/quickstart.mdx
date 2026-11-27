@@ -32,7 +32,7 @@ NEAR AI Cloud uses an OpenAI-compatible API, making it easy to integrate with ex
   Gateway responses include an `X-Request-Id` response header. Support may ask you for it when debugging a request. The value is opaque support/debugging metadata, not W3C `traceparent` or distributed trace context. If you send your own `X-Request-Id`, use a non-sensitive UUID value; `X-Request-Id` values must not contain secrets or PII. `X-Org-Id` and `X-Workspace-Id` are internal tenant headers; public clients cannot set or override them.
 </Tip>
 
-The gateway routes your request to the appropriate model TEE:
+Choose a model from the [model catalog](/cloud/models). Its privacy tier tells you where inference runs. Confidential TEE and 3P Confidential TEE models run inside a trusted execution environment (TEE). For Incognito models, the Gateway runs inside a TEE and the upstream model runs outside it.
 
 <Tabs>
 <Tab title="curl">
@@ -129,7 +129,6 @@ The API will return a JSON response containing the model's completion:
 <Note>
   `zai-org/GLM-5.1-FP8` is a reasoning model, so the response includes a `reasoning_content` field and the reasoning token count in `usage.completion_tokens_details.reasoning_tokens` (the top-level `reasoning_tokens` is a deprecated alias). See [Reasoning Models](/cloud/reasoning-models) to control this behavior.
 </Note>
-All inference is performed within Trusted Execution Environments (TEEs), ensuring your data remains private and verifiable.
 
 <Tip>
   **Using OpenAI SDKs?**

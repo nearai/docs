@@ -24,6 +24,11 @@ def normalize_contract(spec):
         for requirement in operation.get("security", []):
             if "ApiKeyAuth" in requirement:
                 requirement["api_key"] = requirement.pop("ApiKeyAuth")
+        if (method, path) == ("get", "/v1/attestation/ita-token"):
+            operation["description"] = (
+                "Returns Intel Trust Authority attestation tokens for the Gateway and, "
+                "when requested, compatible model evidence. No API key is required."
+            )
         if (method, path) == PUBLIC_EMAIL_VERIFICATION:
             operation["security"] = []
         if method == "get" and path in ADMIN_OPERATION_IDS:

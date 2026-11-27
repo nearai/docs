@@ -45,10 +45,11 @@ Two things follow from paying with staking yield instead of a metered card:
 
 ## Confidentiality guarantees
 
-Staking for Inference pays for the same private inference NEAR AI Cloud always provides — it doesn't change the privacy model, only how you pay for it.
+Paying with staking credits gives you the same [model privacy tiers](/cloud/models) as paying with purchased credits.
 
-- **Open-source models** (Qwen, DeepSeek, GLM) run inside a [Trusted Execution Environment](/cloud/private-inference) — a hardware-isolated enclave on the GPU. Your prompt and the model's output are sealed off from the host operating system, the GPU operator, and NEAR AI itself. Each request returns a hardware-signed attestation in under 30 seconds, so this is a guarantee you can check, not a promise you have to trust.
-- **Frontier models** (from providers like Anthropic, OpenAI, and Google) route through a secure gateway that itself runs inside a TEE. The provider sees a prompt arrive from the gateway and nothing else — it cannot tie the request back to you. An optional PII redaction step strips identifying details before the request leaves the enclave.
+- **Confidential TEE** models run inference inside a trusted execution environment. You can [verify the model's attestation and the signature on your response](/cloud/verification).
+- **3P Confidential TEE** models run inside the provider's TEE. You can verify the NEAR AI Gateway and use the provider's verification procedure for the model.
+- **Incognito** models run outside a TEE. The Gateway sends your prompt using NEAR AI's provider account and keeps your NEAR AI credentials separate. The provider can still see identifying details you include in the prompt. You can [redact personal information](/cloud/guides/specialized-endpoints#pii-detection-%26-redaction) before sending it.
 
 ---
 

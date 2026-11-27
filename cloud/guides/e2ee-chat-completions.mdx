@@ -6,7 +6,7 @@ icon: "message-square-lock"
 ---
 
 
-NEAR AI Cloud runs both the gateway and model inference inside Trusted Execution Environments (TEEs), providing strong hardware-level isolation. End-to-end encryption (E2EE) adds an additional layer of protection by encrypting your messages with the model's public key before they leave your machine.
+For models that support end-to-end encryption (E2EE), your client encrypts messages with the model's attested public key before sending them through the Gateway.
 
 This guide uses the NEAR model E2EE protocol. The gateway sends client-E2EE requests only to a compatible NEAR-serving path; if none is available, the request is unsupported rather than routed through a different E2EE protocol.
 
@@ -43,7 +43,9 @@ sequenceDiagram
     ModelTEE->>GatewayTEE: Encrypted response
     GatewayTEE->>Client: Encrypted response
 
-    Note over Client: Decrypt with private key
+    Client->>GatewayTEE: GET /signature/{completion_id}
+    GatewayTEE->>Client: Model's response signature
+    Note over Client: Verify the signature against the selected model key<br/>and the exact request and response bytes, then decrypt
 ```
 
 ---
@@ -97,16 +99,17 @@ The [Python](/cloud/inference-sdk/python#e2ee), [Rust](/cloud/inference-sdk/rust
 The SDK fetches fresh attestation evidence, checks the nonce on each report, and returns the verified model reports. Select an Ed25519 public key from those reports. You will encrypt the prompt to this key and send it in `X-Model-Pub-Key` to route the request. This public model can be verified without an API key.
 
 ```javascript
-import { InferenceClient } from '@nearai/inference-sdk/node';
+import { AttestationClient, InferenceClient, verifyModelResponse } from '@nearai/inference-sdk/node';
 import { randomBytes } from 'node:crypto';
 
 const model = 'z-ai/glm-5.3-flash';
 const client = new InferenceClient();
 const { models } = await client.verify(model);
-const modelPublicKeyHex = models.find(
+const modelAttestation = models.find(
   (report) => report.signer.signingAlgo === 'ed25519' && report.signingPublicKey
-)?.signingPublicKey;
-if (!modelPublicKeyHex) throw new Error('No verified Ed25519 model key');
+);
+if (!modelAttestation) throw new Error('No verified Ed25519 model key');
+const modelPublicKeyHex = modelAttestation.signingPublicKey;
 ```
 
 ---
@@ -185,6 +188,11 @@ Send the ciphertext and both public keys. The model decrypts the prompt and encr
 
 ```javascript
 const apiKey = process.env.NEARAI_API_KEY;
+const requestBody = Buffer.from(JSON.stringify({
+  model,
+  messages: [{ role: 'user', content: encryptedContent }],
+  stream: false,
+}));
 const chatResponse = await fetch('https://cloud-api.near.ai/v1/chat/completions', {
   method: 'POST',
   headers: {
@@ -196,18 +204,11 @@ const chatResponse = await fetch('https://cloud-api.near.ai/v1/chat/completions'
     'X-Encryption-Version': '3',
     'x-no-aliasing': 'true',
   },
-  body: JSON.stringify({
-    model,
-    messages: [{
-      role: 'user',
-      content: encryptedContent
-    }],
-    stream: false
-  })
+  body: requestBody,
 });
 
 if (!chatResponse.ok) throw new Error(`Chat request failed: ${chatResponse.status}`);
-const data = await chatResponse.json();
+const responseBody = Buffer.from(await chatResponse.arrayBuffer());
 ```
 
 #### Required Headers
@@ -224,7 +225,20 @@ The SDK also sends `X-Encrypt-All-Fields: true`. In manual E2EE v3 requests this
 
 ---
 
-### Step 5: Decrypt the Response
+### Step 5: Verify the Model's Response Signature
+
+Read the completion ID to fetch its signature. Verify the exact request and response bytes against the model attestation you selected in Step 1. If verification fails, the function throws before any output is decrypted or displayed.
+
+```javascript
+const data = JSON.parse(responseBody.toString('utf8'));
+const signature = await new AttestationClient({ apiKey }).fetchCompletionSignature({
+  completionId: data.id,
+  signingAlgo: 'ed25519',
+});
+verifyModelResponse({ requestBody, responseBody, signature, attestation: modelAttestation });
+```
+
+### Step 6: Decrypt the Response
 
 The response `content`, `reasoning_content`, and `reasoning` fields can contain hex-encoded encrypted data. Decrypt each populated field with the request’s reply private key and empty AAD.
 
