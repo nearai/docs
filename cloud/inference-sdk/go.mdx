@@ -10,7 +10,7 @@ Requires Go **1.26.10 or later**. Install the published SDK in your application:
 
 ```bash
 go mod init example.com/my-app # If your project does not have a go.mod yet.
-go get github.com/nearai/inference-sdk/go@v0.3.0
+go get github.com/nearai/inference-sdk/go
 export NEARAI_API_KEY="your-api-key"
 ```
 
@@ -330,7 +330,7 @@ Response records expire 60 minutes after the full response is read, by default. 
 
 For streaming, read the body to EOF and close it before verifying. Chat and Responses streams can finish at normal EOF without `[DONE]` once the SDK has a valid response ID. Messages streams require `message_stop`.
 
-To check a deployment without sending a prompt, call `client.Verify(ctx, model)`. For custom policies and cache settings, see the [Go verification guide](https://github.com/nearai/inference-sdk/blob/v0.3.0/go/docs/verification-guide.md).
+To check a deployment without sending a prompt, call `client.Verify(ctx, model)`. For custom policies and cache settings, see the [Go verification guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md).
 
 ## OHTTP
 
@@ -342,8 +342,8 @@ Set `OHTTP: true` in `InferenceOptions` to encapsulate the Chat HTTP exchange to
 
 ## Examples and reference
 
-- [Go verification guide](https://github.com/nearai/inference-sdk/blob/v0.3.0/go/docs/verification-guide.md): policies, encryption, streaming, TLS binding, and errors.
-- [Go API reference](https://github.com/nearai/inference-sdk/blob/v0.3.0/go/docs/api-reference.md): client options, verification functions, defaults, and result fields.
-- [Runnable Go examples](https://github.com/nearai/inference-sdk/tree/v0.3.0/examples/example-go): Gateway clients, standalone verification, and streaming.
-- OpenAI SDK integration: [Chat Completions](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-go/gateway/chat-completions-with-openai-sdk/main.go) and [Responses](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-go/gateway/responses-with-openai-sdk/main.go).
-- [Anthropic SDK integration](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-go/gateway/messages-with-anthropic-sdk/main.go).
+- [Go verification guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md): policies, encryption, streaming, TLS binding, and errors.
+- [Go API reference](https://github.com/nearai/inference-sdk/blob/main/go/docs/api-reference.md): client options, verification functions, defaults, and result fields.
+- [Runnable Go examples](https://github.com/nearai/inference-sdk/tree/main/examples/example-go): Gateway clients, standalone verification, and streaming.
+- OpenAI SDK integration: [Chat Completions](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/gateway/chat-completions-with-openai-sdk/main.go) and [Responses](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/gateway/responses-with-openai-sdk/main.go).
+- [Anthropic SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-go/gateway/messages-with-anthropic-sdk/main.go).

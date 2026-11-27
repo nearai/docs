@@ -6,10 +6,10 @@ description: "Use the JavaScript SDK for verified Chat Completions, Responses, M
 
 ## Install
 
-[SDK 0.3.0 on npm](https://www.npmjs.com/package/@nearai/inference-sdk/v/0.3.0) requires Node.js 24.22.1 or later for Node usage.
+The [SDK on npm](https://www.npmjs.com/package/@nearai/inference-sdk) requires Node.js 24.22.1 or later for Node usage.
 
 ```bash
-npm install @nearai/inference-sdk@0.3.0
+npm install @nearai/inference-sdk
 ```
 
 Set your API key in the environment:
@@ -150,7 +150,7 @@ console.log("Verified signer:", verified.signatureKind);
 
 ## E2EE
 
-End-to-end encryption is disabled by default. Set `e2ee: true` to encrypt supported Chat fields to a verified NEAR model key and decrypt the response automatically. SDK 0.3.0 uses encryption protocol v3 with Ed25519 (default) or ECDSA. Leave E2EE disabled for other models and APIs.
+End-to-end encryption is disabled by default. Set `e2ee: true` to encrypt supported Chat fields to a verified NEAR model key and decrypt the response automatically. The SDK uses encryption protocol v3 with Ed25519 (default) or ECDSA. Leave E2EE disabled for other models and APIs.
 
 ## Verification
 
@@ -208,10 +208,10 @@ The Chat and `verifyResponse()` calls stay the same. Before sending Chat, the SD
 
 ## Examples and reference
 
-See the [Inference SDK examples and setup instructions](https://github.com/nearai/inference-sdk/tree/v0.3.0/examples) for runnable projects.
+See the [Inference SDK examples and setup instructions](https://github.com/nearai/inference-sdk/tree/main/examples) for runnable projects.
 
-- [InferenceClient](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/gateway/chat-completions.ts): send encrypted Chat requests and verify both streaming and non-streaming replies.
-- OpenAI SDK integration: [Chat Completions](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/gateway/chat-completions-with-openai-sdk.ts) and [Responses](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/gateway/responses-with-openai-sdk.ts).
-- [Anthropic SDK integration](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/gateway/messages-with-anthropic-sdk.ts).
-- [TypeSafe SDK integration](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/gateway/systemone-with-typesafe-sdk.ts).
-- [Manual verification and E2EE](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-js/gateway/chat-completions-bare.ts): work directly with attestation, encryption, and signature-verification helpers.
+- [InferenceClient](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/chat-completions.ts): send encrypted Chat requests and verify both streaming and non-streaming replies.
+- OpenAI SDK integration: [Chat Completions](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/chat-completions-with-openai-sdk.ts) and [Responses](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/responses-with-openai-sdk.ts).
+- [Anthropic SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/messages-with-anthropic-sdk.ts).
+- [TypeSafe SDK integration](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/systemone-with-typesafe-sdk.ts).
+- [Manual verification and E2EE](https://github.com/nearai/inference-sdk/blob/main/examples/example-js/gateway/chat-completions-bare.ts): work directly with attestation, encryption, and signature-verification helpers.

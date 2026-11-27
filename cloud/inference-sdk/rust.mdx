@@ -6,10 +6,10 @@ description: "Use the Rust SDK for verified Chat Completions, Responses, Message
 
 ## Install
 
-The SDK is available on [crates.io](https://crates.io/crates/nearai-inference-sdk/0.3.0). Use Rust stable and Cargo. Add the SDK to your application:
+The SDK is available on [crates.io](https://crates.io/crates/nearai-inference-sdk). Use Rust stable and Cargo. Add the SDK to your application:
 
 ```bash
-cargo add nearai-inference-sdk@0.3.0
+cargo add nearai-inference-sdk
 ```
 
 Set your API key in your server environment:
@@ -169,13 +169,13 @@ For a model-signed receipt (`provider_tee`), `verified.attestations` contains ev
 
 Response records expire 60 minutes after the full response is read, by default. Verify each response before its record expires.
 
-To check a deployment without sending a prompt, call `client.verify(model).await?`. For custom policies and cache settings, see the [Rust verification guide](https://github.com/nearai/inference-sdk/blob/v0.3.0/rs/docs/verification-guide.md).
+To check a deployment without sending a prompt, call `client.verify(model).await?`. For custom policies and cache settings, see the [Rust verification guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md).
 
 ### Streaming and HTTP transport
 
 Use `chat_request()` with `"stream": true`, then `send(reqwest::Request)` to obtain an `InferenceResponse`. Consume its `body` to HTTP EOF before calling `verify_response()` with the completion ID from an SSE data event. Chat and Responses streams can finish at normal EOF without `[DONE]` once the SDK has a valid response ID. Messages streams require `message_stop`.
 
-Rust exposes its own reqwest transport API rather than an OpenAI SDK adapter. Body chunks are SSE bytes and need not correspond to complete events or UTF-8 strings. The [streaming guide](https://github.com/nearai/inference-sdk/blob/v0.3.0/rs/docs/verification-guide.md#streaming) and [Gateway client example](https://github.com/nearai/inference-sdk/blob/v0.3.0/examples/example-rs/src/gateway/chat_completions.rs) show how to consume responses and verify receipts. Use `create_response()` for Responses JSON, or `response_request()` with `send()` for Responses streaming.
+Rust exposes its own reqwest transport API rather than an OpenAI SDK adapter. Body chunks are SSE bytes and need not correspond to complete events or UTF-8 strings. The [streaming guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md#streaming) and [Gateway client example](https://github.com/nearai/inference-sdk/blob/main/examples/example-rs/src/gateway/chat_completions.rs) show how to consume responses and verify receipts. Use `create_response()` for Responses JSON, or `response_request()` with `send()` for Responses streaming.
 
 ## OHTTP
 
@@ -198,6 +198,6 @@ Use these options in the completion example above. OHTTP requires the default Ed
 
 ## Examples and reference
 
-- [Rust verification guide](https://github.com/nearai/inference-sdk/blob/v0.3.0/rs/docs/verification-guide.md): policies, encryption, streaming, TLS binding, and errors.
-- [Rust API reference](https://github.com/nearai/inference-sdk/blob/v0.3.0/rs/docs/api-reference.md): client options, verification functions, defaults, and result fields.
-- [Runnable Rust examples](https://github.com/nearai/inference-sdk/tree/v0.3.0/examples/example-rs): Gateway clients, standalone verification, and JSON/SSE.
+- [Rust verification guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md): policies, encryption, streaming, TLS binding, and errors.
+- [Rust API reference](https://github.com/nearai/inference-sdk/blob/main/rs/docs/api-reference.md): client options, verification functions, defaults, and result fields.
+- [Runnable Rust examples](https://github.com/nearai/inference-sdk/tree/main/examples/example-rs): Gateway clients, standalone verification, and JSON/SSE.

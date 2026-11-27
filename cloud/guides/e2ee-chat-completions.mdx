@@ -50,7 +50,7 @@ sequenceDiagram
 
 ## Encryption Protocol
 
-SDK 0.3.0 uses version 3 for both signing algorithms. The client generates a fresh reply key pair for each request. When encrypting each field, it supplies the reply public key and the field's protocol label as additional authenticated data (AAD). The model proxy checks both before processing the field.
+The SDK uses version 3 for both signing algorithms. The client generates a fresh reply key pair for each request. When encrypting each field, it supplies the reply public key and the field's protocol label as additional authenticated data (AAD). The model proxy checks both before processing the field.
 
 | Signing algorithm | Suite ID | Reply public key used in AAD | Key exchange and encryption |
 | --- | --- | --- | --- |
@@ -412,7 +412,7 @@ const data = await chatResponse.json();
 | `X-Model-Pub-Key` | Ed25519 public key from the selected, verified model report; required as the gateway routing pin |
 | `x-no-aliasing` | Set to `true` for gateway requests so the model ID and attested model key cannot be silently redirected. |
 
-SDK 0.3.0 also sends `X-Encrypt-All-Fields: true`. In manual v3 requests this header is optional. Encrypt all supported [function and tool fields](#encrypting-all-fields-tool-calling) whenever they appear.
+The SDK also sends `X-Encrypt-All-Fields: true`. In manual v3 requests this header is optional. Encrypt all supported [function and tool fields](#encrypting-all-fields-tool-calling) whenever they appear.
 
 ---
 
