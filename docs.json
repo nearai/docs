@@ -74,7 +74,6 @@
                   "cloud/verification/verify-with-sdk",
                   "cloud/verification/verification-center",
                   "cloud/verification/reference/verification-policy",
-                  "cloud/verification/troubleshooting",
                   {
                     "group": "How verification works",
                     "pages": [
