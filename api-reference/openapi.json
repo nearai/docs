@@ -6524,7 +6524,7 @@
           "Attestation"
         ],
         "summary": "Get Intel Trust Authority attestation token",
-        "description": "Get Intel Trust Authority signed attestation JWTs for the gateway and, when\nrequested, compatible model provider evidence. Public endpoint — this is an\nexplicit, documented decision (nearai/infra#193): the response carries only\nITA-signed TEE evidence (no customer or key-scoped data), public access lets\nthird parties verify the platform without an account, and upstream ITA rate\nlimits bound abuse (propagated as 429). See\n`build_public_attestation_routes` in `routes/attestation.rs`.",
+        "description": "Returns Intel Trust Authority attestation tokens for the Gateway and, when requested, compatible model evidence. No API key is required.",
         "operationId": "get_ita_token",
         "parameters": [
           {
