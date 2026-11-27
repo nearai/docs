@@ -20,7 +20,7 @@ export NEARAI_API_KEY="your-api-key"
 
 ## Examples
 
-Use the example for your model's API in `src/main.rs`. The examples use `serde_json` and Tokio with the `macros` and `rt-multi-thread` features.
+Use the example for your model's API in `src/main.rs`.
 
 <Tabs>
 <Tab title="Chat Completions" id="chat-completions">
@@ -175,7 +175,7 @@ To check a deployment without sending a prompt, call `client.verify(model).await
 
 Use `chat_request()` with `"stream": true`, then `send(reqwest::Request)` to obtain an `InferenceResponse`. Consume its `body` to HTTP EOF before calling `verify_response()` with the completion ID from an SSE data event. Chat and Responses streams can finish at normal EOF without `[DONE]` once the SDK has a valid response ID. Messages streams require `message_stop`.
 
-Rust exposes its own reqwest transport API rather than an OpenAI SDK adapter. Body chunks are SSE bytes and need not correspond to complete events or UTF-8 strings. The [streaming guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md#streaming) and [Gateway client example](https://github.com/nearai/inference-sdk/blob/main/examples/example-rs/src/gateway/chat_completions.rs) show how to consume responses and verify receipts. Use `create_response()` for Responses JSON, or `response_request()` with `send()` for Responses streaming.
+Body chunks are SSE bytes and need not correspond to complete events or UTF-8 strings. The [streaming guide](https://github.com/nearai/inference-sdk/blob/main/rs/docs/verification-guide.md#streaming) and [Gateway client example](https://github.com/nearai/inference-sdk/blob/main/examples/example-rs/src/gateway/chat_completions.rs) show how to consume responses and verify receipts. Use `create_response()` for Responses JSON, or `response_request()` with `send()` for Responses streaming.
 
 ## OHTTP
 

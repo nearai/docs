@@ -20,12 +20,6 @@ for the expected text and which preflight report to use.
 <Tabs>
 <Tab title="Node.js">
 
-Install [`ethers`](https://www.npmjs.com/package/ethers) v6 and [`tweetnacl`](https://www.npmjs.com/package/tweetnacl), and save the code as an ES module (a `.mjs` file, or set `"type": "module"` in `package.json`):
-
-```bash
-npm install ethers@6 tweetnacl
-```
-
 ```javascript
 import { Buffer } from 'node:buffer';
 import { createHash, timingSafeEqual } from 'node:crypto';
@@ -117,12 +111,6 @@ export function verifyResponseSignature({ signature, expectedText, preflightSign
 
 </Tab>
 <Tab title="Python">
-
-Requires Python 3.9 or later. Install [`eth-account`](https://pypi.org/project/eth-account/) and [`PyNaCl`](https://pypi.org/project/PyNaCl/):
-
-```bash
-pip install eth-account pynacl
-```
 
 ```python
 import re
