@@ -334,10 +334,10 @@ To check a deployment without sending a prompt, call `client.Verify(ctx, model)`
 
 ## OHTTP
 
-Set `OHTTP: true` in `InferenceOptions` to encapsulate the Chat HTTP exchange to the attested Gateway. OHTTP is disabled by default and requires Ed25519, the default signing algorithm. Configure E2EE independently. Missing or invalid Gateway OHTTP evidence blocks Chat.
+Set `OHTTP: true` in `InferenceOptions` to encapsulate the Chat HTTP exchange to the attested Gateway. OHTTP is disabled by default. Configure E2EE independently. Missing or invalid Gateway OHTTP evidence blocks Chat.
 
 <Note>
-  OHTTP supports Chat Completions, Responses, and Messages through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
+  OHTTP requires Ed25519 and does not support ECDSA or System One. The endpoint must expose `/ohttp` at the same origin.
 </Note>
 
 ## Examples and reference

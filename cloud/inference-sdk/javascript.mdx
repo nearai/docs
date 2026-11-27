@@ -189,7 +189,7 @@ See the [SDK overview](/cloud/inference-sdk#verification) for receipt IDs and si
 
 ## OHTTP
 
-Set `ohttp: true` to encapsulate Chat requests and responses with OHTTP. OHTTP uses the SDK's default Ed25519 signing algorithm; it is not compatible with `signingAlgo: 'ecdsa'`.
+Set `ohttp: true` to encapsulate Chat requests and responses with OHTTP.
 
 ```js
 const client = new InferenceClient({
@@ -203,7 +203,7 @@ const client = new InferenceClient({
 The Chat and `verifyResponse()` calls stay the same. Before sending Chat, the SDK verifies the Gateway's signed OHTTP configuration; a missing or invalid configuration blocks the request. OHTTP encapsulates the exchange to the Gateway, while E2EE encrypts supported Chat fields to the verified model key.
 
 <Note>
-  OHTTP supports Chat Completions, Responses, and Messages through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The configured endpoint or proxy must expose `/ohttp` at the same origin. Authorization and custom headers sent on the outer request, along with the client's network address, are not hidden by OHTTP.
+  OHTTP does not support `signingAlgo: 'ecdsa'` or System One. The endpoint must expose `/ohttp` at the same origin.
 </Note>
 
 ## Examples and reference

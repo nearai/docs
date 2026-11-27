@@ -190,10 +190,10 @@ let client = InferenceClient::with_options(InferenceClientOptions {
 })?;
 ```
 
-Use these options in the completion example above. OHTTP requires the default Ed25519 algorithm and cannot be used with `SigningAlgo::Ecdsa`. E2EE is configured independently. Missing or invalid Gateway OHTTP evidence blocks Chat.
+Use these options in the completion example above. E2EE is configured independently. Missing or invalid Gateway OHTTP evidence blocks Chat.
 
 <Note>
-  OHTTP supports Chat Completions, Responses, and Messages through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
+  OHTTP does not support `SigningAlgo::Ecdsa` or System One. The endpoint must expose `/ohttp` at the same origin.
 </Note>
 
 ## Examples and reference
