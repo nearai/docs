@@ -187,13 +187,7 @@ func run() error {
 
 ## Understand the result
 
-On success, the example prints this line followed by the model's answer.
-
-```text
-Verified model-signed response.
-```
-
-The SDK checked the receipt against the exact request and response bytes. The signature kind tells you who signed it.
+The SDK checks the receipt against the exact request and response bytes. The signature kind tells you who signed it.
 
 | Signature kind | Who signed the receipt |
 | --- | --- |
