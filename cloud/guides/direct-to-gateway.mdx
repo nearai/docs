@@ -1,0 +1,30 @@
+---
+title: "Move from Direct to Gateway"
+sidebarTitle: "Direct to Gateway"
+description: "Migrate your Direct endpoint integration before support ends on December 6, 2026."
+icon: "arrow-right-left"
+---
+
+Direct endpoints are deprecated. Support ends on **December 6, 2026**. Migrate
+your application to the NEAR AI Cloud Gateway before this date.
+
+## Update your integration
+
+1. Change your API base URL to `https://cloud-api.near.ai/v1`.
+2. Use a Gateway model ID from the [model catalog](/cloud/models) in your requests.
+3. Keep your existing NEAR AI Cloud API key.
+
+For a complete request example, see the [Quickstart](/cloud/quickstart).
+
+## If you use the Inference SDK
+
+Replace the experimental Direct Client with `InferenceClient` and use the
+Gateway base URL. Follow the guide for your language:
+
+- [JavaScript / TypeScript](/cloud/inference-sdk/javascript)
+- [Python](/cloud/inference-sdk/python)
+- [Rust](/cloud/inference-sdk/rust)
+- [Go](/cloud/inference-sdk/go)
+
+For attestation and response verification, follow the
+[Gateway verification guide](/cloud/verification).
