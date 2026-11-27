@@ -71,9 +71,6 @@
                 "icon": "file-check",
                 "root": "cloud/verification/index",
                 "pages": [
-                  "cloud/verification/verify-with-sdk",
-                  "cloud/verification/verification-center",
-                  "cloud/verification/reference/verification-policy",
                   {
                     "group": "How verification works",
                     "pages": [
@@ -84,6 +81,9 @@
                       "cloud/verification/cloud-api/image-provenance"
                     ]
                   },
+                  "cloud/verification/verify-with-sdk",
+                  "cloud/verification/verification-center",
+                  "cloud/verification/reference/verification-policy",
                   {
                     "group": "Protocol reference",
                     "pages": [
