@@ -1,0 +1,174 @@
+---
+title: "Hermes"
+description: "Point Hermes at NEAR AI Cloud and check Intel TDX and NVIDIA attestation reports for a hosted model."
+---
+
+<Warning>
+  On 2026-11-21 the three non-streaming chat completions were signed with `signature_kind: provider_tee`. The streaming completion at 2026-11-21T05:22:33Z was signed with `signature_kind: gateway`. The verifier exited 0 for `openai/gpt-5` after HTTP 503 and printed no Intel or NVIDIA verdict. Read the printed lines.
+</Warning>
+
+Hermes can call an OpenAI-compatible gateway. NEAR AI Cloud's gateway is `https://cloud-api.near.ai/v1`. On 2026-11-21, three hosted models returned Intel TDX and NVIDIA attestation reports from `GET /v1/attestation/report` without an API key. `openai/gpt-5` returned HTTP 503.
+
+## Overview
+
+Use this guide to select a NEAR-hosted model from Hermes and to check its attestation with the official verifier. The verifier commit that completed against the November 2026 report API is `main` at `94554726fd548676842b7ea603a8173a60c31341` (2026-08-10). The repository's last push on 2026-09-02 is a different branch and is not this procedure.
+
+| Setting | Value |
+| --- | --- |
+| Base URL | `https://cloud-api.near.ai/v1` |
+| Model ID | A hosted id, for example `z-ai/glm-5.3-flash` |
+| API key | Required for chat and for `GET /v1/signature/{chat_id}`. Not required for `GET /v1/attestation/report` |
+| Verifier | `nearai/nearai-cloud-verifier` commit `94554726fd548676842b7ea603a8173a60c31341` |
+
+## Prerequisites
+
+- Hermes. The chat below was run on Hermes 0.23.2 on 2026-11-21.
+- A NEAR AI Cloud API key from the [NEAR AI Cloud Dashboard](https://cloud.near.ai/dashboard/organizations), for chat and for `GET /v1/signature/{chat_id}`.
+- Python 3.12 available to `uv`, for the verifier. The 2026-11-21 verifier run used a `uv` virtualenv.
+
+Do not paste a real API key into the shell history you share, into screenshots, or into this file.
+
+## Base URL
+
+```text
+https://cloud-api.near.ai/v1
+```
+
+On 2026-11-21 at 15:52 JST, Hermes 0.23.2 logged `base_url=https://cloud-api.near.ai/v1` for the chat in Configure. The logged base URL has no `/chat/completions` suffix.
+
+## Model ID
+
+These three ids returned attestation reports on 2026-11-21:
+
+```text
+Qwen/Qwen3.8-27B
+deepseek-ai/DeepSeek-V4.1-Flash-1017
+z-ai/glm-5.3-flash
+```
+
+`openai/gpt-5` is an external model. The report request returned HTTP 503 and the body contained `TEE attestation is not supported for external providers`. Treat that model as not attestable.
+
+Copy the id exactly. A slash is part of the id. Hermes 0.23.2 accepted `z-ai/glm-5.3-flash` through `-m` on the run in Configure.
+
+## Configure
+
+On 2026-11-21 at 15:52 JST, Hermes 0.23.2 completed one chat with the config below. That run did not use a NEAR plugin. `key_env` is the environment variable name. The config file stored `NEARAI_API_KEY`, not the key.
+
+```yaml
+model:
+  provider: custom:nearai
+  default: z-ai/glm-5.3-flash
+providers:
+  nearai:
+    api: https://cloud-api.near.ai/v1
+    key_env: NEARAI_API_KEY
+    transport: chat_completions
+    default_model: z-ai/glm-5.3-flash
+```
+
+```bash
+hermes chat -q "Reply with only: near-ai-ok" --oneshot --provider custom:nearai -m z-ai/glm-5.3-flash
+```
+
+The model id contains a slash. `-m z-ai/glm-5.3-flash` selected it. The process printed `near-ai-ok` and exited 0. The log line was `API call #1: model=z-ai/glm-5.3-flash provider=custom in=10856 out=6`.
+
+## Verify attestations
+
+Do this before trusting a hosted model. The check uses no API key.
+
+The 2026-09-02 verifier (`7264f564`, `python -m py.model_attestation`) stops with `API_KEY is required to fetch Cloud API attestations` and does not call the API. Use `main` at `94554726` and `py/model_verifier.py` instead.
+
+```bash
+git clone https://github.com/nearai/nearai-cloud-verifier.git
+cd nearai-cloud-verifier
+git checkout 94554726fd548676842b7ea603a8173a60c31341
+uv venv .venv --python 3.12
+uv pip install --python .venv/bin/python -r requirements.txt
+```
+
+`requirements.txt` has lower bounds and no lockfile. On 2026-11-21 the install included `dcap-qvl==0.7.1`, `cryptography==50.0.2`, and `requests==2.34.2`.
+
+Fetch the report, headers included:
+
+```bash
+curl -sS -i "https://cloud-api.near.ai/v1/attestation/report?model=Qwen/Qwen3.8-27B&nonce=$(python3 -c 'import secrets; print(secrets.token_hex(32))')&signing_algo=ecdsa"
+```
+
+On 2026-11-21 this request shape returned HTTP 200 for the three hosted ids. Run the verifier with `API_KEY` unset:
+
+```bash
+env -u API_KEY .venv/bin/python py/model_verifier.py --model Qwen/Qwen3.8-27B
+```
+
+A passing model attestation on that day printed all of these. Repeat for each hosted id. The verifier checks every `model_attestations` row it receives. It does not pick one. DeepSeek returned 2 rows and `z-ai/glm-5.3-flash` returned 4. Each of those rows shared one signing address per model.
+
+```text
+Verification successful! Status: UpToDate
+Intel TDX quote verified: True
+Report data binds signing address: True
+Report data embeds request nonce: True
+GPU payload nonce matches request_nonce: True
+NVIDIA attestation verdict: True
+```
+
+On 2026-11-21 the same command with `--model openai/gpt-5` exited 0 after a 503 body and did not print an Intel or NVIDIA verdict. On these runs the pass/fail signal was the printed verdict, not the process exit code.
+
+The three hosted-model runs printed `Status: UpToDate`. They did not print `Status: OutOfDate`. The gateway section of the same runs printed Intel TDX `UpToDate` and has no NVIDIA check. Its signing address was `0xb98a789cdc4817275f5155593ba73ef2a957e779`.
+
+## Response signatures
+
+These four completions are separate from the Hermes 0.23.2 chat in Configure. They were checked on 2026-11-21 with `chat_verifier.verify_chat` from verifier commit `94554726`.
+
+A keyless `GET /v1/signature/probe-not-a-real-chat?model=Qwen/Qwen3.8-27B&signing_algo=ecdsa` returned HTTP 401 `Missing authorization header` (`date: Sat, 21 Nov 2026 04:51:38 GMT`).
+
+With an API key, the three non-streaming completions had `signature_kind: provider_tee`. For each one, the request hash matched, the response hash matched, and the recovered address matched `signing_address`. That address's attestation printed Intel TDX `UpToDate` and NVIDIA `True`.
+
+| Call | UTC | signing_address | signature_kind |
+| --- | --- | --- | --- |
+| `z-ai/glm-5.3-flash`, non-streaming | 2026-11-21T05:21:24Z | `0x3b753b4406613c5e70ae640508632b600424fa0c` | provider_tee |
+| `Qwen/Qwen3.8-27B`, non-streaming | 2026-11-21T05:22:20Z | `0x835ab53d20294ef795906dff21ae4c045336aa26` | provider_tee |
+| `deepseek-ai/DeepSeek-V4.1-Flash-1017`, non-streaming | 2026-11-21T05:22:29Z | `0xfe0071895500a9755c18044948ab4f4e1a7f337e` | provider_tee |
+| `z-ai/glm-5.3-flash`, streaming | 2026-11-21T05:22:33Z | `0xb98a789cdc4817275f5155593ba73ef2a957e779` | gateway |
+
+The streaming completion at 2026-11-21T05:22:33Z had `signature_kind: gateway`. The signer was the gateway key `0xb98a789cdc4817275f5155593ba73ef2a957e779`. The request hash matched, the response hash matched, and the signature checked. `chat_verifier.fetch_attestation_for` searches `model_attestations` only, so it printed `Signing address not found on this provider` and the process exited 0. It did not print an Intel or NVIDIA verdict for that address.
+
+The gateway attestation was fetched again at 2026-11-21 14:22 JST without an API key. The signing address was the same `0xb98a789cdc4817275f5155593ba73ef2a957e779`. Intel TDX was `UpToDate`, and report data contained the signing address and the request nonce. That gateway section has no NVIDIA check.
+
+For that streaming response, the signature checked and the signer was the gateway attested with Intel TDX.
+
+## Quick test
+
+The measured Hermes command is the one in Configure. On 2026-11-21 at 15:52 JST, Hermes 0.23.2 printed:
+
+```text
+near-ai-ok
+```
+
+The process exited 0.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| `API_KEY is required to fetch Cloud API attestations` | The 2026-09-02 verifier entry point, not `main` at `94554726`. | Check out `94554726` and run `py/model_verifier.py`. Attestation reports do not need a key. |
+| HTTP 503 and `TEE attestation is not supported for external providers` | The id is an external model (`openai/gpt-5` did this on 2026-11-21). | Show it as not attestable. Do not treat the verifier's exit code 0 as a pass. |
+| HTTP 401 `Missing authorization header` on `/v1/signature/` | The signature fetch had no bearer token. On 2026-11-21 a keyless probe returned this. | Send the key on `GET /v1/signature/{chat_id}`. On the four keyed completions the same day, read `signature_kind` on the returned payload. |
+| `Signing address not found on this provider` after a streaming chat | `signature_kind` is `gateway`. `fetch_attestation_for` only looks in `model_attestations`. | The streaming signer at 2026-11-21T05:22:33Z was the gateway `0xb98a789cdc4817275f5155593ba73ef2a957e779`. Its keyless gateway attestation was Intel TDX only. |
+| Several `model_attestations` rows | The gateway returned more than one signer row. On 2026-11-21 DeepSeek had 2 and `z-ai/glm-5.3-flash` had 4. | Read every row. Those rows shared one signing address per model. |
+
+## Related guides
+
+- [Model Discovery and Refresh](/cloud/guides/integrations/model-discovery)
+- [OpenAI Compatibility](/cloud/guides/openai-compatibility)
+- [Available Models](/cloud/models)
+
+## Sources Checked
+
+Sources checked on 2026-11-21:
+
+- `https://cloud-api.near.ai/v1/attestation/report` for `Qwen/Qwen3.8-27B`, `deepseek-ai/DeepSeek-V4.1-Flash-1017`, `z-ai/glm-5.3-flash`, and `openai/gpt-5`, without an API key
+- Four keyed chat completions and `chat_verifier.verify_chat` on verifier `main` at `94554726` (three non-streaming `provider_tee` completions, one streaming `gateway` completion)
+- Keyless gateway attestation recheck at 14:22 JST for `0xb98a789cdc4817275f5155593ba73ef2a957e779`
+- Keyless `GET /v1/signature/probe-not-a-real-chat` (HTTP 401 at 04:51:38 GMT)
+- `https://github.com/nearai/nearai-cloud-verifier` `main` `94554726` and branch `codex/update-cloud-api-verifier` `7264f564`
+- Hermes 0.23.2 chat at 15:52 JST with `provider: custom:nearai`, `api: https://cloud-api.near.ai/v1`, and `-m z-ai/glm-5.3-flash` (printed `near-ai-ok`, exit 0, log `API call #1: model=z-ai/glm-5.3-flash provider=custom in=10856 out=6`)
