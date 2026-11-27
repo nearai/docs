@@ -1,6 +1,6 @@
 ---
 title: "Verification"
-description: "Learn why to verify an AI request, what the checks tell you, and how to verify a reply with the SDK."
+description: "Learn why to verify an AI request, what to check, and how verification fits into a complete request."
 ---
 
 ## Why verify a request?
@@ -9,36 +9,30 @@ Before sending private data to an AI service, you may want to check that it runs
 
 ## What are you checking?
 
-There are three questions to answer:
+The **Gateway** receives your API request and forwards it. The **model service** runs inference and produces the answer. Each service has its own evidence.
 
-1. **Are the services running on protected hardware?** The SDK checks hardware-backed evidence about the Gateway and, for supported models, the model service.
-2. **Does your connection reach the service you checked?** In a supported server-side runtime, the SDK checks that the HTTPS connection reaches the Gateway identified by that evidence.
-3. **Does the reply match what a verified service signed?** The SDK checks a signed record against the exact request you sent and the reply you received, then identifies which service signed it.
-
-The **Gateway** receives your API request and forwards it. The **model service** runs inference and produces the answer. The SDK checks each service's evidence separately.
+1. **Are the services running on protected hardware?** Check hardware-backed evidence for the Gateway and, for supported models, the model service.
+2. **Does your connection reach the service you checked?** Check that the HTTPS connection reaches the Gateway identified by the verified evidence.
+3. **Does the reply match what a verified service signed?** Check the signed record against the exact request you sent and the reply you received, and identify which service signed it.
 
 ## Follow one request
 
-Suppose your application asks a supported NEAR model to summarize a paragraph. Using a server-side SDK, the complete flow is:
+Suppose your application asks a supported NEAR model to summarize a paragraph.
 
 <Steps>
-  <Step title="The SDK checks the services">
-    Before sending the paragraph, the SDK verifies the Gateway, its HTTPS connection, and the model service. It records the Gateway’s signing key and selects a verified model key for this request.
-
-    **The SDK handles this automatically.** It can reuse a previously verified result within its configured cache lifetime.
+  <Step title="Verify the services before sending data">
+    Verify the hardware evidence from both services and confirm that your HTTPS connection matches the Gateway's verified identity. Keep the Gateway's signing key and choose a verified model key for this request.
   </Step>
-  <Step title="The SDK sends the prompt">
-    After the checks pass, the SDK sends the request to the Gateway. The Gateway forwards it to the model service, which generates a summary and returns it through the Gateway.
+  <Step title="Send the prompt">
+    After the checks pass, send the paragraph to the Gateway. It forwards the request to the model service, which generates a summary. Keep the exact request bytes for the reply check.
   </Step>
-  <Step title="Your application receives the complete reply">
-    The SDK retains the request and response bytes so they can be checked later. For a streaming response, wait until the whole stream has been received.
+  <Step title="Receive the complete reply">
+    Save the exact response bytes for verification. For a streaming response, wait until the whole stream has been received.
   </Step>
-  <Step title="Your application asks the SDK to verify the reply">
-    Call `verifyResponse(responseId)` or your language's equivalent on the same SDK client. The SDK compares the signed record with the saved request and reply bytes. It checks a model signature against the model key it selected, or a Gateway signature against the verified Gateway key.
-
-    **Your application triggers this step.**
+  <Step title="Verify the reply">
+    Retrieve the signed record for the reply and compare it with the saved request and response bytes. Verify a model signature with the key selected for this request, or a Gateway signature with the Gateway key verified earlier.
   </Step>
-  <Step title="Your application decides whether to use the answer">
+  <Step title="Decide whether to use the answer">
     The result tells you whether the model service or the Gateway signed the reply. Check whether that signer meets your application's requirements.
 
     Once verification succeeds and the result meets your requirements, display or use the summary.
@@ -48,8 +42,8 @@ Suppose your application asks a supported NEAR model to summarize a paragraph. U
 ## Try verification
 
 <CardGroup cols={2}>
-  <Card title="Verify a reply with the SDK" icon="code" href="/cloud/verification/verify-with-sdk">
-    Follow this flow with a complete JavaScript, Python, Rust, or Go example.
+  <Card title="Verify a reply in your application" icon="code" href="/cloud/verification/verify-with-sdk">
+    Use the NEAR AI Inference SDK with a complete JavaScript, Python, Rust, or Go example.
   </Card>
   <Card title="Verify GLM-5.3 Flash in your browser" icon="search-check" href="https://cloud.near.ai/verify?model=z-ai%2Fglm-5.3-flash">
     Check the current Gateway and model evidence in the Verification Center. No API key is required.
