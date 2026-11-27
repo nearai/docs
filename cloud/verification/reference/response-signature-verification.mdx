@@ -3,7 +3,7 @@ title: "Response Signature Verification"
 description: "Verify a response signature over exact request and response bytes."
 ---
 
-Use these helpers after you have fetched a response signature and verified the applicable preflight attestation. They verify only the signed response: exact-byte hashes, the signature, and the signer match. They do not verify a quote or choose which preflight evidence applies.
+Use these helpers after you have fetched a response signature and verified the applicable preflight attestation. They check the exact-byte hashes, response signature, and signer match against that verified evidence.
 
 Pass the signature JSON, the exact request and response bytes, the expected signed text for the endpoint, and the signer from the already verified preflight report:
 
@@ -19,12 +19,6 @@ for the expected text and which preflight report to use.
 
 <Tabs>
 <Tab title="Node.js">
-
-Install [`ethers`](https://www.npmjs.com/package/ethers) v6 and [`tweetnacl`](https://www.npmjs.com/package/tweetnacl), and save the code as an ES module (a `.mjs` file, or set `"type": "module"` in `package.json`):
-
-```bash
-npm install ethers@6 tweetnacl
-```
 
 ```javascript
 import { Buffer } from 'node:buffer';
@@ -117,12 +111,6 @@ export function verifyResponseSignature({ signature, expectedText, preflightSign
 
 </Tab>
 <Tab title="Python">
-
-Requires Python 3.9 or later. Install [`eth-account`](https://pypi.org/project/eth-account/) and [`PyNaCl`](https://pypi.org/project/PyNaCl/):
-
-```bash
-pip install eth-account pynacl
-```
 
 ```python
 import re

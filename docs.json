@@ -71,18 +71,24 @@
                 "icon": "file-check",
                 "root": "cloud/verification/index",
                 "pages": [
-                  "cloud/verification/verification-center",
-                  "cloud/verification/cloud-api/gateway-attestation",
-                  "cloud/verification/cloud-api/model-attestations",
-                  "cloud/verification/cloud-api/tls",
-                  "cloud/verification/cloud-api/response-signatures",
-                  "cloud/verification/cloud-api/image-provenance",
                   {
-                    "group": "Reference",
+                    "group": "How verification works",
+                    "pages": [
+                      "cloud/verification/cloud-api/gateway-attestation",
+                      "cloud/verification/cloud-api/model-attestations",
+                      "cloud/verification/cloud-api/response-signatures",
+                      "cloud/verification/cloud-api/tls",
+                      "cloud/verification/cloud-api/image-provenance"
+                    ]
+                  },
+                  "cloud/verification/verify-with-sdk",
+                  "cloud/verification/verification-center",
+                  "cloud/verification/reference/verification-policy",
+                  {
+                    "group": "Protocol reference",
                     "pages": [
                       "cloud/verification/reference/quote-nonce-signer",
-                      "cloud/verification/reference/response-signature-verification",
-                      "cloud/verification/reference/verification-policy"
+                      "cloud/verification/reference/response-signature-verification"
                     ]
                   }
                 ]
@@ -540,6 +546,10 @@
     }
   },
   "redirects": [
+    {
+      "source": "/cloud/verification/cloud-api",
+      "destination": "/cloud/verification"
+    },
     {
       "source": "/cloud/experimental/direct-completions",
       "destination": "/cloud/guides/direct-to-gateway"

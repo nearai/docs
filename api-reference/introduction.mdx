@@ -14,8 +14,8 @@ https://cloud-api.near.ai/v1
 
 ## Authentication
 
-Every request is authenticated with a bearer token in the `Authorization` header. The API
-accepts four token types; for programmatic access you almost always want an **API key**.
+Send `Authorization: Bearer <API_KEY>` with inference requests and response signature lookups.
+You can fetch [attestation reports](/api-reference/attestation/get-attestation-report) for the Gateway and listed models without credentials.
 
 | Token | Prefix | Use for |
 | --- | --- | --- |
@@ -36,8 +36,7 @@ curl https://cloud-api.near.ai/v1/chat/completions \
 
 Each endpoint page lists which token types it accepts under **Authorizations**.
 
-Every endpoint page has an interactive playground: paste your key, edit the request, and
-send it directly from the browser.
+Use the interactive playground on each endpoint page to edit and send a request. Enter a key when the endpoint requires one.
 
 <CardGroup cols={3}>
   <Card title="Chat Completions" icon="message-square" href="/api-reference/chat/create-chat-completion">

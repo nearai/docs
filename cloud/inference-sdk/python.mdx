@@ -1,12 +1,12 @@
 ---
 title: "Python"
-icon: "code"
+icon: "/images/icons/languages/python.svg"
 description: "Use the asynchronous Python SDK for verified Chat Completions, Responses, Messages, and System One decisions."
 ---
 
 ## Install
 
-The SDK is available on [PyPI](https://pypi.org/project/nearai-inference-sdk/). The package requires Python 3.12 or later.
+The [SDK on PyPI](https://pypi.org/project/nearai-inference-sdk/) requires Python 3.12 or later.
 
 ```bash
 pip install nearai-inference-sdk
@@ -157,13 +157,13 @@ asyncio.run(main())
 
 ## E2EE
 
-End-to-end encryption is disabled by default. `e2ee=True` encrypts supported Chat fields to a verified model key and decrypts the response automatically.
+End-to-end encryption is disabled by default. `e2ee=True` encrypts supported Chat fields to a verified model key and decrypts the response automatically. The SDK uses encryption protocol v3 with Ed25519 (default) or ECDSA.
 
 E2EE requires a NEAR vLLM model with attestation enabled. Other providers use Gateway-only verification; set `e2ee=False` for those models.
 
 ## Verification
 
-Before sending Chat, the client verifies the Gateway and, for supported NEAR TEE models, every returned model report. Gateway TLS identity verification is enabled by default and subsequent requests are pinned to that identity. Failed required checks stop the request.
+The client verifies the Gateway before sending your API key. It pins subsequent requests, including model evidence and signature lookups, to the verified Gateway TLS identity by default. For supported NEAR TEE models it also verifies every returned model report before sending Chat, even when E2EE is disabled.
 
 Response-signature verification is explicit: call `await client.verify_response(completion.id)` after receiving the completion. It verifies the exact request and response bytes retained by the client against the relevant verified evidence.
 
@@ -211,10 +211,10 @@ async with InferenceClient(api_key, e2ee=True, ohttp=True) as client:
     print(completion.choices[0].message.content or "")
 ```
 
-OHTTP requires the default Ed25519 algorithm and cannot be used with `signing_algo="ecdsa"`. E2EE is configured independently. Missing or invalid Gateway OHTTP evidence blocks the Chat request.
+E2EE is configured independently. Missing or invalid Gateway OHTTP evidence blocks the Chat request.
 
 <Note>
-  OHTTP supports Chat Completions, Responses, and Messages through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
+  OHTTP does not support `signing_algo="ecdsa"` or System One. The endpoint must expose `/ohttp` at the same origin.
 </Note>
 
 ## Examples and reference

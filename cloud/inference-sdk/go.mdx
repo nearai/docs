@@ -1,6 +1,6 @@
 ---
 title: "Go"
-icon: "code"
+icon: "/images/icons/languages/go.svg"
 description: "Use the Go SDK for verified Chat Completions, Responses, Messages, and System One decisions."
 ---
 
@@ -314,28 +314,30 @@ func run() error {
 
 ## E2EE
 
-Gateway E2EE is disabled by default. Set `E2EE: true` to encrypt supported Chat fields to an attested model key and decrypt the response automatically.
+Set `E2EE: true` to encrypt supported Chat fields to an attested model key and decrypt the response automatically. E2EE is off by default. When enabled, the SDK uses [field encryption v3](/cloud/guides/e2ee-chat-completions) to bind the reply key to each encrypted request field.
 
 E2EE requires a NEAR vLLM model with attestation enabled. Other providers use Gateway-only verification; leave E2EE disabled for those models.
 
 ## Verification
 
-Before sending Chat, the client verifies the Gateway and every returned model report for supported models. Attested Gateway TLS pinning is enabled by default; normal HTTPS certificate validation remains enabled. Failed required checks stop the request.
+The client verifies the Gateway before sending credentials. By default, it pins metadata, model evidence, inference, and receipt requests to the verified Gateway TLS identity. For supported models, it verifies every returned model report before sending the prompt.
 
 Response-signature verification is explicit: call `client.VerifyResponse(ctx, completionID)` after fully consuming the response. The client retains exact request and response bytes automatically, including encrypted wire bytes when E2EE is enabled.
 
-See [Verification](/cloud/inference-sdk#verification) for receipt IDs and signature kinds.
+For a model-signed receipt (`provider_tee`), `verified.Attestations` contains every verified model report matching the signer. See [Verification](/cloud/inference-sdk#verification) for receipt IDs and signature kinds.
 
 Response records expire 60 minutes after the full response is read, by default. Verify each response before its record expires or the client closes.
+
+For streaming, read the body to EOF and close it before verifying. Chat and Responses streams can finish at normal EOF without `[DONE]` once the SDK has a valid response ID. Messages streams require `message_stop`.
 
 To check a deployment without sending a prompt, call `client.Verify(ctx, model)`. For custom policies and cache settings, see the [Go verification guide](https://github.com/nearai/inference-sdk/blob/main/go/docs/verification-guide.md).
 
 ## OHTTP
 
-Set `OHTTP: true` in `InferenceOptions` to encapsulate the Chat HTTP exchange to the attested Gateway. OHTTP is disabled by default and requires Ed25519, the default signing algorithm. Configure E2EE independently. Missing or invalid Gateway OHTTP evidence blocks Chat.
+Set `OHTTP: true` in `InferenceOptions` to encapsulate the Chat HTTP exchange to the attested Gateway. OHTTP is disabled by default. Configure E2EE independently. Missing or invalid Gateway OHTTP evidence blocks Chat.
 
 <Note>
-  OHTTP supports Chat Completions, Responses, and Messages through the Gateway; System One does not support OHTTP. Attestation and signature requests remain regular HTTPS. The endpoint must expose `/ohttp` at the same origin. Outer authorization headers and the client's network address are not hidden by OHTTP.
+  OHTTP requires Ed25519 and does not support ECDSA or System One. The endpoint must expose `/ohttp` at the same origin.
 </Note>
 
 ## Examples and reference
